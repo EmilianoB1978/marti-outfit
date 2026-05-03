@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="My Wardrobe" />
+
+  <title>My Wardrobe</title>
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="./manifest.json" />
+
+  <!-- Icone iOS -->
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="./icons/icon-192.png" />
+
+  <!-- Stili -->
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <!-- Schermata di caricamento iniziale -->
+  <div id="splash" class="splash">
+    <div class="splash-logo">👔</div>
+    <div class="splash-title">My Wardrobe</div>
+    <div class="splash-spinner"></div>
+  </div>
+
+  <!-- Schermata di setup (mostrata se Firebase non e' configurato) -->
+  <div id="setup-screen" class="setup-screen hidden">
+    <h1>⚙️ Setup necessario</h1>
+    <p>Modifica <code>js/firebase-config.js</code> con le tue credenziali Firebase, poi ricarica.</p>
+  </div>
+
+  <!-- App principale -->
+  <div id="app" class="app hidden">
+
+    <!-- Header -->
+    <header class="app-header">
+      <h1 id="page-title">Guardaroba</h1>
+    </header>
+
+    <!-- Contenuto delle pagine (una sola visibile alla volta) -->
+    <main class="app-main">
+
+      <!-- Pagina: Guardaroba (lista capi) -->
+      <section id="page-wardrobe" class="page active">
+        <!-- Filtri tag -->
+        <div class="filter-bar" id="filter-bar"></div>
+
+        <!-- Griglia capi -->
+        <div id="wardrobe-grid" class="wardrobe-grid"></div>
+
+        <!-- Stato vuoto -->
+        <div id="empty-state" class="empty-state hidden">
+          <div class="empty-icon">📦</div>
+          <p>Il tuo guardaroba e' vuoto</p>
+          <button class="btn-primary" onclick="WardrobeUI.openAddItem()">+ Aggiungi un capo</button>
+        </div>
+      </section>
+
+      <!-- Pagina: Outfit -->
+      <section id="page-outfits" class="page">
+        <div class="outfit-prompt">
+          <label for="outfit-context">Per quale occasione?</label>
+          <input
+            type="text"
+            id="outfit-context"
+            placeholder="es. cena informale, lavoro, weekend..."
+          />
+          <button id="btn-generate-outfit" class="btn-primary">
+            ✨ Genera outfit
+          </button>
+        </div>
+
+        <div id="outfit-results" class="outfit-results"></div>
+
+        <!-- Outfit salvati -->
+        <h2 class="section-title">Outfit salvati</h2>
+        <div id="saved-outfits" class="saved-outfits"></div>
+      </section>
+
+    </main>
+
+    <!-- Bottom navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-page="wardrobe">
+        <span class="nav-icon">👕</span>
+        <span class="nav-label">Guardaroba</span>
+      </button>
+      <button class="nav-btn fab" id="btn-add-item">
+        <span class="nav-icon-fab">+</span>
+      </button>
+      <button class="nav-btn" data-page="outfits">
+        <span class="nav-icon">✨</span>
+        <span class="nav-label">Outfit</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Modale: Aggiungi/Modifica capo -->
+  <div id="modal-item" class="modal hidden">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button class="btn-icon" onclick="WardrobeUI.closeModal()">✕</button>
+        <h2 id="modal-title">Nuovo capo</h2>
+        <button class="btn-text" id="btn-save-item">Salva</button>
+      </header>
+
+      <div class="modal-body">
+        <!-- Foto -->
+        <div class="photo-section">
+          <div id="photo-preview" class="photo-preview">
+            <span class="photo-placeholder">📷</span>
+          </div>
+          <div class="photo-actions">
+            <label class="btn-secondary">
+              📸 Scatta foto
+              <input type="file" accept="image/*" capture="environment" id="input-photo-camera" hidden />
+            </label>
+            <label class="btn-secondary">
+              🖼️ Galleria
+              <input type="file" accept="image/*" id="input-photo-gallery" hidden />
+            </label>
+          </div>
+          <button id="btn-analyze" class="btn-primary hidden">
+            🤖 Analizza con AI
+          </button>
+          <div id="analyze-status" class="analyze-status"></div>
+        </div>
+
+        <!-- Tag form -->
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="field-category">
+            <option value="">— Scegli —</option>
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+            <option value="scarpe">Scarpe</option>
+            <option value="accessori">Accessori</option>
+            <option value="capospalla">Capospalla</option>
+            <option value="completo">Completo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Colore</label>
+          <input type="text" id="field-color" placeholder="es. blu navy, bianco..." />
+        </div>
+
+        <div class="form-group">
+          <label>Stile</label>
+          <select id="field-style">
+            <option value="">— Scegli —</option>
+            <option value="casual">Casual</option>
+            <option value="elegante">Elegante</option>
+            <option value="sportivo">Sportivo</option>
+            <option value="formale">Formale</option>
+            <option value="streetwear">Streetwear</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Stagione</label>
+          <select id="field-season" multiple>
+            <option value="primavera">Primavera</option>
+            <option value="estate">Estate</option>
+            <option value="autunno">Autunno</option>
+            <option value="inverno">Inverno</option>
+          </select>
+          <small>Tieni premuto/Cmd per selezione multipla</small>
+        </div>
+
+        <div class="form-group">
+          <label>Occasione</label>
+          <input type="text" id="field-occasion" placeholder="es. lavoro, sport, sera..." />
+        </div>
+
+        <div class="form-group">
+          <label>Note</label>
+          <textarea id="field-notes" rows="2" placeholder="opzionale"></textarea>
+        </div>
+
+        <!-- Pulsante elimina (solo in modifica) -->
+        <button id="btn-delete-item" class="btn-danger hidden">
+          🗑️ Elimina capo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast per messaggi -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Firebase SDK (modulare via CDN) -->
+  <script type="module" src="./js/firebase-config.js"></script>
+  <script type="module" src="./js/claude-api.js"></script>
+  <script type="module" src="./js/wardrobe.js"></script>
+  <script type="module" src="./js/outfit.js"></script>
+  <script type="module" src="./js/app.js"></script>
+
+  <!-- Service Worker per PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(() => console.log('[SW] Service Worker registrato'))
+          .catch(err => console.error('[SW] Errore registrazione:', err));
+      });
+    }
+  </script>
+</body>
+</html>

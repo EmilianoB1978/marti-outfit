@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Node (se in futuro aggiungi tooling)
+node_modules/
+package-lock.json
+
+# Cloudflare wrangler (se userai wrangler invece della UI web)
+.wrangler/
+.dev.vars
+wrangler.toml
+
+# Secrets locali
+.env
+.env.local

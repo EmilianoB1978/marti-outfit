@@ -710,3 +710,36 @@ body.editor-page {
   font-weight: var(--font-weight-medium);
   cursor: pointer;
 }
+
+/* ============================================================================
+   Manual page (formattazione contenuto accordion)
+   ============================================================================ */
+.accordion-body p {
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+  font-size: var(--fs-base);
+  line-height: var(--line-height-base);
+}
+.accordion-body strong { color: var(--color-text); font-weight: var(--font-weight-bold); }
+.accordion-body em     { font-style: italic; color: var(--color-text-muted); }
+
+.manual-list {
+  margin: 0 0 var(--space-3) var(--space-5);
+  padding: 0;
+}
+.manual-list li {
+  margin-bottom: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--fs-base);
+  line-height: var(--line-height-base);
+}
+
+.manual-tip {
+  background: var(--color-surface-alt);
+  padding: var(--space-3);
+  border-radius: var(--radius-input);
+  border-left: 3px solid var(--color-primary);
+  margin: var(--space-3) 0;
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+}

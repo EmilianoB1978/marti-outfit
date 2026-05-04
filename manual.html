@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>Aiuto - Marty Outfit</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>Aiuto</h1>
+    <span class="settings-header-spacer"></span>
+  </header>
+
+  <main class="settings-main">
+
+    <p class="settings-hint">
+      Tutto quello che puoi fare con Marty Outfit. Tap su una sezione per espanderla.
+    </p>
+
+    <!-- ===== Sezione 1: Aggiungere capi ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>👕 Aggiungere capi al guardaroba</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Per aggiungere un capo al tuo guardaroba:</p>
+        <ol class="manual-list">
+          <li>Tap sul pulsante <strong>+</strong> dorato in basso al centro</li>
+          <li>Scegli <strong>📸 Scatta foto</strong> per la fotocamera o <strong>🖼️ Galleria</strong> per le foto già fatte</li>
+          <li>L'app ridimensiona automaticamente la foto a max 1024 pixel per risparmiare spazio</li>
+          <li>Compila i tag (categoria, colore, stile, stagione, occasione) oppure usa l'AI</li>
+          <li>Aggiungi un <strong>prezzo</strong> opzionale per le statistiche cost-per-wear</li>
+          <li>Tap <strong>Salva</strong></li>
+        </ol>
+        <p class="manual-tip">💡 <strong>Tip</strong>: foto su sfondo uniforme (parete bianca, tavolo) funzionano meglio sia per l'AI sia per la rimozione sfondo dell'editor visuale.</p>
+        <p class="manual-tip">⚠️ Se l'iPhone salva foto in formato HEIC, Safari le converte automaticamente. Se hai problemi: <em>Impostazioni iPhone → Fotocamera → Formati → Più compatibile</em>.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 2: Analisi AI ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🤖 Analisi AI delle foto</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Quando aggiungi un capo, dopo aver caricato la foto compare il pulsante <strong>🤖 Analizza con AI</strong>.</p>
+        <p>L'AI (Claude Sonnet 4) guarda la foto e suggerisce automaticamente:</p>
+        <ul class="manual-list">
+          <li><strong>Categoria</strong> (top, bottom, scarpe, accessori, capospalla, completo)</li>
+          <li><strong>Colore principale</strong> in italiano (es. "blu navy")</li>
+          <li><strong>Stile</strong> (casual, elegante, sportivo, formale, streetwear)</li>
+          <li><strong>Stagioni adatte</strong> (può essere multipla)</li>
+          <li><strong>Occasioni d'uso</strong> suggerite</li>
+        </ul>
+        <p>I tag suggeriti dall'AI sono <strong>sempre modificabili</strong>: tu hai l'ultima parola.</p>
+        <p class="manual-tip">💰 <strong>Costo</strong>: ogni analisi costa circa €0,005 (mezzo centesimo). Non viene mai richiamata di nuovo per lo stesso capo: vale solo al primo upload.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 3: Generare outfit ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>✨ Generare outfit con l'AI</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Tap sull'icona <strong>✨</strong> nella nav inferiore per aprire la pagina Outfit.</p>
+        <ol class="manual-list">
+          <li>Scrivi l'<strong>occasione</strong> nel campo (es. "cena informale", "lavoro", "weekend al mare")</li>
+          <li>Tap <strong>✨ Genera outfit con AI</strong></li>
+          <li>Dopo qualche secondo l'AI propone <strong>2-3 outfit completi</strong> usando i capi del tuo guardaroba</li>
+          <li>Per ogni outfit puoi tappare <strong>⭐ Salva</strong> per conservarlo nei preferiti</li>
+        </ol>
+        <p>L'AI tiene conto di:</p>
+        <ul class="manual-list">
+          <li>Categoria di ogni capo (almeno top + bottom + scarpe quando possibile)</li>
+          <li>Stile e stagione adatti al contesto</li>
+          <li>Armonia di colori</li>
+        </ul>
+        <p class="manual-tip">💡 Più capi hai nel guardaroba, più variete l'AI può generare. Minimo 4-5 capi per outfit ragionevoli.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 4: Style Shuffle ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🎲 Style Shuffle (Sorprendimi)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Vuoi un outfit ma non hai voglia di pensarci? Tap sul pulsante dorato <strong>🎲 Sorprendimi</strong> nella pagina Outfit.</p>
+        <p>L'app pesca <strong>3 outfit casuali</strong> dal tuo guardaroba seguendo regole basilari:</p>
+        <ul class="manual-list">
+          <li>1 top + 1 bottom + 1 paio di scarpe</li>
+          <li>Oppure 1 completo + scarpe (se hai completi)</li>
+          <li>+ 0-1 accessorio random</li>
+        </ul>
+        <p>Vedi un'animazione slot-machine di 1 secondo, poi i 3 outfit si fissano. Se ti piace uno, tap <strong>⭐ Salva</strong> o <strong>✓ Indossato oggi</strong>.</p>
+        <p class="manual-tip">🎲 Differenza con l'AI: lo Shuffle è puramente random, NON ragiona su stile/stagione. È più veloce (istantaneo) e gratis (no chiamate API). Ottimo quando hai fretta o per ispirazione.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 5: Editor visuale ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🎨 Editor visuale drag &amp; drop</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>L'editor visuale ti fa creare composizioni outfit "alla Pinterest": trascini i capi su un canvas bianco, li ridimensioni, li ruoti.</p>
+        <p>Tap su <strong>🎨 Crea outfit visuale</strong> nella pagina Outfit.</p>
+        <p><strong>Prima volta che apri l'editor</strong>: scarica il motore di rimozione sfondo (~30 MB, una volta sola, poi funziona offline).</p>
+        <p>Come usarlo:</p>
+        <ol class="manual-list">
+          <li>Tap su un capo della strip in basso → l'app rimuove lo sfondo (5-10s) e lo posiziona al centro</li>
+          <li><strong>1 dito</strong> = trascini per spostarlo</li>
+          <li><strong>2 dita</strong> = pinch per scalare e/o ruotare</li>
+          <li><strong>Tap</strong> = selezioni il capo (compare un bordo dorato e una <strong>✕</strong> per eliminarlo)</li>
+          <li>Tap <strong>Salva</strong>, dai un nome → l'outfit visuale viene salvato come immagine PNG composita</li>
+        </ol>
+        <p class="manual-tip">⚠️ La rimozione sfondo funziona meglio con foto su sfondo <strong>uniforme</strong> (parete bianca, tavolo). Sfondi complessi possono lasciare aloni.</p>
+        <p class="manual-tip">💡 Una volta processato, il "ritaglio" del capo è salvato sul cloud. La prossima volta che lo aggiungi all'editor è istantaneo.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 6: Wear tracking ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📊 Wear tracking (quante volte indossi)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Marty traccia quante volte indossi ogni capo, così sai cosa usi davvero.</p>
+        <p><strong>Come marcare un capo come indossato</strong>:</p>
+        <ul class="manual-list">
+          <li><strong>Singolo capo</strong>: apri il modal del capo (tap sulla card) → tap <strong>✓ Indossato oggi</strong></li>
+          <li><strong>Outfit intero</strong>: nei card "Outfit salvati" tap <strong>✓ Indossato oggi</strong> → marca tutti i capi dell'outfit in un colpo</li>
+          <li>Anche dallo Style Shuffle puoi tappare <strong>✓ Indossato oggi</strong> sui 3 outfit pescati</li>
+        </ul>
+        <p>Sui card del guardaroba compare un badge <strong>👕 N</strong> con il numero di volte che hai indossato il capo.</p>
+        <p>Aprendo il modal del capo vedi:</p>
+        <ul class="manual-list">
+          <li>Quante volte l'hai indossato</li>
+          <li>Data ultima volta</li>
+        </ul>
+        <p class="manual-tip">💡 Combinato col campo <strong>Prezzo</strong>, ottieni il <strong>cost-per-wear</strong> nelle Statistiche: scopri quali capi sono i più convenienti (più li indossi, meno ti costa al singolo uso).</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 7: Capsule ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🎒 Capsule (collezioni tematiche)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Le <strong>capsule</strong> sono raccolte di capi raggruppate per tema. Esempi:</p>
+        <ul class="manual-list">
+          <li>"Vacanza Sicilia" — solo capi estivi e leggeri</li>
+          <li>"Lavoro inverno" — abiti formali e accessori da ufficio</li>
+          <li>"Smart working" — comodi ma decenti per video call</li>
+          <li>"Weekend a Milano" — outfit più curati per uscire</li>
+        </ul>
+        <p><strong>Come crearne una</strong>:</p>
+        <ol class="manual-list">
+          <li>Menu <strong>⋯</strong> in alto → <strong>🎒 Capsule</strong></li>
+          <li>Tap <strong>+</strong> per nuova capsule</li>
+          <li>Inserisci nome, scegli un'icona emoji e un colore di accento</li>
+          <li>Sei portato al dettaglio: tap sui capi del tuo guardaroba per aggiungerli/rimuoverli dalla capsule</li>
+          <li>Quando vuoi un outfit limitato a quella capsule: tap <strong>✨ Genera outfit con questa capsule</strong></li>
+        </ol>
+        <p class="manual-tip">💡 Una capsule è perfetta per <strong>preparare la valigia</strong> prima di un viaggio: aggiungi solo i capi che porti, e l'AI propone outfit usando solo quelli.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 8: Statistiche ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📊 Statistiche guardaroba</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Menu <strong>⋯</strong> → <strong>📊 Statistiche</strong>.</p>
+        <p>La dashboard ti mostra:</p>
+        <ul class="manual-list">
+          <li><strong>Capi totali</strong> nel guardaroba</li>
+          <li><strong>Valore totale</strong> (somma dei prezzi)</li>
+          <li><strong>Outfit salvati</strong></li>
+          <li><strong>Volte indossato</strong> (totale degli usi)</li>
+          <li><strong>Top 5 più indossati</strong></li>
+          <li><strong>Pezzi morti</strong>: capi mai indossati o non da 6+ mesi (considera di rivenderli o regalarli)</li>
+          <li><strong>Distribuzione per categoria</strong> (pie chart)</li>
+          <li><strong>Distribuzione per stile</strong> (pie chart)</li>
+          <li><strong>Cost-per-wear</strong>: ranking dei capi più convenienti per uso</li>
+        </ul>
+        <p class="manual-tip">💡 Per vedere il <strong>cost-per-wear</strong> serve aver compilato il campo <strong>Prezzo</strong> sui capi. Aggiungerlo retroattivamente è facile: apri il modal del capo, scrivi il prezzo, salva.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 9: Aspetto ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🎨 Personalizzare l'aspetto</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Menu <strong>⋯</strong> → <strong>🎨 Aspetto</strong>.</p>
+        <p>Personalizzi l'app in 6 dimensioni:</p>
+        <ul class="manual-list">
+          <li><strong>Temi</strong>: 10 preset (Light, Dark, Pastel Pink, Midnight, Sage, Mono, Warm Sunset, Y2K, Matcha, High Contrast). Toggle "Sync con OS" per seguire automaticamente light/dark di iOS</li>
+          <li><strong>Colori</strong>: 12 swatch quick-pick + color picker per primario, accento, sfondo, testo</li>
+          <li><strong>Forme</strong>: slider per la smussatura di pulsanti, card, input. Bordi sottili / spessi / niente</li>
+          <li><strong>Font</strong>: 5 famiglie (Sistema, Inter, Playfair Display, DM Sans, JetBrains Mono) + 3 dimensioni (Piccolo / Normale / Grande)</li>
+          <li><strong>Layout</strong>: densità (Compatta/Normale/Ampia) + colonne griglia capi (2/3/4) + velocità animazioni</li>
+          <li><strong>Backup</strong>: esporta il tuo tema in .json per portarlo su un altro dispositivo</li>
+        </ul>
+        <p class="manual-tip">💡 Tutto è <strong>persistente</strong>: le tue scelte restano anche dopo aver chiuso l'app. Salvate in localStorage del browser.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione 10: Domande frequenti ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>❓ Domande frequenti</span>
+      </button>
+      <div class="accordion-body" hidden>
+
+        <p><strong>Dove sono salvati i miei capi?</strong></p>
+        <p>Le foto su Firebase Storage (Google Cloud), i dati su Firestore (database NoSQL Google). Il piano gratuito Spark/Blaze copre ampiamente uso personale.</p>
+
+        <p><strong>I miei dati sono privati?</strong></p>
+        <p>Sì. Solo tu ci accedi tramite l'URL della tua app. Le foto sui server Google sono criptate at-rest e in-transit (HTTPS).</p>
+
+        <p><strong>Funziona offline?</strong></p>
+        <p>Sì per consultare il guardaroba già caricato (cache locale). Per aggiungere capi nuovi o generare outfit serve internet.</p>
+
+        <p><strong>Quanto consuma l'AI?</strong></p>
+        <p>Ogni analisi capo costa ~€0,005, ogni sessione di outfit ~€0,01. Per uso personale (es. 100 capi + 50 outfit/mese) parliamo di circa €1/mese sull'account Anthropic.</p>
+
+        <p><strong>Posso usarlo da più dispositivi?</strong></p>
+        <p>Sì. Apri lo stesso URL Marty Outfit da iPhone, iPad o desktop: i capi sono in cloud, sincronizzati istantaneamente.</p>
+
+        <p><strong>Cosa succede se cambio iPhone?</strong></p>
+        <p>Niente. I dati sono in cloud. Apri l'app sul nuovo telefono e troverai tutto.</p>
+
+        <p><strong>Posso cancellare un capo?</strong></p>
+        <p>Sì. Apri il modal del capo (tap sulla card) → 🗑️ Elimina capo. La foto e tutti i dati sono cancellati definitivamente, ma l'outfit salvato che lo includeva resta visibile (con il capo mancante).</p>
+
+      </div>
+    </div>
+
+    <p class="settings-hint" style="margin-top: var(--space-7); text-align: center;">
+      Marty Outfit <span id="version-info"></span>
+    </p>
+
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module">
+    import * as Theme from "./js/theme/manager.js";
+    Theme.init();
+
+    // Accordion: gestisco apertura/chiusura
+    document.querySelectorAll(".accordion-header").forEach(header => {
+      header.addEventListener("click", () => {
+        const expanded = header.getAttribute("aria-expanded") === "true";
+        const body = header.nextElementSibling;
+        header.setAttribute("aria-expanded", !expanded);
+        if (expanded) {
+          body.hidden = true;
+        } else {
+          body.hidden = false;
+        }
+      });
+    });
+
+    // Versione (placeholder per ora; quando avrai un build pipeline puoi iniettarla)
+    document.getElementById("version-info").textContent = "v0.4 · Fase 4";
+  </script>
+</body>
+</html>

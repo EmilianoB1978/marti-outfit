@@ -254,6 +254,40 @@
       </div>
     </div>
 
+    <!-- ===== Sezione: Dati demo ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🧪 Carica capi demo per esplorare l'app</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Per provare l'app senza dover prima fotografare 30 capi, puoi caricare un set demo pre-configurato.</p>
+
+        <p><strong>Come fare</strong>:</p>
+        <ol class="manual-list">
+          <li>Menu <strong>⋯</strong> → <strong>🎨 Aspetto</strong> → tab <strong>💾 Backup</strong></li>
+          <li>Sezione "Dati demo" → tap <strong>🧪 Carica 30 capi demo</strong></li>
+          <li>Aspetta 5-10 secondi (creazione di 30 record Firestore)</li>
+          <li>Torna al guardaroba: vedi i 30 capi popolati</li>
+        </ol>
+
+        <p><strong>Cosa contengono i demo</strong>:</p>
+        <ul class="manual-list">
+          <li>Mix realistico: 9 top, 6 bottom, 5 scarpe, 4 capospalla, 4 accessori, 2 completi</li>
+          <li>Foto reali da Unsplash (CDN pubblico, gratis, esterne al tuo Storage)</li>
+          <li>Prezzi realistici (per testare cost-per-wear nelle Statistiche)</li>
+          <li>Link prodotto fittizi su domini reali (Zara, H&M, Levi's, ecc.). Cliccandoli vedrai un 404 — perfetto per testare l'alert scadenza link</li>
+          <li>Alcuni capi hanno <strong>link_added_at di 200+ giorni fa</strong>: aprendoli vedrai subito i banner rossi di "Link scaduto"</li>
+        </ul>
+
+        <p><strong>Come rimuoverli</strong>:</p>
+        <p>Stessa pagina → bottone <strong>🗑️ Rimuovi tutti i demo</strong>. Cancella in un colpo solo i capi marcati <code>is_demo:true</code>. <strong>I tuoi capi reali NON vengono toccati</strong> (a meno che tu non abbia per caso aggiunto manualmente quel campo).</p>
+
+        <p class="manual-tip">💡 <strong>Foto esterne</strong>: i capi demo hanno foto Unsplash, non file nel tuo Firebase Storage. Quindi NON consumano la tua quota Storage. Quando li elimini scompaiono solo i record Firestore.</p>
+
+        <p class="manual-tip">⚠️ <strong>Editor visuale e demo</strong>: l'editor drag&drop con rimozione sfondo funziona anche sui demo, ma la prima rimozione di sfondo crea un cutout PNG nel TUO Storage. Se rimuovi il demo dopo aver editato, il cutout resta orfano (~50 KB). Cleanup manuale dal Firebase Console se ti dà fastidio.</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Link prodotto + scadenza ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

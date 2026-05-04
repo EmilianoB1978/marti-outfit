@@ -9,6 +9,7 @@
 
 import * as Theme from "./theme/manager.js";
 import * as Weather from "./weather.js";
+import * as DemoLoader from "./demo-loader.js";
 
 // Inizializzo il theme manager (legge localStorage, applica al documento)
 Theme.init();
@@ -335,6 +336,77 @@ function initBackup() {
     Theme.reset();
     toast("Tutto resettato al tema Light di default", "success");
   });
+
+  // ============================================================================
+  // Demo data: load / remove / count
+  // ============================================================================
+  const btnLoad = document.getElementById("btn-load-demo");
+  const btnRemove = document.getElementById("btn-remove-demo");
+  const statusRow = document.getElementById("demo-status");
+  const countEl = document.getElementById("demo-count");
+
+  async function syncDemoStatus() {
+    try {
+      const count = await DemoLoader.countDemo();
+      if (count > 0) {
+        statusRow.classList.remove("hidden");
+        countEl.textContent = `${count} capi demo nel guardaroba`;
+        btnRemove.classList.remove("hidden");
+        btnLoad.disabled = true;
+        btnLoad.textContent = "✓ Demo già caricati";
+      } else {
+        statusRow.classList.add("hidden");
+        btnRemove.classList.add("hidden");
+        btnLoad.disabled = false;
+        btnLoad.textContent = "🧪 Carica 30 capi demo";
+      }
+    } catch (err) {
+      console.warn("Demo count failed:", err);
+    }
+  }
+
+  btnLoad.addEventListener("click", async () => {
+    if (!confirm("Caricare 30 capi demo nel tuo guardaroba? Potrai rimuoverli in qualsiasi momento.")) return;
+    btnLoad.disabled = true;
+    btnLoad.textContent = "⏳ Caricamento...";
+    try {
+      const r = await DemoLoader.loadDemo((cur, tot) => {
+        btnLoad.textContent = `⏳ ${cur}/${tot}...`;
+      });
+      if (r.alreadyLoaded) {
+        toast("Demo già presenti", "warning");
+      } else {
+        toast(`Caricati ${r.added} capi demo`, "success");
+      }
+      syncDemoStatus();
+    } catch (err) {
+      console.error(err);
+      toast("Errore caricamento: " + err.message, "error");
+      btnLoad.disabled = false;
+      btnLoad.textContent = "🧪 Carica 30 capi demo";
+    }
+  });
+
+  btnRemove.addEventListener("click", async () => {
+    if (!confirm("Rimuovere tutti i capi demo dal guardaroba? Operazione irreversibile (i capi reali non vengono toccati).")) return;
+    btnRemove.disabled = true;
+    btnRemove.textContent = "⏳ Rimozione...";
+    try {
+      const r = await DemoLoader.removeDemo((cur, tot) => {
+        btnRemove.textContent = `⏳ ${cur}/${tot}...`;
+      });
+      toast(`Rimossi ${r.removed} capi demo`, "success");
+      syncDemoStatus();
+    } catch (err) {
+      console.error(err);
+      toast("Errore rimozione: " + err.message, "error");
+    } finally {
+      btnRemove.disabled = false;
+      btnRemove.textContent = "🗑️ Rimuovi tutti i demo";
+    }
+  });
+
+  syncDemoStatus();
 }
 
 // =============================================================================

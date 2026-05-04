@@ -91,9 +91,10 @@ export async function analyzeGarment(base64Image) {
  * Manda al Worker SOLO i metadati (no foto): risparmia token e tempo.
  * @param {string} context - es. "cena informale"
  * @param {Array} items - array di capi { id, category, color, style, season, occasion }
+ * @param {string|null} weather - optional, es. "Meteo oggi: Pioggia leggera, 8-14°C"
  * @returns {Promise<Array<{title, description, item_ids}>>}
  */
-export async function suggestOutfits(context, items) {
+export async function suggestOutfits(context, items, weather = null) {
   if (!isWorkerConfigured) {
     throw new Error("Cloudflare Worker non configurato. Modifica js/claude-api.js");
   }
@@ -111,7 +112,7 @@ export async function suggestOutfits(context, items) {
   const response = await fetch(`${WORKER_URL}/suggest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ context, items: slim })
+    body: JSON.stringify({ context, items: slim, weather })
   });
 
   if (!response.ok) {

@@ -8,6 +8,7 @@
 // =============================================================================
 
 import * as Theme from "./theme/manager.js";
+import * as Weather from "./weather.js";
 
 // Inizializzo il theme manager (legge localStorage, applica al documento)
 Theme.init();
@@ -337,6 +338,90 @@ function initBackup() {
 }
 
 // =============================================================================
+// TAB 7: METEO (location + forecast preview)
+// =============================================================================
+function initWeather() {
+  const btnGeo = document.getElementById("btn-use-geo");
+  const btnCity = document.getElementById("btn-set-city");
+  const btnClear = document.getElementById("btn-clear-weather");
+  const inputCity = document.getElementById("input-city");
+  const status = document.getElementById("weather-status");
+
+  async function syncStatus() {
+    const loc = Weather.getCachedLocation();
+    if (!loc) {
+      status.classList.add("hidden");
+      btnClear.classList.add("hidden");
+      return;
+    }
+
+    btnClear.classList.remove("hidden");
+    try {
+      const forecast = await Weather.getForecast(loc);
+      const desc = Weather.describeWeatherCode(forecast.daily.weatherCode);
+      status.innerHTML = `
+        <span class="weather-emoji">${desc.emoji}</span>
+        <div class="weather-info">
+          <div class="weather-temp">${forecast.daily.min.toFixed(0)}° / ${forecast.daily.max.toFixed(0)}°C</div>
+          <div class="weather-desc">${desc.label} · ${escapeHtml(loc.label)}</div>
+        </div>
+      `;
+      status.classList.remove("hidden");
+    } catch (err) {
+      status.innerHTML = `<div style="padding:var(--space-3); color: var(--color-error)">Errore meteo: ${err.message}</div>`;
+      status.classList.remove("hidden");
+    }
+  }
+
+  btnGeo.addEventListener("click", async () => {
+    btnGeo.disabled = true;
+    btnGeo.textContent = "...";
+    try {
+      const loc = await Weather.requestGeolocation();
+      Weather.setCachedLocation(loc);
+      toast("Posizione salvata", "success");
+      syncStatus();
+    } catch (err) {
+      toast("Geolocalizzazione fallita: " + err.message, "error");
+    } finally {
+      btnGeo.disabled = false;
+      btnGeo.textContent = "📍 Attiva";
+    }
+  });
+
+  btnCity.addEventListener("click", async () => {
+    const city = inputCity.value.trim();
+    if (!city) return;
+    btnCity.disabled = true;
+    try {
+      const loc = await Weather.geocode(city);
+      Weather.setCachedLocation(loc);
+      toast(`Posizione: ${loc.label}`, "success");
+      inputCity.value = "";
+      syncStatus();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      btnCity.disabled = false;
+    }
+  });
+
+  btnClear.addEventListener("click", () => {
+    Weather.clearCachedLocation();
+    toast("Posizione rimossa", "success");
+    syncStatus();
+  });
+
+  syncStatus();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+// =============================================================================
 // Boot
 // =============================================================================
 document.addEventListener("DOMContentLoaded", () => {
@@ -346,5 +431,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initShapes();
   initTypo();
   initLayout();
+  initWeather();
   initBackup();
 });

@@ -7,6 +7,7 @@ import * as Wardrobe from "./wardrobe.js";
 import * as Outfit from "./outfit.js";
 import * as Claude from "./claude-api.js";
 import * as Theme from "./theme/manager.js";
+import * as Weather from "./weather.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
@@ -413,10 +414,22 @@ async function generateOutfit() {
   btn.textContent = "✨ Generazione...";
 
   try {
-    const outfits = await Claude.suggestOutfits(context, state.items);
+    // Recupero il meteo se l'utente ha attivato la posizione (Settings → Meteo)
+    let weatherCtx = null;
+    const loc = Weather.getCachedLocation();
+    if (loc) {
+      try {
+        const forecast = await Weather.getForecast(loc);
+        weatherCtx = Weather.buildWeatherContext(forecast);
+      } catch (err) {
+        console.warn("Forecast non disponibile, procedo senza:", err);
+      }
+    }
+
+    const outfits = await Claude.suggestOutfits(context, state.items, weatherCtx);
     state.currentOutfits = outfits.map(o => ({ ...o, context }));
     renderCurrentOutfits();
-    toast(`${outfits.length} outfit generati`, "success");
+    toast(`${outfits.length} outfit generati${weatherCtx ? " (meteo incluso)" : ""}`, "success");
   } catch (err) {
     console.error("Errore generazione outfit:", err);
     toast("Errore generazione: " + err.message, "error");

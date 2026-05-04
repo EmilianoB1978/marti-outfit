@@ -31,13 +31,13 @@ const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO 
 
 Rispondi SOLO con il JSON, niente markdown, niente backticks.`;
 
-// Prompt per outfit: input = lista capi + contesto
-function buildOutfitPrompt(context, items) {
+// Prompt per outfit: input = lista capi + contesto + meteo opzionale
+function buildOutfitPrompt(context, items, weather) {
   return `Sei uno stilista personale. Ho questi capi nel guardaroba:
 
 ${items.map(it => `- ID:${it.id} | ${it.category || '?'} | ${it.color || '?'} | ${it.style || '?'} | stagioni: ${(it.season || []).join('/') || '?'} | occasione: ${it.occasion || '?'}`).join('\n')}
 
-Suggeriscimi 2-3 outfit COMPLETI per: "${context}".
+Suggeriscimi 2-3 outfit COMPLETI per: "${context}".${weather ? '\n\n' + weather + ' Considera questo per la scelta dei capi (es. con pioggia evita scarpe in tela, con caldo preferisci tessuti leggeri).' : ''}
 
 Regole:
 - Ogni outfit DEVE includere almeno un top + un bottom (oppure un completo) + scarpe se disponibili.
@@ -146,13 +146,13 @@ async function handleAnalyze(req, env, cors) {
 // Endpoint: POST /suggest
 // =============================================================================
 async function handleSuggest(req, env, cors) {
-  const { context, items } = await req.json();
+  const { context, items, weather } = await req.json();
   if (!context) return errorResponse("Campo 'context' mancante", 400, cors);
   if (!Array.isArray(items) || items.length === 0) {
     return errorResponse("Campo 'items' mancante o vuoto", 400, cors);
   }
 
-  const prompt = buildOutfitPrompt(context, items);
+  const prompt = buildOutfitPrompt(context, items, weather);
 
   const claudeRes = await fetch(ANTHROPIC_API, {
     method: "POST",

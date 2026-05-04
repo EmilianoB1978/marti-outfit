@@ -35,6 +35,7 @@
     <button class="tab" data-tab="shapes">📐 Forme</button>
     <button class="tab" data-tab="typo">🔤 Font</button>
     <button class="tab" data-tab="layout">📱 Layout</button>
+    <button class="tab" data-tab="weather">🌤️ Meteo</button>
     <button class="tab" data-tab="backup">💾 Backup</button>
   </nav>
 
@@ -212,7 +213,43 @@
     </section>
 
     <!-- ==================================================================
-         TAB 6: BACKUP
+         TAB 6: METEO
+         ================================================================== -->
+    <section id="tab-weather" class="settings-tab-panel">
+      <h2 class="settings-section-title">Posizione</h2>
+      <p class="settings-hint">
+        Quando attiva, l'app passa il meteo del giorno all'AI per generare outfit più adatti
+        (es. con pioggia evita scarpe in tela).
+      </p>
+
+      <div id="weather-status" class="weather-status hidden"></div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-title">Usa la mia posizione</div>
+          <div class="settings-row-sub">Geolocalizzazione del browser (autorizzazione richiesta)</div>
+        </div>
+        <button class="btn btn--secondary btn--sm" id="btn-use-geo">📍 Attiva</button>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-title">Inserisci città</div>
+          <div class="settings-row-sub">Nome città (es. "Roma", "Milano")</div>
+        </div>
+      </div>
+      <div style="display:flex; gap: var(--space-2); margin-top: var(--space-2);">
+        <input type="text" id="input-city" class="input" placeholder="es. Roma" style="flex:1" />
+        <button class="btn btn--primary btn--sm" id="btn-set-city">Imposta</button>
+      </div>
+
+      <button id="btn-clear-weather" class="btn btn--ghost btn--block hidden" style="margin-top:var(--space-4)">
+        ↺ Rimuovi posizione
+      </button>
+    </section>
+
+    <!-- ==================================================================
+         TAB 7: BACKUP
          ================================================================== -->
     <section id="tab-backup" class="settings-tab-panel">
 

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>Calendario - Marty Outfit</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>Calendario</h1>
+    <span class="settings-header-spacer"></span>
+  </header>
+
+  <main class="settings-main">
+
+    <!-- Mese corrente + nav -->
+    <div class="cal-month-nav">
+      <button class="btn-icon" id="btn-prev-month" aria-label="Mese precedente">‹</button>
+      <div class="cal-month-name" id="cal-month-name">—</div>
+      <button class="btn-icon" id="btn-next-month" aria-label="Mese successivo">›</button>
+    </div>
+
+    <!-- Meteo (se attivato) -->
+    <div id="weather-banner" class="weather-banner hidden"></div>
+
+    <!-- Griglia giorni della settimana -->
+    <div class="cal-weekdays">
+      <div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div>
+    </div>
+
+    <!-- Griglia giorni del mese -->
+    <div id="cal-grid" class="cal-grid"></div>
+
+    <p class="settings-hint" style="margin-top: var(--space-5);">
+      Tap su un giorno per assegnare un outfit. Il pallino dorato indica i giorni con outfit pianificato; verde i giorni che hai indossato.
+    </p>
+
+  </main>
+
+  <!-- Modal: assegnazione outfit a una data -->
+  <div id="modal-assign" class="modal hidden">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-cancel-assign">✕</button>
+        <h2 id="assign-title">Outfit del giorno</h2>
+        <button class="btn-text" id="btn-save-assign">Salva</button>
+      </header>
+      <div class="modal-body">
+
+        <div id="assign-current" class="assign-current hidden"></div>
+
+        <h3 class="settings-section-title" style="margin-top:0">Scegli un outfit</h3>
+        <div id="assign-outfit-list" class="ranked-list"></div>
+
+        <button id="btn-remove-assign" class="btn btn--danger btn--block hidden" style="margin-top:var(--space-4)">
+          🗑️ Rimuovi pianificazione
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/calendar.js"></script>
+</body>
+</html>

@@ -743,3 +743,160 @@ body.editor-page {
   font-size: var(--fs-sm);
   color: var(--color-text);
 }
+
+/* ============================================================================
+   Calendario outfit
+   ============================================================================ */
+.cal-month-nav {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+.cal-month-name {
+  text-align: center;
+  font-size: var(--fs-md);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-heading);
+  text-transform: capitalize;
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: var(--space-2);
+}
+.cal-weekdays > div {
+  text-align: center;
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-cell {
+  aspect-ratio: 1;
+  background: var(--color-surface);
+  border: 2px solid transparent;
+  border-radius: var(--radius-input);
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: var(--space-1);
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+  overflow: hidden;
+  transition: transform var(--animation-speed) var(--animation-easing);
+}
+.cal-cell:active { transform: scale(0.95); }
+.cal-cell-empty {
+  background: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+.cal-cell.is-today {
+  border-color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+.cal-day-num {
+  font-size: var(--fs-xs);
+  font-weight: var(--font-weight-medium);
+  position: relative;
+  z-index: 2;
+  background: var(--color-bg);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.cal-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  z-index: 1;
+}
+.cal-cell.has-entry { border-color: var(--color-primary); }
+.cal-cell.is-worn { border-color: var(--color-success); }
+
+.cal-marker {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  z-index: 2;
+}
+.cal-marker-planned { background: var(--color-primary); }
+.cal-marker-worn { background: var(--color-success); }
+
+/* Modal assignment */
+.assign-current {
+  background: var(--color-surface);
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-4);
+}
+.assign-current-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  margin-bottom: var(--space-1);
+}
+
+.assign-row {
+  text-align: left;
+  width: 100%;
+  background: var(--color-surface);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.assign-row.is-current { background: var(--color-surface-alt); }
+.assign-row.is-selected { border-color: var(--color-primary); }
+
+/* ============================================================================
+   Weather banner
+   ============================================================================ */
+.weather-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: linear-gradient(135deg, var(--color-info), color-mix(in srgb, var(--color-info), white 20%));
+  color: white;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-4);
+}
+.weather-emoji { font-size: 36px; }
+.weather-info { flex: 1; }
+.weather-temp {
+  font-size: var(--fs-md);
+  font-weight: var(--font-weight-bold);
+}
+.weather-desc {
+  font-size: var(--fs-sm);
+  opacity: 0.9;
+  text-transform: capitalize;
+}
+
+/* Banner status nella settings tab Meteo */
+.weather-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface-alt);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+}
+.weather-status .weather-emoji { font-size: 32px; }

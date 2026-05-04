@@ -254,6 +254,45 @@
       </div>
     </div>
 
+    <!-- ===== Sezione: Link prodotto + scadenza ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🔗 Link prodotto e avviso scadenza</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Per ogni capo puoi salvare il <strong>link al prodotto</strong> (es. URL Amazon, brand store, marketplace). L'app traccia da quando l'hai inserito e ti avvisa quando il link è probabilmente scaduto.</p>
+
+        <p><strong>Aggiungere un link a un capo</strong>:</p>
+        <ol class="manual-list">
+          <li>Apri il modal del capo (tap sulla card o "+ Nuovo")</li>
+          <li>Scorri fino al campo <strong>Link prodotto</strong></li>
+          <li>Incolla l'URL (deve iniziare con <code>https://</code>)</li>
+          <li>Compare un piccolo bottone <strong>🔗</strong> per aprire il link in una scheda nuova</li>
+          <li>Tap <strong>Salva</strong></li>
+        </ol>
+
+        <p><strong>Stato del link nel modal</strong>:</p>
+        <ul class="manual-list">
+          <li><strong>Verde</strong> ✓ — Aggiunto da poco, ancora valido per N giorni</li>
+          <li><strong>Giallo</strong> ⏰ — In scadenza (entro 14 giorni dalla soglia)</li>
+          <li><strong>Rosso</strong> ⚠️ — Probabilmente scaduto: aggiorna o rimuovi</li>
+        </ul>
+
+        <p><strong>Indicatore sul guardaroba</strong>: i capi con link mostrano un'icona 🔗 in alto a sinistra del card. Se il link è scaduto, l'icona diventa ⚠️ rossa.</p>
+
+        <p><strong>Configurare la durata</strong>:</p>
+        <ol class="manual-list">
+          <li>Menu <strong>⋯</strong> → <strong>🎨 Aspetto</strong> → tab <strong>🔗 Link</strong></li>
+          <li>Sposta lo slider tra 30 giorni e 2 anni (default 180 = 6 mesi)</li>
+          <li>La durata si applica a TUTTI i link del guardaroba</li>
+        </ol>
+
+        <p class="manual-tip">💡 <strong>Quando viene aggiornata la data</strong>: ogni volta che cambi il link nel campo (anche solo correggendo un typo), il timestamp viene resettato a oggi. Se il link non lo tocchi, la data originale resta.</p>
+
+        <p class="manual-tip">⚠️ <strong>L'app non verifica davvero se il link funziona</strong>: l'avviso è basato solo sul tempo trascorso. Anche un link valido per anni viene marcato "scaduto" se passa la soglia. È un promemoria per ricontrollarlo, non un test reale.</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Categorie e tag ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

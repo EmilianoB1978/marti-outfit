@@ -80,6 +80,70 @@ async function boot() {
 }
 
 // =============================================================================
+// Link prodotto: stato basato su durata configurata in Settings
+// Ritorna: 'none' | 'ok' | 'warning' | 'expired'
+// =============================================================================
+function computeLinkStatus(item) {
+  if (!item.link_url || !item.link_added_at) return "none";
+
+  const prefs = Theme.getPreferences ? Theme.getPreferences() : { linkDurationDays: 180 };
+  const days = prefs.linkDurationDays || 180;
+
+  const added = new Date(item.link_added_at).getTime();
+  const expires = added + days * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const remaining = expires - now;
+
+  if (remaining <= 0) return "expired";
+  if (remaining <= 14 * 24 * 60 * 60 * 1000) return "warning";  // <= 14 giorni
+  return "ok";
+}
+
+// Render del banner status del link nel modal capo
+function renderLinkStatus(item) {
+  const wrap = document.getElementById("link-status");
+  const openBtn = document.getElementById("btn-open-link");
+
+  if (!item || !item.link_url) {
+    wrap.classList.add("hidden");
+    openBtn.classList.add("hidden");
+    return;
+  }
+
+  // Mostra il bottone "apri" se c'e' un URL valido nel form
+  openBtn.classList.remove("hidden");
+
+  const status = computeLinkStatus(item);
+  if (status === "none") {
+    wrap.classList.add("hidden");
+    return;
+  }
+
+  const prefs = Theme.getPreferences();
+  const days = prefs.linkDurationDays || 180;
+  const added = new Date(item.link_added_at);
+  const addedFmt = added.toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" });
+  const remainingDays = Math.ceil((added.getTime() + days * 86400000 - Date.now()) / 86400000);
+
+  let cls = "link-status-ok";
+  let text = "";
+  if (status === "expired") {
+    cls = "link-status-expired";
+    text = `⚠️ Link probabilmente scaduto · aggiunto il ${addedFmt} · aggiorna o rimuovi`;
+  } else if (status === "warning") {
+    cls = "link-status-warning";
+    text = `⏰ In scadenza · ${remainingDays} giorni rimanenti · aggiunto il ${addedFmt}`;
+  } else {
+    cls = "link-status-ok";
+    text = `✓ Aggiunto il ${addedFmt} · ancora valido per ${remainingDays} giorni`;
+  }
+
+  wrap.className = "link-status " + cls;
+  wrap.textContent = text;
+  wrap.classList.remove("hidden");
+}
+
+// =============================================================================
 // Popola select e datalist dalle tassonomie utente (con marker "+ Nuovo...")
 // =============================================================================
 function populateTaxonomyOptions() {
@@ -220,12 +284,17 @@ function renderWardrobe() {
 
   grid.innerHTML = filtered.map(item => {
     const wearCount = item.wear_count || 0;
+    const linkStatus = computeLinkStatus(item);
+    let linkBadge = "";
+    if (linkStatus === "expired") linkBadge = `<div class="item-link-badge is-expired" title="Link scaduto">⚠️</div>`;
+    else if (linkStatus === "ok" || linkStatus === "warning") linkBadge = `<div class="item-link-badge" title="Link prodotto">🔗</div>`;
     return `
     <div class="item-card" data-id="${item.id}">
       ${item.photo_url
         ? `<img class="item-photo" src="${item.photo_url}" alt="" loading="lazy" />`
         : `<div class="item-photo" style="display:flex;align-items:center;justify-content:center;font-size:48px;opacity:0.3">👕</div>`
       }
+      ${linkBadge}
       ${wearCount > 0 ? `<div class="item-wear-badge">👕 ${wearCount}</div>` : ''}
       <div class="item-info">
         <div class="item-category">${item.category || "—"}</div>
@@ -373,7 +442,7 @@ function openAddItem() {
   // Reset form (tutti i campi)
   ["field-category", "field-subcategory", "field-color", "field-color-secondary",
    "field-pattern", "field-material", "field-style", "field-occasion",
-   "field-notes", "field-price"].forEach(id => {
+   "field-notes", "field-price", "field-link"].forEach(id => {
     document.getElementById(id).value = "";
   });
   Array.from(document.getElementById("field-season").options).forEach(o => o.selected = false);
@@ -381,6 +450,10 @@ function openAddItem() {
   // Reset slider formality (0 = non specificato)
   document.getElementById("field-formality").value = 0;
   document.getElementById("formality-value").textContent = "—";
+
+  // Reset link status (nascondi)
+  document.getElementById("link-status").classList.add("hidden");
+  document.getElementById("btn-open-link").classList.add("hidden");
 
   document.getElementById("modal-item").classList.remove("hidden");
 }
@@ -409,12 +482,16 @@ function openEditItem(id) {
   document.getElementById("field-occasion").value = item.occasion || "";
   document.getElementById("field-notes").value = item.notes || "";
   document.getElementById("field-price").value = item.price ?? "";
+  document.getElementById("field-link").value = item.link_url || "";
 
   // Slider formality (1-5, oppure 0 se non specificato)
   const formality = item.formality || 0;
   document.getElementById("field-formality").value = formality;
   document.getElementById("formality-value").textContent =
     formality === 0 ? "—" : `${formality}/5`;
+
+  // Link status (banner con stato scadenza)
+  renderLinkStatus(item);
 
   const seasons = Array.isArray(item.season) ? item.season : [];
   Array.from(document.getElementById("field-season").options).forEach(o => {
@@ -577,6 +654,23 @@ async function saveItem() {
   const formality = formalityRaw >= 1 && formalityRaw <= 5 ? formalityRaw : null;
   const colorPrimary = document.getElementById("field-color").value.trim() || null;
 
+  const newLink = document.getElementById("field-link").value.trim() || null;
+
+  // Determino se aggiornare il timestamp del link:
+  // - se l'utente aggiunge/modifica il link rispetto a prima -> nuovo timestamp
+  // - se non l'ha toccato -> mantengo il vecchio timestamp
+  let linkAddedAt = null;
+  if (newLink) {
+    const existing = state.editingId ? state.items.find(i => i.id === state.editingId) : null;
+    if (existing && existing.link_url === newLink && existing.link_added_at) {
+      // Stesso link di prima → mantengo timestamp originale
+      linkAddedAt = existing.link_added_at;
+    } else {
+      // Link nuovo o cambiato → timestamp adesso
+      linkAddedAt = new Date().toISOString();
+    }
+  }
+
   const data = {
     category: document.getElementById("field-category").value || null,
     subcategory: document.getElementById("field-subcategory").value.trim() || null,
@@ -591,6 +685,8 @@ async function saveItem() {
     occasion: document.getElementById("field-occasion").value.trim() || null,
     notes: document.getElementById("field-notes").value.trim() || null,
     price: (price !== null && !isNaN(price)) ? price : null,
+    link_url: newLink,
+    link_added_at: linkAddedAt,
   };
 
   // Filter via __add_new__ se rimasto per qualche motivo
@@ -1062,6 +1158,22 @@ document.addEventListener("DOMContentLoaded", () => {
         handleSelectAddNew(selectId, taxonomy);
       }
     });
+  });
+
+  // Link prodotto: bottone "Apri" e visibilità reattiva
+  const fieldLink = document.getElementById("field-link");
+  const btnOpenLink = document.getElementById("btn-open-link");
+  fieldLink.addEventListener("input", () => {
+    const url = fieldLink.value.trim();
+    if (url && /^https?:\/\//i.test(url)) {
+      btnOpenLink.classList.remove("hidden");
+    } else {
+      btnOpenLink.classList.add("hidden");
+    }
+  });
+  btnOpenLink.addEventListener("click", () => {
+    const url = fieldLink.value.trim();
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
   });
 
   // Outfit

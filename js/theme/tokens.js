@@ -345,4 +345,6 @@ export const defaultPreferences = {
   animationSpeed: "normal",   // "none" | "slow" | "normal" | "fast"
   showLabels:   true,         // mostra etichette icone in nav
   customOverrides: {},        // override manuali sui singoli token (color picker)
+  // Behavior preferences
+  linkDurationDays: 180,      // 30..720 giorni - dopo questa soglia, alert scadenza link
 };

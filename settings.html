@@ -36,6 +36,7 @@
     <button class="tab" data-tab="typo">🔤 Font</button>
     <button class="tab" data-tab="layout">📱 Layout</button>
     <button class="tab" data-tab="weather">🌤️ Meteo</button>
+    <button class="tab" data-tab="links">🔗 Link</button>
     <button class="tab" data-tab="backup">💾 Backup</button>
   </nav>
 
@@ -246,6 +247,32 @@
       <button id="btn-clear-weather" class="btn btn--ghost btn--block hidden" style="margin-top:var(--space-4)">
         ↺ Rimuovi posizione
       </button>
+    </section>
+
+    <!-- ==================================================================
+         TAB: LINK (durata avviso scadenza)
+         ================================================================== -->
+    <section id="tab-links" class="settings-tab-panel">
+      <h2 class="settings-section-title">Link prodotti</h2>
+      <p class="settings-hint">
+        Quando aggiungi un link prodotto a un capo (es. URL Amazon o brand store),
+        l'app traccia da quanto tempo l'hai inserito. Dopo la durata che scegli qui,
+        un alert ti avviserà che il link potrebbe non essere più valido.
+      </p>
+
+      <div class="settings-row">
+        <label for="slider-link-duration" class="settings-row-title">Durata avviso (giorni)</label>
+        <span class="settings-value" id="value-link-duration">180</span>
+      </div>
+      <input type="range" id="slider-link-duration" class="slider" min="30" max="720" step="30" />
+      <div class="formality-scale" style="grid-template-columns: repeat(5, 1fr); margin-top: var(--space-1);">
+        <span>30g</span><span>3 mesi</span><span>6 mesi</span><span>1 anno</span><span>2 anni</span>
+      </div>
+
+      <p class="settings-hint" style="margin-top: var(--space-4);">
+        L'avviso compare quando apri un capo e diventa rosso oltre la scadenza.
+        Sui card del guardaroba un'icona 🔗 indica i capi con link, ⚠️ se scaduto.
+      </p>
     </section>
 
     <!-- ==================================================================

@@ -1215,6 +1215,61 @@ body.editor-page {
   font-size: var(--fs-base);
 }
 
+/* ============================================================================
+   Link prodotto field + status banner
+   ============================================================================ */
+.link-field-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.link-field-row input { flex: 1; }
+.link-field-row .btn--sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-md);
+  flex-shrink: 0;
+}
+
+.link-status {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-input);
+  font-size: var(--fs-sm);
+  border-left: 3px solid var(--color-border);
+}
+.link-status-ok {
+  background: color-mix(in srgb, var(--color-success), transparent 88%);
+  border-left-color: var(--color-success);
+  color: var(--color-text);
+}
+.link-status-warning {
+  background: color-mix(in srgb, var(--color-warning), transparent 85%);
+  border-left-color: var(--color-warning);
+  color: var(--color-text);
+}
+.link-status-expired {
+  background: color-mix(in srgb, var(--color-error), transparent 85%);
+  border-left-color: var(--color-error);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Badge link sui card del guardaroba */
+.item-link-badge {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-xs);
+  pointer-events: none;
+}
+.item-link-badge.is-expired {
+  background: var(--color-error);
+}
+
 /* Banner status nella settings tab Meteo */
 .weather-status {
   display: flex;

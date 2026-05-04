@@ -11,7 +11,7 @@ import {
 
 const COLLECTION = "items";
 
-// Default per i campi opzionali aggiunti nel tempo (Fase 3 + Fase 6)
+// Default per i campi opzionali aggiunti nel tempo (Fase 3, 6, link)
 // Lazy migration: applicati in memoria al fetch, scritti su DB solo
 // quando l'utente modifica esplicitamente.
 const ITEM_DEFAULTS = {
@@ -29,6 +29,9 @@ const ITEM_DEFAULTS = {
   formality:      null,  // 1-5
   cutout_url:     null,  // gia' usato da editor visuale (Fase 4)
   cutout_path:    null,
+  // Link prodotto + alert scadenza
+  link_url:       null,
+  link_added_at:  null,  // ISO string di quando il link e' stato impostato
 };
 
 /** Applica i default a un capo letto dal DB. NON scrive su DB (lazy). */
@@ -98,6 +101,9 @@ export async function createItem(data) {
     pattern:        data.pattern  || null,
     material:       data.material || null,
     formality:      data.formality ?? null,
+    // Link prodotto
+    link_url:       data.link_url || null,
+    link_added_at:  data.link_url ? new Date().toISOString() : null,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp()
   };

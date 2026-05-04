@@ -415,6 +415,43 @@ function initWeather() {
   syncStatus();
 }
 
+// =============================================================================
+// TAB: LINK (durata avviso scadenza)
+// =============================================================================
+function initLinks() {
+  const slider = document.getElementById("slider-link-duration");
+  const display = document.getElementById("value-link-duration");
+
+  function formatDuration(days) {
+    if (days >= 365) {
+      const years = Math.round(days / 365 * 10) / 10;
+      return `${days} g (${years} anni)`;
+    }
+    if (days >= 30) {
+      const months = Math.round(days / 30);
+      return `${days} g (${months} mesi)`;
+    }
+    return `${days} giorni`;
+  }
+
+  function syncSlider() {
+    const prefs = Theme.getPreferences();
+    const v = prefs.linkDurationDays || 180;
+    slider.value = v;
+    display.textContent = formatDuration(v);
+  }
+
+  slider.addEventListener("input", () => {
+    display.textContent = formatDuration(+slider.value);
+  });
+  slider.addEventListener("change", () => {
+    Theme.set("linkDurationDays", +slider.value);
+  });
+
+  syncSlider();
+  Theme.subscribe(syncSlider);
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -432,5 +469,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initTypo();
   initLayout();
   initWeather();
+  initLinks();
   initBackup();
 });

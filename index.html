@@ -280,6 +280,15 @@
         </div>
 
         <div class="form-group">
+          <label>Link prodotto (opzionale)</label>
+          <div class="link-field-row">
+            <input type="url" id="field-link" placeholder="https://..." inputmode="url" />
+            <button type="button" id="btn-open-link" class="btn btn--ghost btn--sm hidden" aria-label="Apri link in nuova scheda">🔗</button>
+          </div>
+          <div id="link-status" class="link-status hidden"></div>
+        </div>
+
+        <div class="form-group">
           <label>Note</label>
           <textarea id="field-notes" rows="2" placeholder="opzionale"></textarea>
         </div>

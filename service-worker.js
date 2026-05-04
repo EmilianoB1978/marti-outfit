@@ -1,7 +1,7 @@
 // Service Worker per PWA My Wardrobe
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v8-rich-tagging';
+const CACHE_VERSION = 'v9-polish-final';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -38,6 +38,9 @@ const SHELL_FILES = [
   './js/bg-removal.js',
   './js/calendar.js',
   './js/weather.js',
+  './js/onboarding.js',
+  './js/search.js',
+  './js/haptic.js',
   './js/theme/tokens.js',
   './js/theme/manager.js',
   './icons/icon-192.png',

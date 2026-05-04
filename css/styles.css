@@ -193,6 +193,13 @@ html, body {
 }
 .empty-icon { font-size: 60px; margin-bottom: var(--space-3); }
 
+.empty-illustration {
+  width: 140px;
+  height: 140px;
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+}
+
 /* ============================================================================
    Bottom nav
    ============================================================================ */

@@ -8,6 +8,9 @@ import * as Outfit from "./outfit.js";
 import * as Claude from "./claude-api.js";
 import * as Theme from "./theme/manager.js";
 import * as Weather from "./weather.js";
+import * as Haptic from "./haptic.js";
+import * as Search from "./search.js";
+import { showOnboarding } from "./onboarding.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
@@ -45,8 +48,12 @@ async function boot() {
     return;
   }
 
+  // Mostro l'app con skeleton subito (nasconde lo splash, fa sentire l'app reattiva)
+  document.getElementById("splash").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  renderSkeletonWardrobe();
+
   try {
-    // Caricamento parallelo dati
     const [items, savedOutfits] = await Promise.all([
       Wardrobe.listItems(),
       Outfit.listSavedOutfits()
@@ -57,16 +64,29 @@ async function boot() {
     renderWardrobe();
     renderFilters();
     renderSavedOutfits();
-
-    document.getElementById("splash").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
   } catch (err) {
     console.error("Errore boot:", err);
     toast("Errore caricamento dati", "error");
-    // Mostro comunque l'app vuota
-    document.getElementById("splash").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
   }
+
+  // Onboarding al primo avvio (dopo che l'app e' visibile)
+  setTimeout(() => showOnboarding(false), 600);
+}
+
+// =============================================================================
+// Skeleton loading: ghost cards mentre fetcho i dati
+// =============================================================================
+function renderSkeletonWardrobe() {
+  const grid = document.getElementById("wardrobe-grid");
+  grid.innerHTML = Array(6).fill(0).map(() => `
+    <div class="item-card skeleton-card">
+      <div class="skeleton skeleton--card"></div>
+      <div class="item-info">
+        <div class="skeleton skeleton--text" style="width: 60%"></div>
+        <div class="skeleton skeleton--text" style="width: 40%"></div>
+      </div>
+    </div>
+  `).join("");
 }
 
 // =============================================================================
@@ -112,9 +132,86 @@ function renderWardrobe() {
 
   // Click sui capi -> apri modale modifica
   grid.querySelectorAll(".item-card").forEach(card => {
-    card.addEventListener("click", () => {
+    card.addEventListener("click", (e) => {
+      // Se l'utente ha cliccato un'azione swipe, non aprire il modal
+      if (e.target.closest(".swipe-action")) return;
       openEditItem(card.dataset.id);
     });
+    attachSwipeActions(card);
+  });
+}
+
+/**
+ * Aggancia swipe-left a un item-card per rivelare azioni rapide
+ * (✓ Indossato / 🗑️ Elimina). Ripristina posizione su tap fuori.
+ */
+function attachSwipeActions(card) {
+  let startX = null;
+  let dx = 0;
+  let active = false;
+
+  // Wrappo il contenuto se non l'ho gia' fatto
+  if (!card.querySelector(".swipe-actions")) {
+    const actions = document.createElement("div");
+    actions.className = "swipe-actions";
+    actions.innerHTML = `
+      <button class="swipe-action swipe-action-worn" aria-label="Indossato oggi">✓</button>
+      <button class="swipe-action swipe-action-delete" aria-label="Elimina">🗑️</button>
+    `;
+    card.appendChild(actions);
+
+    actions.querySelector(".swipe-action-worn").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const item = state.items.find(i => i.id === card.dataset.id);
+      if (!item) return;
+      try {
+        const updated = await Wardrobe.markItemAsWorn(card.dataset.id, item);
+        Object.assign(item, updated);
+        Haptic.success();
+        renderWardrobe();
+        toast("✓ Marcato come indossato", "success");
+      } catch (err) { toast("Errore", "error"); }
+    });
+
+    actions.querySelector(".swipe-action-delete").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (!confirm("Eliminare definitivamente questo capo?")) return;
+      const item = state.items.find(i => i.id === card.dataset.id);
+      try {
+        await Wardrobe.deleteItem(card.dataset.id, item?.photo_path);
+        state.items = state.items.filter(i => i.id !== card.dataset.id);
+        Haptic.pulse();
+        renderWardrobe();
+        renderFilters();
+        toast("Capo eliminato", "success");
+      } catch (err) { toast("Errore", "error"); }
+    });
+  }
+
+  card.addEventListener("touchstart", e => {
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    dx = 0;
+    active = true;
+  });
+  card.addEventListener("touchmove", e => {
+    if (!active || startX === null) return;
+    dx = e.touches[0].clientX - startX;
+    if (dx < 0) {
+      card.style.transform = `translateX(${Math.max(dx, -120)}px)`;
+    }
+  });
+  card.addEventListener("touchend", () => {
+    if (!active) return;
+    active = false;
+    if (dx < -60) {
+      card.style.transform = "translateX(-120px)";
+      card.classList.add("is-swiped");
+    } else {
+      card.style.transform = "";
+      card.classList.remove("is-swiped");
+    }
+    startX = null;
   });
 }
 
@@ -383,6 +480,7 @@ async function saveItem() {
 
     if (state.editingId) {
       await Wardrobe.updateItem(state.editingId, data);
+      Haptic.tap();
       toast("Capo aggiornato", "success");
     } else {
       if (!data.photo_url && !state.pendingPhoto) {
@@ -391,6 +489,7 @@ async function saveItem() {
         return;
       }
       await Wardrobe.createItem(data);
+      Haptic.success();
       toast("Capo aggiunto", "success");
     }
 
@@ -802,14 +901,100 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-menu").addEventListener("click", () => {
     menuDrawer.classList.remove("hidden");
   });
-  // Click sul fondo (overlay) chiude il drawer; click sul pannello no
   menuDrawer.addEventListener("click", (e) => {
     if (e.target === menuDrawer) menuDrawer.classList.add("hidden");
   });
 
+  // Re-mostra il tour onboarding (dal menu)
+  document.getElementById("btn-replay-tour").addEventListener("click", () => {
+    menuDrawer.classList.add("hidden");
+    showOnboarding(true);
+  });
+
+  // Ricerca globale
+  document.getElementById("btn-search").addEventListener("click", () => {
+    Haptic.tap();
+    Search.openSearch();
+  });
+
+  // Cmd+K / Ctrl+K shortcut (desktop)
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      Search.openSearch();
+    }
+  });
+
+  // Evento "apri item dal search" -> apre il modal modifica
+  window.addEventListener("marty:open-item", (e) => {
+    openEditItem(e.detail.id);
+  });
+
+  // Pull-to-refresh sulla home
+  setupPullToRefresh();
+
   // Boot
   boot();
 });
+
+// =============================================================================
+// Pull-to-refresh: swipe down dall'inizio della scroll area
+// =============================================================================
+function setupPullToRefresh() {
+  const main = document.querySelector(".app-main");
+  const indicator = document.getElementById("ptr-indicator");
+  const text = document.getElementById("ptr-text");
+  const THRESHOLD = 80;
+
+  let startY = null;
+  let pulling = false;
+  let dy = 0;
+
+  main.addEventListener("touchstart", (e) => {
+    // Solo se siamo in cima della scroll area
+    if (main.scrollTop > 0) return;
+    if (e.touches.length !== 1) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+    dy = 0;
+  });
+
+  main.addEventListener("touchmove", (e) => {
+    if (!pulling || startY === null) return;
+    dy = e.touches[0].clientY - startY;
+    if (dy > 0 && main.scrollTop === 0) {
+      const v = Math.min(dy * 0.5, 100);
+      indicator.style.transform = `translateY(${v}px)`;
+      indicator.style.opacity = Math.min(dy / THRESHOLD, 1);
+      text.textContent = dy > THRESHOLD ? "↻ Rilascia per ricaricare" : "↓ Tira giù per ricaricare";
+    }
+  });
+
+  main.addEventListener("touchend", async () => {
+    if (!pulling) return;
+    pulling = false;
+
+    if (dy > THRESHOLD) {
+      text.textContent = "⏳ Aggiornamento...";
+      indicator.style.transform = "translateY(60px)";
+      try {
+        Haptic.tap();
+        const items = await Wardrobe.listItems();
+        state.items = items;
+        renderWardrobe();
+        renderFilters();
+        toast("Aggiornato", "success");
+      } catch (err) {
+        toast("Errore", "error");
+      }
+    }
+
+    indicator.style.transform = "";
+    indicator.style.opacity = "";
+    startY = null;
+    dy = 0;
+  });
+}
 
 // Esporto helpers chiamati inline da HTML (onclick)
 window.WardrobeUI = {

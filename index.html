@@ -44,8 +44,14 @@
     <!-- Header -->
     <header class="app-header">
       <h1 id="page-title">Guardaroba</h1>
+      <button class="app-header-search" id="btn-search" aria-label="Cerca">🔍</button>
       <button class="app-header-settings" id="btn-menu" aria-label="Menu">⋯</button>
     </header>
+
+    <!-- Pull-to-refresh indicator (sopra il contenuto) -->
+    <div id="ptr-indicator" class="ptr-indicator">
+      <span id="ptr-text">↓ Tira giù per ricaricare</span>
+    </div>
 
     <!-- Contenuto delle pagine (una sola visibile alla volta) -->
     <main class="app-main">
@@ -60,9 +66,21 @@
 
         <!-- Stato vuoto -->
         <div id="empty-state" class="empty-state hidden">
-          <div class="empty-icon">📦</div>
-          <p>Il tuo guardaroba e' vuoto</p>
-          <button class="btn-primary" onclick="WardrobeUI.openAddItem()">+ Aggiungi un capo</button>
+          <svg class="empty-illustration" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Stampella -->
+            <path d="M100 50 L100 30 Q100 25 105 25 Q110 25 110 30" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" />
+            <circle cx="100" cy="50" r="3" fill="currentColor" />
+            <!-- Maglia stilizzata -->
+            <path d="M55 60 L100 50 L145 60 L155 80 L145 95 L130 90 L130 150 Q130 158 122 158 L78 158 Q70 158 70 150 L70 90 L55 95 L45 80 Z"
+                  stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" />
+            <!-- Sparkles -->
+            <circle cx="40" cy="40" r="2" fill="currentColor" opacity="0.5" />
+            <circle cx="170" cy="50" r="3" fill="currentColor" opacity="0.4" />
+            <circle cx="160" cy="160" r="2" fill="currentColor" opacity="0.5" />
+            <circle cx="35" cy="170" r="2.5" fill="currentColor" opacity="0.4" />
+          </svg>
+          <p>Il tuo guardaroba è vuoto</p>
+          <button class="btn-primary" onclick="WardrobeUI.openAddItem()">+ Aggiungi il primo capo</button>
         </div>
       </section>
 
@@ -296,6 +314,10 @@
           <span class="menu-link-icon">📖</span>
           <span>Aiuto</span>
         </a>
+        <button class="menu-link" id="btn-replay-tour" type="button">
+          <span class="menu-link-icon">🚀</span>
+          <span>Mostra il tour</span>
+        </button>
       </div>
     </div>
   </div>

@@ -1,0 +1,425 @@
+/* =============================================================================
+   Stili condivisi per pagine extra: capsules, capsule-detail, analytics, menu
+   ============================================================================= */
+
+/* ============================================================================
+   Menu drawer (apre dall'icona ⋯ in app header)
+   ============================================================================ */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  animation: menuFadeIn var(--animation-speed) var(--animation-easing);
+}
+@keyframes menuFadeIn { from { opacity: 0; } }
+
+.menu-panel {
+  background: var(--color-bg);
+  width: 100%;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  padding: var(--space-3) 0 calc(var(--space-4) + var(--safe-bottom));
+  animation: menuSlideUp var(--animation-speed) var(--animation-easing);
+}
+@keyframes menuSlideUp { from { transform: translateY(100%); } }
+
+.menu-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+  margin: 0 auto var(--space-3);
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+}
+.menu-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  color: var(--color-text);
+  text-decoration: none;
+  font-family: var(--font-family-base);
+  font-size: var(--fs-base);
+  font-weight: var(--font-weight-medium);
+  border-bottom: var(--border-width) solid var(--color-divider);
+  transition: background var(--animation-speed) var(--animation-easing);
+}
+.menu-link:active { background: var(--color-surface-alt); }
+.menu-link:last-child { border-bottom: none; }
+.menu-link-icon { font-size: var(--fs-xl); width: 32px; text-align: center; }
+
+/* ============================================================================
+   Wear count badge sui capi (Wardrobe + Capsule pickers)
+   ============================================================================ */
+.item-card {
+  position: relative;
+}
+.item-wear-badge {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-xs);
+  font-weight: var(--font-weight-bold);
+  pointer-events: none;
+}
+
+/* ============================================================================
+   Wear stats nel modal modifica capo
+   ============================================================================ */
+.wear-stats {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.wear-stats-info {
+  flex: 1;
+}
+.wear-stats-count {
+  font-size: var(--fs-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+.wear-stats-last {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ============================================================================
+   Outfit "Indossato oggi" pulsante
+   ============================================================================ */
+.outfit-actions .btn-worn {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: var(--radius-button);
+  padding: var(--space-3);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+/* ============================================================================
+   Capsule list cards (pagina capsules.html)
+   ============================================================================ */
+.capsules-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.capsule-card {
+  display: block;
+  background: var(--color-surface);
+  border: 2px solid var(--capsule-accent, var(--color-border));
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: transform var(--animation-speed) var(--animation-easing);
+}
+.capsule-card:active { transform: scale(0.98); }
+
+.capsule-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.capsule-card-icon {
+  font-size: 36px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--capsule-accent, var(--color-primary));
+  border-radius: var(--radius-card);
+  flex-shrink: 0;
+}
+.capsule-card-name {
+  font-size: var(--fs-md);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-heading);
+}
+.capsule-card-count {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.capsule-card-preview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.capsule-card-preview img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-input);
+  background: var(--color-surface-alt);
+}
+.capsule-card-preview span {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-input);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  opacity: 0.4;
+}
+
+/* Icon picker (modal nuova capsule) */
+.icon-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-2);
+}
+.icon-option {
+  aspect-ratio: 1;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-input);
+  font-size: 24px;
+  cursor: pointer;
+  transition: border-color var(--animation-speed) var(--animation-easing);
+}
+.icon-option.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+
+/* ============================================================================
+   Capsule detail page
+   ============================================================================ */
+.capsule-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--capsule-accent, var(--color-primary));
+  color: var(--color-text-inverse);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-4);
+}
+.capsule-detail-icon { font-size: 48px; }
+.capsule-detail-name {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: var(--font-family-heading);
+  font-size: var(--fs-xl);
+  font-weight: var(--font-weight-bold);
+  flex: 1;
+  padding: var(--space-1);
+}
+.capsule-detail-name:focus {
+  outline: 2px solid rgba(255,255,255,0.5);
+  border-radius: var(--radius-input);
+}
+
+.capsule-cta { margin-bottom: var(--space-5); }
+
+.capsule-count {
+  display: inline-block;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+  font-size: var(--fs-xs);
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
+.capsule-picker-item {
+  position: relative;
+  cursor: pointer;
+  transition: transform var(--animation-speed) var(--animation-easing),
+              border var(--animation-speed) var(--animation-easing);
+  border: 3px solid transparent;
+}
+.capsule-picker-item.is-selected {
+  border-color: var(--color-primary);
+}
+.capsule-picker-mark {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================================================
+   Analytics page
+   ============================================================================ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.stat-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  text-align: center;
+}
+.stat-value {
+  font-size: var(--fs-2xl);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-heading);
+  color: var(--color-primary);
+  line-height: 1;
+  margin-bottom: var(--space-2);
+}
+.stat-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Ranked list (top worn, dead stock, cost-per-wear) */
+.ranked-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ranked-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-input);
+  padding: var(--space-2);
+}
+.ranked-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--fs-sm);
+  flex-shrink: 0;
+}
+.ranked-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-input);
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+.ranked-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ranked-info {
+  flex: 1;
+  min-width: 0;
+}
+.ranked-title {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ranked-sub {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.ranked-stat {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  font-size: var(--fs-sm);
+}
+
+.empty-state-inline {
+  background: var(--color-surface);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+/* Pie chart */
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-3);
+}
+.chart-svg {
+  width: 180px;
+  height: 180px;
+}
+.chart-legend {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+}
+.chart-legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.chart-legend-label {
+  flex: 1;
+  color: var(--color-text);
+}
+.chart-legend-value {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+/* settings-header-spacer (riutilizzato nelle pagine con icona destra opzionale) */
+.settings-header-spacer { width: 40px; }

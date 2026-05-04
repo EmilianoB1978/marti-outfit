@@ -17,11 +17,12 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="./icons/icon-192.png" />
 
-  <!-- Stili (ordine: tokens -> components -> styles app -> settings shared) -->
+  <!-- Stili (ordine: tokens -> components -> styles app -> settings -> extras) -->
   <link rel="stylesheet" href="./css/tokens.css" />
   <link rel="stylesheet" href="./css/components.css" />
   <link rel="stylesheet" href="./css/styles.css" />
   <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
 </head>
 <body>
   <!-- Schermata di caricamento iniziale -->
@@ -43,7 +44,7 @@
     <!-- Header -->
     <header class="app-header">
       <h1 id="page-title">Guardaroba</h1>
-      <a href="./settings.html" class="app-header-settings" aria-label="Aspetto">⚙️</a>
+      <button class="app-header-settings" id="btn-menu" aria-label="Menu">⋯</button>
     </header>
 
     <!-- Contenuto delle pagine (una sola visibile alla volta) -->
@@ -135,6 +136,15 @@
           <div id="analyze-status" class="analyze-status"></div>
         </div>
 
+        <!-- Wear stats (visibile solo in modifica capo esistente) -->
+        <div id="wear-stats-section" class="wear-stats hidden">
+          <div class="wear-stats-info">
+            <div class="wear-stats-count" id="wear-stats-count">Indossato 0 volte</div>
+            <div class="wear-stats-last" id="wear-stats-last">Mai indossato</div>
+          </div>
+          <button class="btn btn--secondary btn--sm" id="btn-mark-worn">✓ Indossato oggi</button>
+        </div>
+
         <!-- Tag form -->
         <div class="form-group">
           <label>Categoria</label>
@@ -183,6 +193,12 @@
         </div>
 
         <div class="form-group">
+          <label>Prezzo (opzionale)</label>
+          <input type="number" id="field-price" min="0" step="0.01" placeholder="es. 49.90 (€)" inputmode="decimal" />
+          <small>Serve per le statistiche cost-per-wear</small>
+        </div>
+
+        <div class="form-group">
           <label>Note</label>
           <textarea id="field-notes" rows="2" placeholder="opzionale"></textarea>
         </div>
@@ -191,6 +207,27 @@
         <button id="btn-delete-item" class="btn-danger hidden">
           🗑️ Elimina capo
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu drawer (icona ⋯ in header) -->
+  <div id="menu-drawer" class="menu-overlay hidden">
+    <div class="menu-panel">
+      <div class="menu-handle"></div>
+      <div class="menu-list">
+        <a href="./capsules.html" class="menu-link">
+          <span class="menu-link-icon">🎒</span>
+          <span>Capsule</span>
+        </a>
+        <a href="./analytics.html" class="menu-link">
+          <span class="menu-link-icon">📊</span>
+          <span>Statistiche</span>
+        </a>
+        <a href="./settings.html" class="menu-link">
+          <span class="menu-link-icon">🎨</span>
+          <span>Aspetto</span>
+        </a>
       </div>
     </div>
   </div>

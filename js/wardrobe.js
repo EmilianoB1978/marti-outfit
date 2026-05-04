@@ -11,13 +11,30 @@ import {
 
 const COLLECTION = "items";
 
+// Default per i campi nuovi (Fase 3 - lazy migration in memoria)
+const ITEM_DEFAULTS = {
+  wear_count:    0,
+  last_worn_at:  null,
+  wear_history:  [],
+  price:         null,
+};
+
+/** Applica i default a un capo letto dal DB. NON scrive su DB (lazy). */
+function ensureDefaults(item) {
+  for (const [k, v] of Object.entries(ITEM_DEFAULTS)) {
+    if (item[k] === undefined) item[k] = v;
+  }
+  return item;
+}
+
 /**
  * Carica tutti i capi del guardaroba, ordinati per data di creazione DESC.
+ * Applica default per campi nuovi (wear_count, ecc.) ai vecchi record.
  */
 export async function listItems() {
   const q = query(collection(db, COLLECTION), orderBy("created_at", "desc"));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map(d => ensureDefaults({ id: d.id, ...d.data() }));
 }
 
 /**
@@ -57,11 +74,65 @@ export async function createItem(data) {
     occasion: data.occasion || null,
     notes: data.notes || null,
     description: data.description || null, // descrizione AI (opzionale)
+    // Tracking (Fase 3) - inizializzati a default
+    wear_count:   0,
+    last_worn_at: null,
+    wear_history: [],
+    price:        data.price ?? null,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp()
   };
   const ref = await addDoc(collection(db, COLLECTION), payload);
   return { id: ref.id, ...payload };
+}
+
+// ============================================================================
+// Wear tracking (Fase 3)
+// ============================================================================
+
+/**
+ * Marca un capo come "indossato oggi": incrementa wear_count, aggiorna
+ * last_worn_at, push su wear_history. Salva su Firestore.
+ */
+export async function markItemAsWorn(id, currentItem) {
+  const now = new Date().toISOString();
+  const newCount = (currentItem.wear_count || 0) + 1;
+  const newHistory = [...(currentItem.wear_history || []), now];
+
+  await updateDoc(doc(db, COLLECTION, id), {
+    wear_count: newCount,
+    last_worn_at: now,
+    wear_history: newHistory,
+    updated_at: serverTimestamp(),
+  });
+
+  return { wear_count: newCount, last_worn_at: now, wear_history: newHistory };
+}
+
+/**
+ * Marca un intero outfit come indossato: incrementa wear_count su ogni
+ * capo dell'outfit. Esegue le update in parallelo.
+ */
+export async function markOutfitAsWorn(itemIds, allItems) {
+  const now = new Date().toISOString();
+  const itemMap = new Map(allItems.map(it => [it.id, it]));
+
+  const updates = itemIds
+    .map(id => itemMap.get(id))
+    .filter(Boolean)
+    .map(item => {
+      const newCount = (item.wear_count || 0) + 1;
+      const newHistory = [...(item.wear_history || []), now];
+      return updateDoc(doc(db, COLLECTION, item.id), {
+        wear_count: newCount,
+        last_worn_at: now,
+        wear_history: newHistory,
+        updated_at: serverTimestamp(),
+      });
+    });
+
+  await Promise.all(updates);
+  return now;
 }
 
 /**

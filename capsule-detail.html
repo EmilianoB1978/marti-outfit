@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>Dettaglio capsule - Marty Outfit</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./capsules.html" class="btn-icon" aria-label="Indietro">←</a>
+    <h1 id="capsule-title">Capsule</h1>
+    <button class="btn-icon" id="btn-delete-capsule" aria-label="Elimina">🗑️</button>
+  </header>
+
+  <main class="settings-main">
+
+    <div class="capsule-header" id="capsule-header"></div>
+
+    <div class="capsule-cta">
+      <button class="btn btn--primary btn--block" id="btn-generate-outfit">
+        ✨ Genera outfit con questa capsule
+      </button>
+    </div>
+
+    <h2 class="settings-section-title">
+      Capi nella capsule
+      <span class="capsule-count" id="capsule-count">0</span>
+    </h2>
+
+    <p class="settings-hint">Tap per aggiungere/rimuovere capi.</p>
+
+    <div id="picker-grid" class="wardrobe-grid"></div>
+
+  </main>
+
+  <!-- Modale risultato outfit -->
+  <div id="modal-outfit-result" class="modal hidden">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-close-outfit">✕</button>
+        <h2>Outfit suggeriti</h2>
+        <span></span>
+      </header>
+      <div class="modal-body" id="outfit-result-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/capsule-detail.js"></script>
+</body>
+</html>

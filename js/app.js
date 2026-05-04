@@ -89,12 +89,15 @@ function renderWardrobe() {
     return;
   }
 
-  grid.innerHTML = filtered.map(item => `
+  grid.innerHTML = filtered.map(item => {
+    const wearCount = item.wear_count || 0;
+    return `
     <div class="item-card" data-id="${item.id}">
       ${item.photo_url
         ? `<img class="item-photo" src="${item.photo_url}" alt="" loading="lazy" />`
         : `<div class="item-photo" style="display:flex;align-items:center;justify-content:center;font-size:48px;opacity:0.3">👕</div>`
       }
+      ${wearCount > 0 ? `<div class="item-wear-badge">👕 ${wearCount}</div>` : ''}
       <div class="item-info">
         <div class="item-category">${item.category || "—"}</div>
         <div class="item-tags">
@@ -103,7 +106,8 @@ function renderWardrobe() {
         </div>
       </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   // Click sui capi -> apri modale modifica
   grid.querySelectorAll(".item-card").forEach(card => {
@@ -155,12 +159,13 @@ function openAddItem() {
 
   document.getElementById("modal-title").textContent = "Nuovo capo";
   document.getElementById("btn-delete-item").classList.add("hidden");
+  document.getElementById("wear-stats-section").classList.add("hidden");
   document.getElementById("photo-preview").innerHTML = '<span class="photo-placeholder">📷</span>';
   document.getElementById("btn-analyze").classList.add("hidden");
   document.getElementById("analyze-status").textContent = "";
 
-  // Reset form
-  ["field-category", "field-color", "field-style", "field-occasion", "field-notes"].forEach(id => {
+  // Reset form (incluso prezzo)
+  ["field-category", "field-color", "field-style", "field-occasion", "field-notes", "field-price"].forEach(id => {
     document.getElementById(id).value = "";
   });
   Array.from(document.getElementById("field-season").options).forEach(o => o.selected = false);
@@ -187,13 +192,46 @@ function openEditItem(id) {
   document.getElementById("field-style").value = item.style || "";
   document.getElementById("field-occasion").value = item.occasion || "";
   document.getElementById("field-notes").value = item.notes || "";
+  document.getElementById("field-price").value = item.price ?? "";
 
   const seasons = Array.isArray(item.season) ? item.season : [];
   Array.from(document.getElementById("field-season").options).forEach(o => {
     o.selected = seasons.includes(o.value);
   });
 
+  // Wear stats sezione (visibile in modifica, nascosta in nuovo)
+  renderWearStats(item);
+  document.getElementById("wear-stats-section").classList.remove("hidden");
+
   document.getElementById("modal-item").classList.remove("hidden");
+}
+
+// Render della sezione "Indossato N volte" + bottone "Indossato oggi"
+function renderWearStats(item) {
+  const count = item.wear_count || 0;
+  document.getElementById("wear-stats-count").textContent =
+    count === 0 ? "Mai indossato" : `Indossato ${count} ${count === 1 ? 'volta' : 'volte'}`;
+  document.getElementById("wear-stats-last").textContent = item.last_worn_at
+    ? `Ultima volta: ${new Date(item.last_worn_at).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" })}`
+    : "—";
+}
+
+// Marca il capo corrente come "indossato oggi"
+async function markCurrentItemAsWorn() {
+  if (!state.editingId) return;
+  const item = state.items.find(i => i.id === state.editingId);
+  if (!item) return;
+
+  try {
+    const updated = await Wardrobe.markItemAsWorn(state.editingId, item);
+    Object.assign(item, updated);  // patch in memoria
+    renderWearStats(item);
+    renderWardrobe();  // riaggiorna badge griglia
+    toast("✓ Marcato come indossato oggi", "success");
+  } catch (err) {
+    console.error(err);
+    toast("Errore aggiornamento", "error");
+  }
 }
 
 function closeModal() {
@@ -283,6 +321,9 @@ async function analyzePendingPhoto() {
 // Salva capo (create o update)
 // =============================================================================
 async function saveItem() {
+  const priceRaw = document.getElementById("field-price").value;
+  const price = priceRaw ? parseFloat(priceRaw) : null;
+
   const data = {
     category: document.getElementById("field-category").value || null,
     color: document.getElementById("field-color").value.trim() || null,
@@ -290,6 +331,7 @@ async function saveItem() {
     season: Array.from(document.getElementById("field-season").selectedOptions).map(o => o.value),
     occasion: document.getElementById("field-occasion").value.trim() || null,
     notes: document.getElementById("field-notes").value.trim() || null,
+    price: (price !== null && !isNaN(price)) ? price : null,
   };
 
   const btn = document.getElementById("btn-save-item");
@@ -456,11 +498,35 @@ function renderSavedOutfits() {
           `).join("")}
         </div>
         <div class="outfit-actions">
-          <button class="btn-secondary" data-del="${outfit.id}">🗑️ Elimina</button>
+          <button class="btn-worn" data-worn="${outfit.id}">✓ Indossato oggi</button>
+          <button class="btn-secondary" data-del="${outfit.id}">🗑️</button>
         </div>
       </div>
     `;
   }).join("");
+
+  // "Indossato oggi" → incrementa wearCount su tutti i capi dell'outfit
+  container.querySelectorAll("[data-worn]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const outfit = state.savedOutfits.find(o => o.id === btn.dataset.worn);
+      if (!outfit) return;
+      btn.disabled = true;
+      btn.textContent = "...";
+      try {
+        await Wardrobe.markOutfitAsWorn(outfit.item_ids || [], state.items);
+        // Refresh items per riflettere wearCount aggiornati
+        state.items = await Wardrobe.listItems();
+        renderWardrobe();
+        toast(`✓ Outfit indossato (${(outfit.item_ids || []).length} capi)`, "success");
+      } catch (err) {
+        console.error(err);
+        toast("Errore: " + err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "✓ Indossato oggi";
+      }
+    });
+  });
 
   container.querySelectorAll("[data-del]").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -529,9 +595,20 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-analyze").addEventListener("click", analyzePendingPhoto);
   document.getElementById("btn-save-item").addEventListener("click", saveItem);
   document.getElementById("btn-delete-item").addEventListener("click", deleteCurrentItem);
+  document.getElementById("btn-mark-worn").addEventListener("click", markCurrentItemAsWorn);
 
   // Outfit
   document.getElementById("btn-generate-outfit").addEventListener("click", generateOutfit);
+
+  // Menu drawer (icona ⋯ in header)
+  const menuDrawer = document.getElementById("menu-drawer");
+  document.getElementById("btn-menu").addEventListener("click", () => {
+    menuDrawer.classList.remove("hidden");
+  });
+  // Click sul fondo (overlay) chiude il drawer; click sul pannello no
+  menuDrawer.addEventListener("click", (e) => {
+    if (e.target === menuDrawer) menuDrawer.classList.add("hidden");
+  });
 
   // Boot
   boot();

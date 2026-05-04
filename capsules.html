@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>Capsule - Marty Outfit</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>Capsule</h1>
+    <button class="btn-icon" id="btn-new-capsule" aria-label="Nuova capsule">+</button>
+  </header>
+
+  <main class="settings-main">
+
+    <p class="settings-hint">
+      Le capsule sono raccolte tematiche di capi (es. "Vacanza Sicilia", "Lavoro inverno").
+      Puoi generare outfit limitando l'AI a una capsule.
+    </p>
+
+    <div id="capsules-list" class="capsules-list"></div>
+
+    <div id="empty-state" class="empty-state hidden">
+      <div class="empty-icon">🎒</div>
+      <p>Nessuna capsule ancora</p>
+      <button class="btn-primary" id="btn-new-capsule-empty">+ Crea la prima</button>
+    </div>
+  </main>
+
+  <!-- Modale: nuova capsule -->
+  <div id="modal-new-capsule" class="modal hidden">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-cancel-capsule">✕</button>
+        <h2>Nuova capsule</h2>
+        <button class="btn-text" id="btn-save-capsule">Crea</button>
+      </header>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="capsule-name">Nome</label>
+          <input type="text" id="capsule-name" placeholder="es. Vacanza Sicilia" />
+        </div>
+        <div class="form-group">
+          <label for="capsule-icon">Icona</label>
+          <div class="icon-picker">
+            <button data-icon="🎒" class="icon-option">🎒</button>
+            <button data-icon="🌞" class="icon-option">🌞</button>
+            <button data-icon="❄️" class="icon-option">❄️</button>
+            <button data-icon="💼" class="icon-option">💼</button>
+            <button data-icon="🎉" class="icon-option">🎉</button>
+            <button data-icon="🏖️" class="icon-option">🏖️</button>
+            <button data-icon="⛷️" class="icon-option">⛷️</button>
+            <button data-icon="💻" class="icon-option">💻</button>
+            <button data-icon="🎽" class="icon-option">🎽</button>
+            <button data-icon="✈️" class="icon-option">✈️</button>
+            <button data-icon="🌃" class="icon-option">🌃</button>
+            <button data-icon="🎭" class="icon-option">🎭</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="capsule-color">Colore di accento</label>
+          <input type="color" id="capsule-color" value="#d4af37" class="color-picker-input" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/capsules-page.js"></script>
+</body>
+</html>

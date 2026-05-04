@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>Statistiche - Marty Outfit</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>Statistiche</h1>
+    <span class="settings-header-spacer"></span>
+  </header>
+
+  <main class="settings-main">
+
+    <!-- 4 stat card riepilogo -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-label">Capi totali</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-value">—</div>
+        <div class="stat-label">Valore totale</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-outfits">—</div>
+        <div class="stat-label">Outfit salvati</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-wears">—</div>
+        <div class="stat-label">Volte indossato</div>
+      </div>
+    </div>
+
+    <h2 class="settings-section-title">Top 5 più indossati</h2>
+    <div id="top-worn" class="ranked-list"></div>
+
+    <h2 class="settings-section-title">Pezzi morti</h2>
+    <p class="settings-hint">Capi mai indossati o non da molto tempo. Considera di rivenderli, regalarli, o dargli una chance!</p>
+    <div id="dead-stock" class="ranked-list"></div>
+
+    <h2 class="settings-section-title">Distribuzione per categoria</h2>
+    <div class="chart-container">
+      <svg id="chart-categories" class="chart-svg" viewBox="-100 -100 200 200" aria-label="Distribuzione capi per categoria"></svg>
+      <div id="legend-categories" class="chart-legend"></div>
+    </div>
+
+    <h2 class="settings-section-title">Distribuzione per stile</h2>
+    <div class="chart-container">
+      <svg id="chart-styles" class="chart-svg" viewBox="-100 -100 200 200" aria-label="Distribuzione capi per stile"></svg>
+      <div id="legend-styles" class="chart-legend"></div>
+    </div>
+
+    <h2 class="settings-section-title">Cost-per-wear</h2>
+    <p class="settings-hint">Quanto ti è costato in media indossare un capo (prezzo / volte indossato). I capi più indossati sono i più "convenienti".</p>
+    <div id="cost-per-wear" class="ranked-list"></div>
+
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/analytics.js"></script>
+</body>
+</html>

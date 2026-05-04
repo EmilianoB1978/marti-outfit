@@ -1,7 +1,7 @@
 // Service Worker per PWA My Wardrobe
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v4-settings-page';
+const CACHE_VERSION = 'v5-capsules-analytics';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -10,23 +10,29 @@ const SHELL_FILES = [
   './',
   './index.html',
   './settings.html',
+  './capsules.html',
+  './capsule-detail.html',
+  './analytics.html',
   './manifest.json',
   './css/tokens.css',
   './css/components.css',
   './css/styles.css',
   './css/settings.css',
+  './css/extras.css',
   './js/app.js',
   './js/firebase-config.js',
   './js/claude-api.js',
   './js/wardrobe.js',
   './js/outfit.js',
+  './js/capsules.js',
+  './js/capsules-page.js',
+  './js/capsule-detail.js',
+  './js/analytics.js',
   './js/settings.js',
   './js/theme/tokens.js',
   './js/theme/manager.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  // Font self-hosted (i .woff2 vengono caricati on-demand quando l'utente
-  // sceglie il font in Settings; li metto nella shell cosi' funzionano offline)
   './fonts/inter.woff2',
   './fonts/playfair.woff2',
   './fonts/dmsans.woff2',

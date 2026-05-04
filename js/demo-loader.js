@@ -13,8 +13,29 @@ import {
 } from "./firebase-config.js";
 
 import { DEMO_ITEMS } from "./demo-data.js";
+import * as Taxonomies from "./taxonomies.js";
 
 const COLLECTION = "items";
+
+/**
+ * Categorie strutturate richieste dai demo (con icon).
+ * Vengono aggiunte alle tassonomie utente prima del load se mancanti.
+ * Necessario per la nuova categoria 'vestito' (utenti pre-esistenti).
+ */
+const REQUIRED_CATEGORIES = [
+  { value: "vestito", label: "Vestito", icon: "👗", builtIn: true },
+];
+
+/** Ensures all categories needed by the demo set exist in user's taxonomies. */
+async function ensureRequiredCategories() {
+  await Taxonomies.load();
+  const existing = Taxonomies.listValues("categories").map(c => c.value);
+  for (const req of REQUIRED_CATEGORIES) {
+    if (!existing.includes(req.value)) {
+      await Taxonomies.addValue("categories", req.label);
+    }
+  }
+}
 
 /**
  * Carica i 30 capi demo. Skip se gia' caricati (controllo via query is_demo).
@@ -26,6 +47,9 @@ export async function loadDemo(onProgress) {
   if (existingDemo > 0) {
     return { added: 0, skipped: existingDemo, alreadyLoaded: true };
   }
+
+  // Garantisce che le categorie necessarie ai demo esistano nelle tassonomie utente
+  await ensureRequiredCategories();
 
   let added = 0;
   for (let i = 0; i < DEMO_ITEMS.length; i++) {

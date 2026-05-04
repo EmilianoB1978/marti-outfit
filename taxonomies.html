@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>Categorie e tag - Marty Outfit</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>Categorie e tag</h1>
+    <span class="settings-header-spacer"></span>
+  </header>
+
+  <nav class="tabs settings-tabs" role="tablist">
+    <button class="tab is-active" data-tax="categories">📁 Categorie</button>
+    <button class="tab" data-tax="subcategories">🏷️ Sotto-cat.</button>
+    <button class="tab" data-tax="colors">🎨 Colori</button>
+    <button class="tab" data-tax="patterns">📐 Pattern</button>
+    <button class="tab" data-tax="materials">🧵 Materiali</button>
+    <button class="tab" data-tax="styles">✨ Stili</button>
+    <button class="tab" data-tax="seasons">🌤️ Stagioni</button>
+    <button class="tab" data-tax="occasions">📅 Occasioni</button>
+  </nav>
+
+  <main class="settings-main">
+
+    <p class="settings-hint" id="tax-hint">
+      Gestisci i valori usati nei tag dei tuoi capi. Puoi aggiungere, rinominare o eliminare.
+    </p>
+
+    <div class="taxonomy-add-row">
+      <input type="text" id="tax-new-input" class="input" placeholder="Aggiungi un nuovo valore..." />
+      <button class="btn btn--primary" id="tax-add-btn">+ Aggiungi</button>
+    </div>
+
+    <div id="tax-list" class="taxonomy-list"></div>
+
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/taxonomies-page.js"></script>
+</body>
+</html>

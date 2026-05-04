@@ -189,17 +189,19 @@
 
         <div class="form-group">
           <label>Sotto-categoria <small>(es. t-shirt, jeans, sneakers...)</small></label>
-          <input type="text" id="field-subcategory" placeholder="opzionale" />
+          <input type="text" id="field-subcategory" placeholder="opzionale" list="dl-subcategories" />
+          <datalist id="dl-subcategories"></datalist>
         </div>
 
         <div class="form-group">
           <label>Colore principale</label>
-          <input type="text" id="field-color" placeholder="es. blu navy, bianco..." />
+          <input type="text" id="field-color" placeholder="es. blu navy, bianco..." list="dl-colors" />
+          <datalist id="dl-colors"></datalist>
         </div>
 
         <div class="form-group">
           <label>Colore secondario <small>(opzionale)</small></label>
-          <input type="text" id="field-color-secondary" placeholder="se presente" />
+          <input type="text" id="field-color-secondary" placeholder="se presente" list="dl-colors" />
         </div>
 
         <div class="form-group">
@@ -267,7 +269,8 @@
 
         <div class="form-group">
           <label>Occasione</label>
-          <input type="text" id="field-occasion" placeholder="es. lavoro, sport, sera..." />
+          <input type="text" id="field-occasion" placeholder="es. lavoro, sport, sera..." list="dl-occasions" />
+          <datalist id="dl-occasions"></datalist>
         </div>
 
         <div class="form-group">
@@ -305,6 +308,10 @@
         <a href="./analytics.html" class="menu-link">
           <span class="menu-link-icon">📊</span>
           <span>Statistiche</span>
+        </a>
+        <a href="./taxonomies.html" class="menu-link">
+          <span class="menu-link-icon">🏷️</span>
+          <span>Categorie e tag</span>
         </a>
         <a href="./settings.html" class="menu-link">
           <span class="menu-link-icon">🎨</span>

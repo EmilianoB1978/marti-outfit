@@ -10,6 +10,7 @@ import * as Theme from "./theme/manager.js";
 import * as Weather from "./weather.js";
 import * as Haptic from "./haptic.js";
 import * as Search from "./search.js";
+import * as Taxonomies from "./taxonomies.js";
 import { showOnboarding } from "./onboarding.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
@@ -61,6 +62,11 @@ async function boot() {
     state.items = items;
     state.savedOutfits = savedOutfits;
 
+    // Carico le tassonomie (con migrazione automatica dai capi esistenti
+    // alla prima volta) e popolo i select/datalist del modal
+    await Taxonomies.load(items);
+    populateTaxonomyOptions();
+
     renderWardrobe();
     renderFilters();
     renderSavedOutfits();
@@ -71,6 +77,108 @@ async function boot() {
 
   // Onboarding al primo avvio (dopo che l'app e' visibile)
   setTimeout(() => showOnboarding(false), 600);
+}
+
+// =============================================================================
+// Popola select e datalist dalle tassonomie utente (con marker "+ Nuovo...")
+// =============================================================================
+function populateTaxonomyOptions() {
+  // SELECT con icona/label (categorie hanno struttura ricca)
+  populateSelect("field-category", Taxonomies.listValues("categories").map(c => ({
+    value: c.value, label: `${c.icon || '🏷️'} ${c.label}`
+  })));
+
+  // SELECT semplici (string-only)
+  populateSelect("field-pattern",  Taxonomies.listSimpleValues("patterns"));
+  populateSelect("field-material", Taxonomies.listSimpleValues("materials"));
+  populateSelect("field-style",    Taxonomies.listSimpleValues("styles"));
+  populateMultiSelect("field-season", Taxonomies.listSimpleValues("seasons"));
+
+  // DATALIST per i campi free-text
+  populateDatalist("dl-subcategories", Taxonomies.listSimpleValues("subcategories"));
+  populateDatalist("dl-colors",        Taxonomies.listSimpleValues("colors"));
+  populateDatalist("dl-occasions",     Taxonomies.listSimpleValues("occasions"));
+}
+
+function populateSelect(id, values) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const currentValue = sel.value;
+
+  // Mantieni l'opzione vuota all'inizio
+  const opts = ['<option value="">— Scegli —</option>'];
+
+  for (const v of values) {
+    if (typeof v === "string") {
+      opts.push(`<option value="${escapeHtml(v)}">${capitalize(v)}</option>`);
+    } else {
+      opts.push(`<option value="${escapeHtml(v.value)}">${escapeHtml(v.label)}</option>`);
+    }
+  }
+
+  // Sentinel "+ Aggiungi nuovo..."
+  opts.push('<option value="__add_new__" style="font-style:italic">+ Aggiungi nuovo…</option>');
+
+  sel.innerHTML = opts.join("");
+  sel.value = currentValue;  // ripristino valore precedente se presente
+}
+
+function populateMultiSelect(id, values) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const previouslySelected = Array.from(sel.selectedOptions).map(o => o.value);
+
+  sel.innerHTML = values.map(v =>
+    `<option value="${escapeHtml(v)}">${capitalize(v)}</option>`
+  ).join("");
+
+  Array.from(sel.options).forEach(o => {
+    o.selected = previouslySelected.includes(o.value);
+  });
+}
+
+function populateDatalist(id, values) {
+  const dl = document.getElementById(id);
+  if (!dl) return;
+  dl.innerHTML = values.map(v => `<option value="${escapeHtml(v)}"></option>`).join("");
+}
+
+// Handler per "+ Aggiungi nuovo..." su tutti i select
+async function handleSelectAddNew(selectId, taxonomy) {
+  const sel = document.getElementById(selectId);
+  const newValue = prompt(`Nuovo valore per ${taxonomyLabel(taxonomy)}:`);
+  if (!newValue || !newValue.trim()) {
+    sel.value = "";
+    return;
+  }
+  const trimmed = newValue.trim();
+  try {
+    await Taxonomies.addValue(taxonomy, trimmed);
+    populateTaxonomyOptions();
+    // Seleziono il nuovo valore appena aggiunto
+    if (taxonomy === "categories") {
+      // Per categories il value e' lowercase normalizzato
+      const allCats = Taxonomies.listValues("categories");
+      const justAdded = allCats[allCats.length - 1];
+      sel.value = justAdded.value;
+    } else {
+      sel.value = trimmed;
+    }
+    toast(`Aggiunto "${trimmed}"`, "success");
+  } catch (err) {
+    console.error(err);
+    toast("Errore aggiunta", "error");
+    sel.value = "";
+  }
+}
+
+function taxonomyLabel(t) {
+  return ({
+    categories: "categoria",
+    patterns: "pattern",
+    materials: "materiale",
+    styles: "stile",
+  }[t] || t);
 }
 
 // =============================================================================
@@ -395,6 +503,25 @@ async function analyzePendingPhoto() {
   try {
     const tags = await Claude.analyzeGarment(state.pendingPhoto.base64);
 
+    // Se l'AI restituisce valori non in tassonomia (es. nuovo pattern/material),
+    // li aggiungo automaticamente prima di selezionarli nei select
+    const autoAddIfMissing = async (taxonomy, value) => {
+      if (!value) return;
+      const existing = Taxonomies.listSimpleValues(taxonomy).map(v => v.toLowerCase());
+      if (!existing.includes(String(value).toLowerCase())) {
+        await Taxonomies.addValue(taxonomy, value);
+      }
+    };
+    await Promise.all([
+      autoAddIfMissing("patterns", tags.pattern),
+      autoAddIfMissing("materials", tags.material),
+      autoAddIfMissing("styles", tags.style),
+      autoAddIfMissing("subcategories", tags.subcategory),
+      autoAddIfMissing("colors", tags.color_primary || tags.color),
+      autoAddIfMissing("colors", tags.color_secondary),
+    ]);
+    populateTaxonomyOptions();
+
     // Helper: setta solo se il campo e' vuoto (non sovrascrivere user input)
     const setIfEmpty = (id, value) => {
       if (!value) return;
@@ -465,6 +592,35 @@ async function saveItem() {
     notes: document.getElementById("field-notes").value.trim() || null,
     price: (price !== null && !isNaN(price)) ? price : null,
   };
+
+  // Filter via __add_new__ se rimasto per qualche motivo
+  if (data.category === "__add_new__") data.category = null;
+  if (data.pattern === "__add_new__") data.pattern = null;
+  if (data.material === "__add_new__") data.material = null;
+  if (data.style === "__add_new__") data.style = null;
+
+  // Auto-save dei valori NUOVI scritti nei campi free-text dentro le tassonomie
+  // (silenzioso, niente prompt: l'utente l'ha gia' digitato).
+  const autoAdd = async (taxonomy, value) => {
+    if (!value) return;
+    const existing = Taxonomies.listSimpleValues(taxonomy).map(v => v.toLowerCase());
+    if (!existing.includes(value.toLowerCase())) {
+      await Taxonomies.addValue(taxonomy, value);
+    }
+  };
+  try {
+    await Promise.all([
+      autoAdd("subcategories", data.subcategory),
+      autoAdd("colors",        data.color_primary),
+      autoAdd("colors",        data.color_secondary),
+      // Le occasioni sono spesso multi-valore separate da virgole: salvo ognuna
+      ...((data.occasion || "").split(",").map(o => autoAdd("occasions", o.trim()))),
+    ]);
+    // Refresh datalist per riflettere eventuali aggiunte
+    populateTaxonomyOptions();
+  } catch (err) {
+    console.warn("Auto-add taxonomy failed (non bloccante):", err);
+  }
 
   const btn = document.getElementById("btn-save-item");
   btn.disabled = true;
@@ -890,6 +1046,22 @@ document.addEventListener("DOMContentLoaded", () => {
   formalitySlider.addEventListener("input", () => {
     const v = +formalitySlider.value;
     document.getElementById("formality-value").textContent = v === 0 ? "—" : `${v}/5`;
+  });
+
+  // Listener "+ Aggiungi nuovo..." sui select del modal capo
+  const taxLinks = [
+    ["field-category", "categories"],
+    ["field-pattern", "patterns"],
+    ["field-material", "materials"],
+    ["field-style", "styles"],
+  ];
+  taxLinks.forEach(([selectId, taxonomy]) => {
+    const sel = document.getElementById(selectId);
+    sel.addEventListener("change", () => {
+      if (sel.value === "__add_new__") {
+        handleSelectAddNew(selectId, taxonomy);
+      }
+    });
   });
 
   // Outfit

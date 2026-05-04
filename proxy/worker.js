@@ -17,25 +17,52 @@
 const CLAUDE_MODEL = "claude-sonnet-4-20250514";
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 
-// Prompt per analisi foto: chiediamo JSON strutturato
+// Prompt per analisi foto: chiediamo JSON strutturato ricco
 const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO un oggetto JSON (nessun testo prima o dopo) con questi campi:
 
 {
   "category": "top|bottom|scarpe|accessori|capospalla|completo",
-  "color": "colore principale in italiano (es. 'blu navy', 'bianco', 'beige')",
+  "subcategory": "tipo specifico in italiano (es. 't-shirt', 'jeans slim', 'sneakers', 'blazer', 'maglione girocollo', 'gonna a tubo')",
+  "color_primary": "colore principale in italiano (es. 'blu navy', 'bianco panna', 'beige sabbia')",
+  "color_secondary": "secondo colore se presente, altrimenti null",
+  "color": "alias di color_primary (per compatibilita')",
+  "pattern": "tinta unita|righe|quadri|floreale|denim|grafico|animalier|altro",
+  "material": "cotone|denim|lana|pelle|lino|sintetico|cashmere|seta|maglia|altro",
   "style": "casual|elegante|sportivo|formale|streetwear",
+  "formality": numero 1-5 (1=molto casual home/sport, 3=neutro, 5=molto formale gala/cerimonia),
   "season": ["primavera","estate","autunno","inverno"] (array, includi tutte le stagioni adatte),
   "occasion": "occasioni d'uso suggerite, separate da virgola (es. 'lavoro, aperitivo')",
-  "description": "breve descrizione del capo in italiano, max 80 caratteri"
+  "description": "breve descrizione visiva del capo in italiano, max 80 caratteri (es. 'maglietta cotone bianco taglio classico')"
 }
+
+Importante:
+- Sii preciso ma sintetico
+- Se non riesci a determinare un campo, usa null (non inventare)
+- formality DEVE essere un numero (1, 2, 3, 4 o 5), non una stringa
 
 Rispondi SOLO con il JSON, niente markdown, niente backticks.`;
 
 // Prompt per outfit: input = lista capi + contesto + meteo opzionale
 function buildOutfitPrompt(context, items, weather) {
+  // Formato compatto delle features rilevanti (formality, material, pattern se presenti)
+  const fmtItem = (it) => {
+    const parts = [
+      `ID:${it.id}`,
+      it.category || '?',
+      it.subcategory ? `(${it.subcategory})` : null,
+      it.color_primary || it.color || '?',
+      it.style || '?',
+      it.formality ? `formalita':${it.formality}/5` : null,
+      it.material || null,
+      it.pattern || null,
+      `stagioni:${(it.season || []).join('/') || '?'}`,
+    ].filter(Boolean);
+    return `- ${parts.join(' | ')}`;
+  };
+
   return `Sei uno stilista personale. Ho questi capi nel guardaroba:
 
-${items.map(it => `- ID:${it.id} | ${it.category || '?'} | ${it.color || '?'} | ${it.style || '?'} | stagioni: ${(it.season || []).join('/') || '?'} | occasione: ${it.occasion || '?'}`).join('\n')}
+${items.map(fmtItem).join('\n')}
 
 Suggeriscimi 2-3 outfit COMPLETI per: "${context}".${weather ? '\n\n' + weather + ' Considera questo per la scelta dei capi (es. con pioggia evita scarpe in tela, con caldo preferisci tessuti leggeri).' : ''}
 
@@ -44,6 +71,9 @@ Regole:
 - Usa SOLO gli ID forniti, non inventarli.
 - Combina colori e stili in modo armonioso.
 - Considera la stagione/occasione del contesto richiesto.
+- Se l'occasione e' formale, preferisci capi con formalita' alta (4-5).
+- Se l'occasione e' casual, preferisci 1-3.
+- Evita di mischiare materiali troppo diversi (es. pelle pesante con lino estivo).
 
 Rispondi SOLO con un oggetto JSON (nessun testo prima o dopo, nessun markdown):
 

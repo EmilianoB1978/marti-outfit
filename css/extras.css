@@ -888,6 +888,28 @@ body.editor-page {
   text-transform: capitalize;
 }
 
+/* ============================================================================
+   Formality slider (1-5 stars) nel modal capo
+   ============================================================================ */
+.formality-value {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-xs);
+  font-weight: var(--font-weight-bold);
+  margin-left: var(--space-2);
+}
+.formality-scale {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-top: var(--space-1);
+}
+
 /* Banner status nella settings tab Meteo */
 .weather-status {
   display: flex;

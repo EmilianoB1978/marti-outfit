@@ -170,8 +170,50 @@
         </div>
 
         <div class="form-group">
-          <label>Colore</label>
+          <label>Sotto-categoria <small>(es. t-shirt, jeans, sneakers...)</small></label>
+          <input type="text" id="field-subcategory" placeholder="opzionale" />
+        </div>
+
+        <div class="form-group">
+          <label>Colore principale</label>
           <input type="text" id="field-color" placeholder="es. blu navy, bianco..." />
+        </div>
+
+        <div class="form-group">
+          <label>Colore secondario <small>(opzionale)</small></label>
+          <input type="text" id="field-color-secondary" placeholder="se presente" />
+        </div>
+
+        <div class="form-group">
+          <label>Pattern</label>
+          <select id="field-pattern">
+            <option value="">— Scegli —</option>
+            <option value="tinta unita">Tinta unita</option>
+            <option value="righe">Righe</option>
+            <option value="quadri">Quadri</option>
+            <option value="floreale">Floreale</option>
+            <option value="denim">Denim</option>
+            <option value="grafico">Grafico/stampe</option>
+            <option value="animalier">Animalier</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Materiale</label>
+          <select id="field-material">
+            <option value="">— Scegli —</option>
+            <option value="cotone">Cotone</option>
+            <option value="denim">Denim</option>
+            <option value="lana">Lana</option>
+            <option value="pelle">Pelle</option>
+            <option value="lino">Lino</option>
+            <option value="sintetico">Sintetico</option>
+            <option value="cashmere">Cashmere</option>
+            <option value="seta">Seta</option>
+            <option value="maglia">Maglia</option>
+            <option value="altro">Altro</option>
+          </select>
         </div>
 
         <div class="form-group">
@@ -184,6 +226,14 @@
             <option value="formale">Formale</option>
             <option value="streetwear">Streetwear</option>
           </select>
+        </div>
+
+        <div class="form-group">
+          <label>Formalità <span class="formality-value" id="formality-value">—</span></label>
+          <input type="range" id="field-formality" class="slider" min="0" max="5" step="1" value="0" />
+          <div class="formality-scale">
+            <span>—</span><span>1<br>casa</span><span>2</span><span>3</span><span>4</span><span>5<br>gala</span>
+          </div>
         </div>
 
         <div class="form-group">

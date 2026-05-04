@@ -165,11 +165,17 @@ function openAddItem() {
   document.getElementById("btn-analyze").classList.add("hidden");
   document.getElementById("analyze-status").textContent = "";
 
-  // Reset form (incluso prezzo)
-  ["field-category", "field-color", "field-style", "field-occasion", "field-notes", "field-price"].forEach(id => {
+  // Reset form (tutti i campi)
+  ["field-category", "field-subcategory", "field-color", "field-color-secondary",
+   "field-pattern", "field-material", "field-style", "field-occasion",
+   "field-notes", "field-price"].forEach(id => {
     document.getElementById(id).value = "";
   });
   Array.from(document.getElementById("field-season").options).forEach(o => o.selected = false);
+
+  // Reset slider formality (0 = non specificato)
+  document.getElementById("field-formality").value = 0;
+  document.getElementById("formality-value").textContent = "—";
 
   document.getElementById("modal-item").classList.remove("hidden");
 }
@@ -189,11 +195,21 @@ function openEditItem(id) {
   document.getElementById("btn-analyze").classList.add("hidden");
 
   document.getElementById("field-category").value = item.category || "";
-  document.getElementById("field-color").value = item.color || "";
+  document.getElementById("field-subcategory").value = item.subcategory || "";
+  document.getElementById("field-color").value = item.color_primary || item.color || "";
+  document.getElementById("field-color-secondary").value = item.color_secondary || "";
+  document.getElementById("field-pattern").value = item.pattern || "";
+  document.getElementById("field-material").value = item.material || "";
   document.getElementById("field-style").value = item.style || "";
   document.getElementById("field-occasion").value = item.occasion || "";
   document.getElementById("field-notes").value = item.notes || "";
   document.getElementById("field-price").value = item.price ?? "";
+
+  // Slider formality (1-5, oppure 0 se non specificato)
+  const formality = item.formality || 0;
+  document.getElementById("field-formality").value = formality;
+  document.getElementById("formality-value").textContent =
+    formality === 0 ? "—" : `${formality}/5`;
 
   const seasons = Array.isArray(item.season) ? item.season : [];
   Array.from(document.getElementById("field-season").options).forEach(o => {
@@ -282,19 +298,31 @@ async function analyzePendingPhoto() {
   try {
     const tags = await Claude.analyzeGarment(state.pendingPhoto.base64);
 
-    // Popola campi senza sovrascrivere quelli gia' compilati dall'utente
-    if (tags.category && !document.getElementById("field-category").value) {
-      document.getElementById("field-category").value = tags.category;
+    // Helper: setta solo se il campo e' vuoto (non sovrascrivere user input)
+    const setIfEmpty = (id, value) => {
+      if (!value) return;
+      const el = document.getElementById(id);
+      if (!el.value) el.value = value;
+    };
+
+    // Campi base
+    setIfEmpty("field-category", tags.category);
+    setIfEmpty("field-subcategory", tags.subcategory);
+    setIfEmpty("field-color", tags.color_primary || tags.color);
+    setIfEmpty("field-color-secondary", tags.color_secondary);
+    setIfEmpty("field-pattern", tags.pattern);
+    setIfEmpty("field-material", tags.material);
+    setIfEmpty("field-style", tags.style);
+    setIfEmpty("field-occasion", tags.occasion);
+
+    // Formality (slider): l'AI ritorna numero 1-5
+    if (tags.formality && +document.getElementById("field-formality").value === 0) {
+      const f = Math.max(1, Math.min(5, parseInt(tags.formality)));
+      document.getElementById("field-formality").value = f;
+      document.getElementById("formality-value").textContent = `${f}/5`;
     }
-    if (tags.color && !document.getElementById("field-color").value) {
-      document.getElementById("field-color").value = tags.color;
-    }
-    if (tags.style && !document.getElementById("field-style").value) {
-      document.getElementById("field-style").value = tags.style;
-    }
-    if (tags.occasion && !document.getElementById("field-occasion").value) {
-      document.getElementById("field-occasion").value = tags.occasion;
-    }
+
+    // Stagioni (multi-select)
     if (Array.isArray(tags.season)) {
       Array.from(document.getElementById("field-season").options).forEach(o => {
         if (tags.season.includes(o.value)) o.selected = true;
@@ -302,10 +330,7 @@ async function analyzePendingPhoto() {
     }
 
     // Salvo la descrizione AI come "note di contesto" (utile al motore outfit)
-    if (tags.description) {
-      const notesEl = document.getElementById("field-notes");
-      if (!notesEl.value) notesEl.value = tags.description;
-    }
+    setIfEmpty("field-notes", tags.description);
 
     status.textContent = "✓ Tag suggeriti dall'AI - controlla e modifica";
     toast("Tag generati", "success");
@@ -324,11 +349,20 @@ async function analyzePendingPhoto() {
 async function saveItem() {
   const priceRaw = document.getElementById("field-price").value;
   const price = priceRaw ? parseFloat(priceRaw) : null;
+  const formalityRaw = +document.getElementById("field-formality").value;
+  const formality = formalityRaw >= 1 && formalityRaw <= 5 ? formalityRaw : null;
+  const colorPrimary = document.getElementById("field-color").value.trim() || null;
 
   const data = {
     category: document.getElementById("field-category").value || null,
-    color: document.getElementById("field-color").value.trim() || null,
+    subcategory: document.getElementById("field-subcategory").value.trim() || null,
+    color: colorPrimary,                       // alias per retrocompat
+    color_primary: colorPrimary,
+    color_secondary: document.getElementById("field-color-secondary").value.trim() || null,
+    pattern: document.getElementById("field-pattern").value || null,
+    material: document.getElementById("field-material").value || null,
     style: document.getElementById("field-style").value || null,
+    formality,
     season: Array.from(document.getElementById("field-season").selectedOptions).map(o => o.value),
     occasion: document.getElementById("field-occasion").value.trim() || null,
     notes: document.getElementById("field-notes").value.trim() || null,
@@ -751,6 +785,13 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-save-item").addEventListener("click", saveItem);
   document.getElementById("btn-delete-item").addEventListener("click", deleteCurrentItem);
   document.getElementById("btn-mark-worn").addEventListener("click", markCurrentItemAsWorn);
+
+  // Slider formality: aggiorno il display live
+  const formalitySlider = document.getElementById("field-formality");
+  formalitySlider.addEventListener("input", () => {
+    const v = +formalitySlider.value;
+    document.getElementById("formality-value").textContent = v === 0 ? "—" : `${v}/5`;
+  });
 
   // Outfit
   document.getElementById("btn-generate-outfit").addEventListener("click", generateOutfit);

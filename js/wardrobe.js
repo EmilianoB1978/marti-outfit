@@ -11,12 +11,24 @@ import {
 
 const COLLECTION = "items";
 
-// Default per i campi nuovi (Fase 3 - lazy migration in memoria)
+// Default per i campi opzionali aggiunti nel tempo (Fase 3 + Fase 6)
+// Lazy migration: applicati in memoria al fetch, scritti su DB solo
+// quando l'utente modifica esplicitamente.
 const ITEM_DEFAULTS = {
+  // Fase 3 - wear tracking
   wear_count:    0,
   last_worn_at:  null,
   wear_history:  [],
   price:         null,
+  // Fase 6 - auto-tagging migliorato
+  subcategory:    null,
+  color_primary:  null,
+  color_secondary: null,
+  pattern:        null,
+  material:       null,
+  formality:      null,  // 1-5
+  cutout_url:     null,  // gia' usato da editor visuale (Fase 4)
+  cutout_path:    null,
 };
 
 /** Applica i default a un capo letto dal DB. NON scrive su DB (lazy). */
@@ -74,11 +86,18 @@ export async function createItem(data) {
     occasion: data.occasion || null,
     notes: data.notes || null,
     description: data.description || null, // descrizione AI (opzionale)
-    // Tracking (Fase 3) - inizializzati a default
+    // Tracking (Fase 3)
     wear_count:   0,
     last_worn_at: null,
     wear_history: [],
     price:        data.price ?? null,
+    // Auto-tagging migliorato (Fase 6)
+    subcategory:    data.subcategory     || null,
+    color_primary:  data.color_primary   || data.color || null,
+    color_secondary: data.color_secondary || null,
+    pattern:        data.pattern  || null,
+    material:       data.material || null,
+    formality:      data.formality ?? null,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp()
   };

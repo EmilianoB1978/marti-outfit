@@ -3,9 +3,10 @@
 // =============================================================================
 
 import {
-  db,
+  db, storage,
   collection, doc, addDoc, getDocs, deleteDoc,
-  query, orderBy, serverTimestamp
+  query, orderBy, serverTimestamp,
+  storageRef, uploadBytes, getDownloadURL,
 } from "./firebase-config.js";
 
 const COLLECTION = "outfits";
@@ -40,4 +41,31 @@ export async function saveOutfit(outfit) {
  */
 export async function deleteSavedOutfit(id) {
   await deleteDoc(doc(db, COLLECTION, id));
+}
+
+/**
+ * Salva un outfit visuale (creato con il drag&drop editor).
+ * @param {object} data - { title, layout, item_ids, compositeBlob }
+ * @returns {Promise<object>} l'outfit salvato
+ */
+export async function saveVisualOutfit(data) {
+  // Carico l'immagine composita su Storage
+  const compositePath = `outfits/composite_${Date.now()}.png`;
+  const ref = storageRef(storage, compositePath);
+  await uploadBytes(ref, data.compositeBlob, { contentType: "image/png" });
+  const compositeUrl = await getDownloadURL(ref);
+
+  const payload = {
+    title: data.title || "Outfit visuale",
+    description: data.description || null,
+    item_ids: data.item_ids || [],
+    context: data.context || null,
+    is_visual: true,
+    composite_url: compositeUrl,
+    composite_path: compositePath,
+    layout: data.layout || [],
+    created_at: serverTimestamp(),
+  };
+  const docRef = await addDoc(collection(db, COLLECTION), payload);
+  return { id: docRef.id, ...payload };
 }

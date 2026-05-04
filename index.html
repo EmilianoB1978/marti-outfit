@@ -68,6 +68,15 @@
 
       <!-- Pagina: Outfit -->
       <section id="page-outfits" class="page">
+
+        <button id="btn-shuffle" class="shuffle-cta">
+          🎲 Sorprendimi (3 outfit casuali)
+        </button>
+
+        <a href="./outfit-editor.html" class="btn btn--secondary btn--block" style="margin-bottom: var(--space-3);">
+          🎨 Crea outfit visuale (drag & drop)
+        </a>
+
         <div class="outfit-prompt">
           <label for="outfit-context">Per quale occasione?</label>
           <input
@@ -76,11 +85,12 @@
             placeholder="es. cena informale, lavoro, weekend..."
           />
           <button id="btn-generate-outfit" class="btn-primary">
-            ✨ Genera outfit
+            ✨ Genera outfit con AI
           </button>
         </div>
 
         <div id="outfit-results" class="outfit-results"></div>
+        <div id="shuffle-results" class="shuffle-result-grid"></div>
 
         <!-- Outfit salvati -->
         <h2 class="section-title">Outfit salvati</h2>

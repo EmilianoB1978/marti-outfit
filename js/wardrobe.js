@@ -110,6 +110,26 @@ export async function markItemAsWorn(id, currentItem) {
 }
 
 /**
+ * Carica il cutout (PNG con bg trasparente) su Storage e aggiorna l'item.
+ * Usato dall'outfit editor visuale (bg-removal.js).
+ * @param {string} itemId
+ * @param {Blob} cutoutBlob - PNG con trasparenza
+ * @returns {Promise<string>} URL pubblico del cutout
+ */
+export async function uploadAndSaveCutout(itemId, cutoutBlob) {
+  const path = `cutouts/${itemId}.png`;
+  const ref = storageRef(storage, path);
+  await uploadBytes(ref, cutoutBlob, { contentType: "image/png" });
+  const url = await getDownloadURL(ref);
+  await updateDoc(doc(db, COLLECTION, itemId), {
+    cutout_url: url,
+    cutout_path: path,
+    updated_at: serverTimestamp(),
+  });
+  return url;
+}
+
+/**
  * Marca un intero outfit come indossato: incrementa wear_count su ogni
  * capo dell'outfit. Esegue le update in parallelo.
  */

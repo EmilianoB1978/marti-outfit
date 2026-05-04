@@ -1,11 +1,13 @@
 // Service Worker per PWA My Wardrobe
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v5-capsules-analytics';
+const CACHE_VERSION = 'v6-editor-shuffle';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
 // Quando aggiungi un file critico al boot, mettilo qui e bumpa CACHE_VERSION.
+// NOTA: il modello @imgly (~30 MB) NON e' qui: viene cachato in IndexedDB
+// dalla libreria stessa al primo uso dell'editor.
 const SHELL_FILES = [
   './',
   './index.html',
@@ -13,6 +15,7 @@ const SHELL_FILES = [
   './capsules.html',
   './capsule-detail.html',
   './analytics.html',
+  './outfit-editor.html',
   './manifest.json',
   './css/tokens.css',
   './css/components.css',
@@ -29,6 +32,8 @@ const SHELL_FILES = [
   './js/capsule-detail.js',
   './js/analytics.js',
   './js/settings.js',
+  './js/outfit-editor.js',
+  './js/bg-removal.js',
   './js/theme/tokens.js',
   './js/theme/manager.js',
   './icons/icon-192.png',

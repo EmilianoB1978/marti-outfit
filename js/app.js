@@ -543,6 +543,148 @@ function renderSavedOutfits() {
 }
 
 // =============================================================================
+// Style Shuffle (3.7) - genera 3 outfit random con animazione slot-machine
+// =============================================================================
+
+// Categorie richieste per un outfit valido (fallback graceful se mancano)
+const SHUFFLE_REQUIRED = ["top", "bottom", "scarpe"];
+const SHUFFLE_OPTIONAL = ["accessori"];
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Costruisce un outfit pescando 1 capo per ogni categoria richiesta
+function composeRandomOutfit() {
+  const items = state.items;
+
+  // Caso 1: c'e' un "completo" -> usa quello + scarpe + opzionali
+  const completi = items.filter(it => it.category === "completo");
+  let chosen = [];
+
+  if (completi.length > 0 && Math.random() < 0.3) {
+    chosen.push(pickRandom(completi));
+    const scarpe = items.filter(it => it.category === "scarpe");
+    if (scarpe.length) chosen.push(pickRandom(scarpe));
+  } else {
+    // Caso 2: top + bottom + scarpe
+    for (const cat of SHUFFLE_REQUIRED) {
+      const pool = items.filter(it => it.category === cat);
+      if (pool.length) chosen.push(pickRandom(pool));
+    }
+  }
+
+  // Aggiungo 0-1 accessorio random (50% chance)
+  if (Math.random() < 0.5) {
+    const acc = items.filter(it => it.category === "accessori");
+    if (acc.length) chosen.push(pickRandom(acc));
+  }
+
+  return chosen;
+}
+
+const SHUFFLE_TITLES = [
+  "Casual chic", "Look essenziale", "Vibes urbane",
+  "Pulito e raffinato", "Outfit del giorno", "Combo del momento",
+  "Easy & cool", "Stile spontaneo",
+];
+
+async function generateShuffleOutfits() {
+  if (state.items.length < 2) {
+    toast("Aggiungi almeno 2 capi al guardaroba", "error");
+    return;
+  }
+
+  const container = document.getElementById("shuffle-results");
+  // Render 3 card con slot vuoti
+  const outfits = [
+    composeRandomOutfit(),
+    composeRandomOutfit(),
+    composeRandomOutfit(),
+  ];
+
+  container.innerHTML = outfits.map((items, idx) => {
+    const slots = items.map((_, i) => `<div class="shuffle-slot is-spinning" data-card="${idx}" data-slot="${i}"></div>`).join("");
+    return `
+      <div class="shuffle-card">
+        <div class="shuffle-card-title">${SHUFFLE_TITLES[Math.floor(Math.random() * SHUFFLE_TITLES.length)]}</div>
+        <div class="shuffle-card-items" data-items="${idx}">${slots}</div>
+      </div>
+    `;
+  }).join("");
+
+  // Animazione slot machine: cycling random per 1 secondo, poi settle
+  const SPIN_DURATION = 1000;
+  const SPIN_INTERVAL = 80;
+  const allItemUrls = state.items.filter(it => it.photo_url).map(it => it.photo_url);
+
+  const spinTimers = [];
+  document.querySelectorAll(".shuffle-slot").forEach(slot => {
+    const t = setInterval(() => {
+      const url = pickRandom(allItemUrls);
+      if (url) slot.innerHTML = `<img src="${url}" alt="" />`;
+    }, SPIN_INTERVAL);
+    spinTimers.push(t);
+  });
+
+  // Dopo SPIN_DURATION ms, settle ogni slot al capo finale
+  setTimeout(() => {
+    spinTimers.forEach(t => clearInterval(t));
+    outfits.forEach((items, cardIdx) => {
+      items.forEach((item, slotIdx) => {
+        const slot = container.querySelector(`[data-card="${cardIdx}"][data-slot="${slotIdx}"]`);
+        if (slot) {
+          slot.classList.remove("is-spinning");
+          slot.innerHTML = item.photo_url
+            ? `<img src="${item.photo_url}" alt="" />`
+            : '👕';
+        }
+      });
+    });
+
+    // Pulsante "Salva" e "Indossato" per ogni outfit
+    container.querySelectorAll(".shuffle-card").forEach((card, idx) => {
+      const items = outfits[idx];
+      const actions = document.createElement("div");
+      actions.className = "outfit-actions";
+      actions.style.marginTop = "var(--space-3)";
+      actions.innerHTML = `
+        <button class="btn-secondary" data-shuffle-save="${idx}">⭐ Salva</button>
+        <button class="btn-worn" data-shuffle-worn="${idx}">✓ Indossato oggi</button>
+      `;
+      card.appendChild(actions);
+
+      actions.querySelector("[data-shuffle-save]").addEventListener("click", async () => {
+        try {
+          const saved = await Outfit.saveOutfit({
+            title: card.querySelector(".shuffle-card-title").textContent,
+            description: "Generato da Sorprendimi",
+            item_ids: items.map(it => it.id),
+            context: "shuffle"
+          });
+          state.savedOutfits.unshift(saved);
+          renderSavedOutfits();
+          toast("Outfit salvato", "success");
+        } catch (err) {
+          toast("Errore salvataggio", "error");
+        }
+      });
+
+      actions.querySelector("[data-shuffle-worn]").addEventListener("click", async () => {
+        try {
+          await Wardrobe.markOutfitAsWorn(items.map(it => it.id), state.items);
+          state.items = await Wardrobe.listItems();
+          renderWardrobe();
+          toast(`✓ Outfit indossato`, "success");
+        } catch (err) {
+          toast("Errore: " + err.message, "error");
+        }
+      });
+    });
+  }, SPIN_DURATION);
+}
+
+// =============================================================================
 // Navigazione: bottom nav
 // =============================================================================
 function switchPage(pageName) {
@@ -599,6 +741,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Outfit
   document.getElementById("btn-generate-outfit").addEventListener("click", generateOutfit);
+  document.getElementById("btn-shuffle").addEventListener("click", generateShuffleOutfits);
 
   // Menu drawer (icona ⋯ in header)
   const menuDrawer = document.getElementById("menu-drawer");

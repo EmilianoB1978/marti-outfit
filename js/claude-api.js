@@ -6,9 +6,8 @@
 // Vedi README.md per il setup del Worker.
 // =============================================================================
 
-// 🔧 SOSTITUISCI con l'URL del tuo Cloudflare Worker
-//    Esempio: https://my-wardrobe-proxy.tuonome.workers.dev
-const WORKER_URL = "https://my-wardrobe-proxy.TUONOME.workers.dev";
+// URL del Cloudflare Worker che fa da proxy alla Claude API
+const WORKER_URL = "https://marty-outfit-proxy.e-barbierato.workers.dev";
 
 const isWorkerConfigured = !WORKER_URL.includes("TUONOME");
 

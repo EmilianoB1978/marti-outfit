@@ -1,0 +1,350 @@
+// =============================================================================
+// Settings page controller - Marty Outfit
+// =============================================================================
+// Cablo gli elementi della UI con il theme manager.
+// Pattern: ad ogni evento input/change, chiamo Theme.set/update/overrideToken;
+// poi mi sottoscrivo a Theme.subscribe per riallineare la UI quando lo stato
+// cambia da fonti esterne (es. tap su preset reset overrides).
+// =============================================================================
+
+import * as Theme from "./theme/manager.js";
+
+// Inizializzo il theme manager (legge localStorage, applica al documento)
+Theme.init();
+
+// =============================================================================
+// Toast helper (riusato dall'app principale)
+// =============================================================================
+function toast(message, type = "default") {
+  const el = document.getElementById("toast");
+  el.textContent = message;
+  el.className = `toast ${type}`;
+  el.classList.remove("hidden");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.add("hidden"), 2500);
+}
+
+// =============================================================================
+// Tabs navigation
+// =============================================================================
+function initTabs() {
+  const tabs = document.querySelectorAll(".settings-tabs .tab");
+  const panels = document.querySelectorAll(".settings-tab-panel");
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("is-active"));
+      panels.forEach(p => p.classList.remove("is-active"));
+      tab.classList.add("is-active");
+      const id = tab.dataset.tab;
+      document.getElementById(`tab-${id}`).classList.add("is-active");
+      // Persisto la tab nel hash per deep link
+      history.replaceState(null, "", `#${id}`);
+    });
+  });
+
+  // Apri tab dal hash all'avvio (es. ?#colors)
+  const initial = location.hash.replace("#", "");
+  if (initial) {
+    const btn = document.querySelector(`.tab[data-tab="${initial}"]`);
+    if (btn) btn.click();
+  }
+}
+
+// =============================================================================
+// TAB 1: TEMI PREDEFINITI
+// =============================================================================
+function initPresets() {
+  const grid = document.getElementById("preset-grid");
+  const toggleAuto = document.getElementById("toggle-auto");
+
+  // Render dei preset come card con mini-preview 2x2
+  function renderPresets() {
+    const prefs = Theme.getPreferences();
+    const presets = Theme.getPresets();
+
+    grid.innerHTML = presets.map(p => {
+      const isActive = prefs.themeMode === p.key;
+      // Recupero i colori per la mini-preview leggendoli dai tokens del preset
+      // (uso dei placeholder se manca, evita JS lookup)
+      return `
+        <button class="preset-card ${isActive ? 'is-active' : ''}" data-preset="${p.key}" aria-label="Tema ${p.name}">
+          <div class="preset-swatch preset-${p.key}"></div>
+          <div class="preset-name">${p.name}</div>
+          ${isActive ? '<div class="preset-active-mark">✓</div>' : ''}
+        </button>
+      `;
+    }).join("");
+
+    grid.querySelectorAll(".preset-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const key = card.dataset.preset;
+        // Quando l'utente sceglie un preset, disabilito 'auto' e azzero overrides
+        Theme.update({ themeMode: key, customOverrides: {} });
+        toggleAuto.checked = false;
+        toast(`Tema "${card.querySelector('.preset-name').textContent}" applicato`, "success");
+      });
+    });
+  }
+
+  // Toggle "Sync con OS"
+  toggleAuto.addEventListener("change", () => {
+    if (toggleAuto.checked) {
+      Theme.set("themeMode", "auto");
+      toast("Sincronizzazione con il sistema attiva", "success");
+    } else {
+      // Se viene disattivato, ripristino l'ultimo preset esplicito o light
+      Theme.set("themeMode", "light");
+    }
+  });
+
+  // Stato iniziale del toggle
+  function syncToggleAuto() {
+    toggleAuto.checked = Theme.getPreferences().themeMode === "auto";
+  }
+
+  renderPresets();
+  syncToggleAuto();
+
+  // Riallineo UI quando il tema cambia da fonti esterne
+  Theme.subscribe(() => {
+    renderPresets();
+    syncToggleAuto();
+  });
+}
+
+// =============================================================================
+// TAB 2: COLORI
+// =============================================================================
+
+// Palette swatch quick-pick per colore primario
+const PRIMARY_SWATCHES = [
+  "#d4af37", "#1a1a1a", "#e74c3c", "#27ae60", "#3498db",
+  "#9b59b6", "#ff6b9d", "#ff8c42", "#16a085", "#2c3e50",
+  "#f1c40f", "#34495e",
+];
+
+function initColors() {
+  const grid = document.getElementById("swatch-grid-primary");
+  const pPrimary = document.getElementById("picker-primary");
+  const pAccent  = document.getElementById("picker-accent");
+  const pBg      = document.getElementById("picker-bg");
+  const pText    = document.getElementById("picker-text");
+
+  // Render swatch grid
+  grid.innerHTML = PRIMARY_SWATCHES.map(color => `
+    <button class="swatch swatch--lg" data-color="${color}" style="background:${color}" aria-label="Colore ${color}"></button>
+  `).join("");
+  grid.querySelectorAll(".swatch").forEach(sw => {
+    sw.addEventListener("click", () => {
+      Theme.overrideToken("color-primary", sw.dataset.color);
+      toast("Colore principale aggiornato", "success");
+    });
+  });
+
+  // Sync color picker con valore corrente del CSS variable
+  function syncPickers() {
+    const css = getComputedStyle(document.documentElement);
+    pPrimary.value = hexFromCss(css.getPropertyValue("--color-primary"));
+    pAccent.value  = hexFromCss(css.getPropertyValue("--color-accent"));
+    pBg.value      = hexFromCss(css.getPropertyValue("--color-bg"));
+    pText.value    = hexFromCss(css.getPropertyValue("--color-text"));
+  }
+
+  // Bind change su ogni picker
+  pPrimary.addEventListener("input", e => Theme.overrideToken("color-primary", e.target.value));
+  pAccent.addEventListener("input",  e => Theme.overrideToken("color-accent",  e.target.value));
+  pBg.addEventListener("input",      e => Theme.overrideToken("color-bg",      e.target.value));
+  pText.addEventListener("input",    e => Theme.overrideToken("color-text",    e.target.value));
+
+  document.getElementById("btn-clear-overrides").addEventListener("click", () => {
+    Theme.clearOverrides();
+    toast("Personalizzazioni colore rimosse", "success");
+  });
+
+  syncPickers();
+  Theme.subscribe(syncPickers);
+}
+
+// Converte un valore CSS color (rgb / hex / hsl) in hex per i picker.
+// Approccio robusto: setto come background di un elemento temp e leggo computed.
+function hexFromCss(value) {
+  if (!value) return "#000000";
+  value = value.trim();
+  if (value.startsWith("#")) {
+    // Espande #abc -> #aabbcc
+    if (value.length === 4) {
+      return "#" + value.slice(1).split("").map(c => c+c).join("");
+    }
+    return value.slice(0, 7);
+  }
+  // rgb / rgba -> hex
+  const m = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (m) {
+    return "#" + [m[1], m[2], m[3]].map(n => parseInt(n).toString(16).padStart(2, "0")).join("");
+  }
+  return "#000000";
+}
+
+// =============================================================================
+// TAB 3: FORME
+// =============================================================================
+function initShapes() {
+  const sliders = [
+    { id: "slider-radius-button", value: "value-radius-button", key: "radiusButton" },
+    { id: "slider-radius-card",   value: "value-radius-card",   key: "radiusCard"   },
+    { id: "slider-radius-input",  value: "value-radius-input",  key: "radiusInput"  },
+  ];
+
+  function syncSliders() {
+    const prefs = Theme.getPreferences();
+    sliders.forEach(({ id, value, key }) => {
+      const slider = document.getElementById(id);
+      const display = document.getElementById(value);
+      slider.value = prefs[key];
+      display.textContent = `${prefs[key]}px`;
+    });
+    document.querySelectorAll('input[name="border"]').forEach(r => {
+      r.checked = String(r.value) === String(prefs.borderWidth);
+    });
+  }
+
+  sliders.forEach(({ id, value, key }) => {
+    const slider = document.getElementById(id);
+    const display = document.getElementById(value);
+    slider.addEventListener("input", () => {
+      const v = +slider.value;
+      display.textContent = `${v}px`;
+      Theme.set(key, v);
+    });
+  });
+
+  // Bordi (radio 0/1/2 px)
+  document.querySelectorAll('input[name="border"]').forEach(r => {
+    r.addEventListener("change", () => {
+      if (r.checked) Theme.set("borderWidth", +r.value);
+    });
+  });
+
+  syncSliders();
+  Theme.subscribe(syncSliders);
+}
+
+// =============================================================================
+// TAB 4: TIPOGRAFIA
+// =============================================================================
+function initTypo() {
+  const list = document.getElementById("font-list");
+  const fonts = Theme.getFonts();
+
+  list.innerHTML = fonts.map(f => `
+    <button class="font-card" data-font="${f.key}">
+      <div class="font-card-name" style="font-family: var(--font-preview-${f.key}, inherit)">${f.name}</div>
+      <div class="font-card-sample" style="font-family: var(--font-preview-${f.key}, inherit)">Aa Bb 123 - Outfit</div>
+    </button>
+  `).join("");
+
+  // Imposto preview font-family come variabile CSS specifica (non altero il tema attivo)
+  list.querySelectorAll(".font-card").forEach(card => {
+    card.addEventListener("click", () => {
+      Theme.set("font", card.dataset.font);
+      toast(`Font "${card.querySelector('.font-card-name').textContent}" applicato`, "success");
+    });
+  });
+
+  function syncFontUI() {
+    const prefs = Theme.getPreferences();
+    list.querySelectorAll(".font-card").forEach(card => {
+      card.classList.toggle("is-active", card.dataset.font === prefs.font);
+    });
+    document.querySelectorAll('input[name="font-size"]').forEach(r => {
+      r.checked = parseFloat(r.value) === parseFloat(prefs.fontSizeScale);
+    });
+  }
+
+  // Font size scale radios
+  document.querySelectorAll('input[name="font-size"]').forEach(r => {
+    r.addEventListener("change", () => {
+      if (r.checked) Theme.set("fontSizeScale", parseFloat(r.value));
+    });
+  });
+
+  syncFontUI();
+  Theme.subscribe(syncFontUI);
+}
+
+// =============================================================================
+// TAB 5: LAYOUT
+// =============================================================================
+function initLayout() {
+  const animSelect = document.getElementById("select-animation");
+  const colsButtons = document.querySelectorAll("#grid-cols-preview button");
+
+  function syncLayoutUI() {
+    const prefs = Theme.getPreferences();
+    document.querySelectorAll('input[name="density"]').forEach(r => {
+      r.checked = parseFloat(r.value) === parseFloat(prefs.density);
+    });
+    colsButtons.forEach(b => {
+      b.classList.toggle("is-active", +b.dataset.cols === +prefs.gridColumns);
+    });
+    animSelect.value = prefs.animationSpeed;
+  }
+
+  document.querySelectorAll('input[name="density"]').forEach(r => {
+    r.addEventListener("change", () => {
+      if (r.checked) Theme.set("density", parseFloat(r.value));
+    });
+  });
+
+  colsButtons.forEach(b => {
+    b.addEventListener("click", () => Theme.set("gridColumns", +b.dataset.cols));
+  });
+
+  animSelect.addEventListener("change", () => Theme.set("animationSpeed", animSelect.value));
+
+  syncLayoutUI();
+  Theme.subscribe(syncLayoutUI);
+}
+
+// =============================================================================
+// TAB 6: BACKUP
+// =============================================================================
+function initBackup() {
+  document.getElementById("btn-export").addEventListener("click", () => {
+    Theme.exportTheme();
+    toast("Tema esportato", "success");
+  });
+
+  document.getElementById("input-import").addEventListener("change", async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      await Theme.importTheme(file);
+      toast("Tema importato", "success");
+    } catch (err) {
+      console.error(err);
+      toast("File non valido: " + err.message, "error");
+    }
+    e.target.value = "";  // reset input
+  });
+
+  document.getElementById("btn-reset").addEventListener("click", () => {
+    if (!confirm("Resettare tutte le personalizzazioni? I tuoi capi e outfit non vengono toccati.")) return;
+    Theme.reset();
+    toast("Tutto resettato al tema Light di default", "success");
+  });
+}
+
+// =============================================================================
+// Boot
+// =============================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  initTabs();
+  initPresets();
+  initColors();
+  initShapes();
+  initTypo();
+  initLayout();
+  initBackup();
+});

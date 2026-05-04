@@ -1,0 +1,446 @@
+/* =============================================================================
+   Settings page - stili specifici
+   =============================================================================
+   La pagina ha un layout proprio (scroll lineare, no bottom nav).
+   ============================================================================= */
+
+body.settings-page {
+  overflow: auto;          /* permetti scroll verticale (override styles.css) */
+  background: var(--color-bg);
+}
+
+/* ============================================================================
+   Header sticky con back arrow
+   ============================================================================ */
+.settings-header {
+  display: grid;
+  grid-template-columns: 50px 1fr 50px;
+  align-items: center;
+  padding: calc(var(--space-3) + var(--safe-top)) var(--space-3) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.settings-header h1 {
+  text-align: center;
+  font-size: var(--fs-md);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-heading);
+}
+.settings-header .btn-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-xl);
+  text-decoration: none;
+  color: var(--color-text);
+  border-radius: var(--radius-pill);
+}
+.settings-header .btn-icon:active { background: var(--color-surface-alt); }
+
+/* ============================================================================
+   Tabs sticky
+   ============================================================================ */
+.settings-tabs {
+  position: sticky;
+  top: calc(var(--space-7) + var(--safe-top) + 12px);
+  background: var(--color-bg);
+  z-index: 9;
+  padding: 0 var(--space-3);
+}
+
+/* ============================================================================
+   Main container
+   ============================================================================ */
+.settings-main {
+  padding: var(--space-4) var(--space-4) calc(var(--space-8) + var(--safe-bottom));
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+/* Pannelli tab (uno solo visibile alla volta) */
+.settings-tab-panel { display: none; }
+.settings-tab-panel.is-active { display: block; }
+
+/* ============================================================================
+   Section title + hint + row
+   ============================================================================ */
+.settings-section-title {
+  font-size: var(--fs-md);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-heading);
+  margin: var(--space-6) 0 var(--space-3);
+  color: var(--color-text);
+}
+.settings-section-title:first-child { margin-top: var(--space-2); }
+
+.settings-hint {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  gap: var(--space-3);
+}
+.settings-row-title {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+.settings-row-sub {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.settings-value {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: var(--fs-sm);
+}
+
+/* ============================================================================
+   Switch (toggle iOS-style)
+   ============================================================================ */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 51px;
+  height: 31px;
+  flex-shrink: 0;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-pill);
+  transition: background var(--animation-speed) var(--animation-easing);
+}
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  width: 27px;
+  height: 27px;
+  left: 2px;
+  bottom: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--animation-speed) var(--animation-easing);
+}
+.switch input:checked + .switch-slider { background: var(--color-primary); }
+.switch input:checked + .switch-slider::before { transform: translateX(20px); }
+.switch.is-disabled .switch-slider { opacity: 0.4; cursor: not-allowed; }
+
+/* ============================================================================
+   Preset cards (Tab Temi)
+   ============================================================================ */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+@media (min-width: 600px) {
+  .preset-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.preset-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+  transition: transform var(--animation-speed) var(--animation-easing),
+              border-color var(--animation-speed) var(--animation-easing);
+}
+.preset-card:active { transform: scale(0.97); }
+.preset-card.is-active {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+.preset-name {
+  margin-top: var(--space-2);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--fs-sm);
+  text-align: left;
+}
+.preset-active-mark {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Mini-preview 2x2 di colori (calcolati dai valori dei preset) */
+.preset-swatch {
+  width: 100%;
+  aspect-ratio: 2;
+  border-radius: var(--radius-input);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  overflow: hidden;
+}
+.preset-swatch::before,
+.preset-swatch::after,
+.preset-swatch > * { content: ""; display: block; }
+
+/* Definizione mini-preview per ciascun preset (4 colori: bg, surface, primary, accent) */
+.preset-light    { background: linear-gradient(135deg, #ffffff 0% 50%, #f7f7f8 50% 75%, #d4af37 75% 100%); }
+.preset-dark     { background: linear-gradient(135deg, #1a1a1a 0% 50%, #242424 50% 75%, #d4af37 75% 100%); }
+.preset-pastelPink { background: linear-gradient(135deg, #fdf2f4 0% 50%, #f8e3e7 50% 75%, #d4738a 75% 100%); }
+.preset-midnight { background: linear-gradient(135deg, #0a1628 0% 50%, #142340 50% 75%, #d4af37 75% 100%); }
+.preset-sage     { background: linear-gradient(135deg, #f4f1e8 0% 50%, #e8e3d3 50% 75%, #7a8c5d 75% 100%); }
+.preset-mono     { background: linear-gradient(135deg, #ffffff 0% 50%, #f5f5f5 50% 75%, #000000 75% 100%); }
+.preset-warmSunset { background: linear-gradient(135deg, #fdf4ec 0% 50%, #fae5d3 50% 75%, #d97a4b 75% 100%); }
+.preset-y2k      { background: linear-gradient(135deg, #1a0d2e 0% 50%, #2a1a4d 50% 75%, #ff4dd2 75% 100%); }
+.preset-matcha   { background: linear-gradient(135deg, #f0ebd8 0% 50%, #e3dcc0 50% 75%, #5d8c3a 75% 100%); }
+.preset-highContrast { background: linear-gradient(135deg, #000000 0% 50%, #0a0a0a 50% 75%, #ffff00 75% 100%); }
+
+/* ============================================================================
+   Swatch grid (Tab Colori)
+   ============================================================================ */
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+.swatch-grid .swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+}
+
+.color-picker-input {
+  width: 56px;
+  height: 36px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  padding: 2px;
+  background: var(--color-surface);
+}
+
+/* ============================================================================
+   Shapes preview (Tab Forme)
+   ============================================================================ */
+.shapes-preview {
+  background: var(--color-surface-alt);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-4);
+}
+
+/* ============================================================================
+   Radio pill group (densita', font-size, border)
+   ============================================================================ */
+.radio-group {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.radio-pill {
+  flex: 1;
+  min-width: 90px;
+  cursor: pointer;
+}
+.radio-pill input { display: none; }
+.radio-pill span {
+  display: block;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-button);
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: var(--font-weight-medium);
+  transition: background var(--animation-speed) var(--animation-easing);
+}
+.radio-pill input:checked + span {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border-color: var(--color-primary);
+}
+
+/* ============================================================================
+   Typography preview (Tab Font)
+   ============================================================================ */
+.typo-preview {
+  background: var(--color-surface);
+  padding: var(--space-5);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-4);
+}
+.typo-preview-heading {
+  font-family: var(--font-family-heading);
+  font-size: var(--fs-2xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-2);
+}
+.typo-preview-body {
+  font-family: var(--font-family-base);
+  font-size: var(--fs-base);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-base);
+}
+
+.font-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.font-card {
+  text-align: left;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  cursor: pointer;
+  color: var(--color-text);
+  transition: border-color var(--animation-speed) var(--animation-easing);
+}
+.font-card.is-active {
+  border-color: var(--color-primary);
+}
+.font-card-name {
+  font-size: var(--fs-md);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-1);
+}
+.font-card-sample {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+/* ============================================================================
+   Grid columns preview (Tab Layout)
+   ============================================================================ */
+.grid-cols-preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+.grid-cols-preview button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+  font-size: var(--fs-sm);
+  font-weight: var(--font-weight-medium);
+  transition: border-color var(--animation-speed) var(--animation-easing);
+}
+.grid-cols-preview button.is-active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.grid-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  gap: 2px;
+}
+.grid-icon::before, .grid-icon::after,
+.grid-icon span { content: ""; background: currentColor; border-radius: 2px; opacity: 0.7; }
+.grid-icon--2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.grid-icon--2::before { grid-column: 1; grid-row: 1; }
+.grid-icon--2::after  { grid-column: 2; grid-row: 1; }
+.grid-icon--2 span:nth-child(1) { grid-column: 1; grid-row: 2; }
+.grid-icon--2 span:nth-child(2) { grid-column: 2; grid-row: 2; }
+.grid-icon--3 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.grid-icon--3::before { grid-column: 1 / 4; grid-row: 1; height: 50%; align-self: center; }
+.grid-icon--3::after  { grid-column: 1 / 4; grid-row: 2; height: 50%; align-self: center; }
+.grid-icon--4 { grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.grid-icon--4::before { grid-column: 1 / 5; grid-row: 1; height: 50%; align-self: center; }
+.grid-icon--4::after  { grid-column: 1 / 5; grid-row: 2; height: 50%; align-self: center; }
+
+/* Trick semplice: rinuncio agli ::before/::after e disegno tutto come bg con grid auto */
+.grid-icon--2 { background:
+  linear-gradient(currentColor,currentColor) left top  /48% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) right top /48% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) left bottom /48% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) right bottom/48% 48% no-repeat;
+  opacity: 0.7;
+}
+.grid-icon--2::before, .grid-icon--2::after, .grid-icon--2 span { display: none; }
+
+.grid-icon--3 { background:
+  linear-gradient(currentColor,currentColor) 0% 0% /30% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 50% 0% /30% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 100% 0% /30% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 0% 100% /30% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 50% 100% /30% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 100% 100% /30% 48% no-repeat;
+  opacity: 0.7;
+}
+.grid-icon--3::before, .grid-icon--3::after, .grid-icon--3 span { display: none; }
+
+.grid-icon--4 { background:
+  linear-gradient(currentColor,currentColor) 0%   0%  /22% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 33%  0%  /22% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 66%  0%  /22% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 100% 0%  /22% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 0%   100%/22% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 33%  100%/22% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 66%  100%/22% 48% no-repeat,
+  linear-gradient(currentColor,currentColor) 100% 100%/22% 48% no-repeat;
+  opacity: 0.7;
+}
+.grid-icon--4::before, .grid-icon--4::after, .grid-icon--4 span { display: none; }
+
+/* ============================================================================
+   Pulsante settings nell'header dell'app principale
+   ============================================================================ */
+.app-header { position: relative; }
+.app-header-settings {
+  position: absolute;
+  right: var(--space-3);
+  top: calc(var(--space-3) + var(--safe-top));
+  font-size: var(--fs-xl);
+  background: none;
+  border: none;
+  color: var(--color-text);
+  text-decoration: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.app-header-settings:active { background: var(--color-surface-alt); }

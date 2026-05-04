@@ -114,22 +114,18 @@ function applyFont() {
   root.style.setProperty("--font-family-heading", fontDef.heading);
 }
 
-// Inietta runtime un <style> con @font-face per il font selezionato
+// Inietta runtime un <style> con @font-face per il font selezionato.
+// I font variabili usano un range di weight (es. "100 900"), i regular un peso fisso.
 function injectFontFace(key, fontDef) {
   const style = document.createElement("style");
   style.dataset.font = key;
-  // Mappa nomi file -> CSS family + weight
-  const fileToWeight = (file) => {
-    if (file.includes("700")) return 700;
-    return 400;
-  };
-  const familyName = fontDef.base.match(/"([^"]+)"/)?.[1] || key;
+  const family = fontDef.family || key;
 
-  style.textContent = (fontDef.files || []).map(file => `
+  style.textContent = (fontDef.files || []).map(f => `
 @font-face {
-  font-family: "${familyName}";
-  src: url("./fonts/${file}") format("woff2");
-  font-weight: ${fileToWeight(file)};
+  font-family: "${family}";
+  src: url("./fonts/${f.src}") format("${f.format || 'woff2'}");
+  font-weight: ${f.weight || 400};
   font-style: normal;
   font-display: swap;
 }`).join("\n");

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="My Wardrobe" />
+
+  <title>Aspetto - Marty Outfit</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+
+  <!-- Stili (stesso ordine del index) -->
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+</head>
+<body class="settings-page">
+
+  <!-- Header con indietro -->
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>Aspetto</h1>
+    <span class="settings-header-spacer"></span>
+  </header>
+
+  <!-- Tabs (sticky sotto l'header) -->
+  <nav class="tabs settings-tabs" role="tablist">
+    <button class="tab is-active" data-tab="presets">🎨 Temi</button>
+    <button class="tab" data-tab="colors">🌈 Colori</button>
+    <button class="tab" data-tab="shapes">📐 Forme</button>
+    <button class="tab" data-tab="typo">🔤 Font</button>
+    <button class="tab" data-tab="layout">📱 Layout</button>
+    <button class="tab" data-tab="backup">💾 Backup</button>
+  </nav>
+
+  <main class="settings-main">
+
+    <!-- ==================================================================
+         TAB 1: TEMI PREDEFINITI
+         ================================================================== -->
+    <section id="tab-presets" class="settings-tab-panel is-active">
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-title">Sincronizza con il sistema</div>
+          <div class="settings-row-sub">Cambia automaticamente tra Light e Dark seguendo iOS</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggle-auto" />
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <h2 class="settings-section-title">Temi predefiniti</h2>
+      <div class="preset-grid" id="preset-grid">
+        <!-- Card popolate da settings.js -->
+      </div>
+
+      <p class="settings-hint">
+        Tap su un tema per applicarlo subito. Dopo puoi personalizzarlo dai tab Colori, Forme, Font, Layout.
+      </p>
+    </section>
+
+    <!-- ==================================================================
+         TAB 2: COLORI
+         ================================================================== -->
+    <section id="tab-colors" class="settings-tab-panel">
+
+      <h2 class="settings-section-title">Colore principale</h2>
+      <p class="settings-hint">Tocca un colore predefinito o scegli il tuo dal picker.</p>
+
+      <div class="swatch-grid" id="swatch-grid-primary"></div>
+
+      <div class="settings-row">
+        <label for="picker-primary" class="settings-row-title">Picker personalizzato</label>
+        <input type="color" id="picker-primary" class="color-picker-input" />
+      </div>
+
+      <h2 class="settings-section-title">Altri colori</h2>
+
+      <div class="settings-row">
+        <label for="picker-accent" class="settings-row-title">Accento</label>
+        <input type="color" id="picker-accent" class="color-picker-input" />
+      </div>
+
+      <div class="settings-row">
+        <label for="picker-bg" class="settings-row-title">Sfondo</label>
+        <input type="color" id="picker-bg" class="color-picker-input" />
+      </div>
+
+      <div class="settings-row">
+        <label for="picker-text" class="settings-row-title">Testo</label>
+        <input type="color" id="picker-text" class="color-picker-input" />
+      </div>
+
+      <button class="btn btn--ghost" id="btn-clear-overrides">
+        ↺ Resetta colori personalizzati
+      </button>
+      <p class="settings-hint">Toglie le modifiche manuali e torna ai colori del tema selezionato.</p>
+    </section>
+
+    <!-- ==================================================================
+         TAB 3: FORME
+         ================================================================== -->
+    <section id="tab-shapes" class="settings-tab-panel">
+
+      <h2 class="settings-section-title">Anteprima</h2>
+      <div class="shapes-preview">
+        <button class="btn btn--primary">Bottone</button>
+        <div class="card card--elevated" style="margin-top: var(--space-3); padding: var(--space-4);">
+          <strong>Card</strong>
+          <p style="color: var(--color-text-muted); margin-top: var(--space-1); font-size: var(--fs-sm);">Testo di esempio</p>
+        </div>
+        <input type="text" class="input" placeholder="Input di esempio" style="margin-top: var(--space-3);" />
+      </div>
+
+      <h2 class="settings-section-title">Smussatura angoli</h2>
+
+      <div class="settings-row">
+        <label for="slider-radius-button" class="settings-row-title">Bottoni</label>
+        <span class="settings-value" id="value-radius-button">8px</span>
+      </div>
+      <input type="range" id="slider-radius-button" class="slider" min="0" max="32" step="1" />
+
+      <div class="settings-row">
+        <label for="slider-radius-card" class="settings-row-title">Card</label>
+        <span class="settings-value" id="value-radius-card">14px</span>
+      </div>
+      <input type="range" id="slider-radius-card" class="slider" min="0" max="24" step="1" />
+
+      <div class="settings-row">
+        <label for="slider-radius-input" class="settings-row-title">Input</label>
+        <span class="settings-value" id="value-radius-input">8px</span>
+      </div>
+      <input type="range" id="slider-radius-input" class="slider" min="0" max="16" step="1" />
+
+      <h2 class="settings-section-title">Bordi</h2>
+      <div class="radio-group" id="radio-border">
+        <label class="radio-pill"><input type="radio" name="border" value="0" /><span>Niente</span></label>
+        <label class="radio-pill"><input type="radio" name="border" value="1" /><span>Sottile</span></label>
+        <label class="radio-pill"><input type="radio" name="border" value="2" /><span>Spesso</span></label>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         TAB 4: TIPOGRAFIA
+         ================================================================== -->
+    <section id="tab-typo" class="settings-tab-panel">
+
+      <h2 class="settings-section-title">Anteprima</h2>
+      <div class="typo-preview">
+        <h3 class="typo-preview-heading">Marty Outfit</h3>
+        <p class="typo-preview-body">
+          Il tuo guardaroba digitale, sempre con te. Scopri outfit perfetti per ogni occasione.
+        </p>
+      </div>
+
+      <h2 class="settings-section-title">Font</h2>
+      <div class="font-list" id="font-list">
+        <!-- Popolato da settings.js -->
+      </div>
+
+      <h2 class="settings-section-title">Dimensione testo</h2>
+      <div class="radio-group" id="radio-font-size">
+        <label class="radio-pill"><input type="radio" name="font-size" value="0.875" /><span>Piccolo</span></label>
+        <label class="radio-pill"><input type="radio" name="font-size" value="1" /><span>Normale</span></label>
+        <label class="radio-pill"><input type="radio" name="font-size" value="1.125" /><span>Grande</span></label>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         TAB 5: LAYOUT
+         ================================================================== -->
+    <section id="tab-layout" class="settings-tab-panel">
+
+      <h2 class="settings-section-title">Densità interfaccia</h2>
+      <div class="radio-group" id="radio-density">
+        <label class="radio-pill"><input type="radio" name="density" value="0.75" /><span>Compatta</span></label>
+        <label class="radio-pill"><input type="radio" name="density" value="1" /><span>Normale</span></label>
+        <label class="radio-pill"><input type="radio" name="density" value="1.25" /><span>Ampia</span></label>
+      </div>
+
+      <h2 class="settings-section-title">Colonne griglia capi</h2>
+      <div class="grid-cols-preview" id="grid-cols-preview">
+        <button data-cols="2" aria-label="2 colonne">
+          <span class="grid-icon grid-icon--2"></span><span>2</span>
+        </button>
+        <button data-cols="3" aria-label="3 colonne">
+          <span class="grid-icon grid-icon--3"></span><span>3</span>
+        </button>
+        <button data-cols="4" aria-label="4 colonne">
+          <span class="grid-icon grid-icon--4"></span><span>4</span>
+        </button>
+      </div>
+
+      <h2 class="settings-section-title">Velocità animazioni</h2>
+      <select id="select-animation" class="select">
+        <option value="none">Nessuna</option>
+        <option value="slow">Lente</option>
+        <option value="normal">Normali</option>
+        <option value="fast">Veloci</option>
+      </select>
+      <p class="settings-hint">
+        Nota: se hai attivato "Riduci movimento" nelle impostazioni iOS, le animazioni saranno comunque
+        ridotte automaticamente.
+      </p>
+    </section>
+
+    <!-- ==================================================================
+         TAB 6: BACKUP
+         ================================================================== -->
+    <section id="tab-backup" class="settings-tab-panel">
+
+      <h2 class="settings-section-title">Esporta e importa</h2>
+      <p class="settings-hint">
+        Salva le tue personalizzazioni in un file JSON, oppure caricalo su un altro dispositivo.
+      </p>
+
+      <button class="btn btn--secondary btn--block" id="btn-export">
+        💾 Esporta tema (.json)
+      </button>
+
+      <label class="btn btn--secondary btn--block" style="margin-top: var(--space-3);">
+        📂 Importa tema...
+        <input type="file" id="input-import" accept="application/json" hidden />
+      </label>
+
+      <h2 class="settings-section-title">Sincronizzazione cloud</h2>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-title">Sync su account</div>
+          <div class="settings-row-sub">Disponibile dopo l'accesso utente (in arrivo)</div>
+        </div>
+        <label class="switch is-disabled">
+          <input type="checkbox" disabled />
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <h2 class="settings-section-title">Reset</h2>
+      <button class="btn btn--danger btn--block" id="btn-reset">
+        🗑️ Resetta tutte le personalizzazioni
+      </button>
+      <p class="settings-hint">
+        Riporta tutto al tema Light di default. I tuoi capi e outfit non vengono toccati.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- Toast (riutilizzato dall'app principale) -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Theme manager + settings controller -->
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/settings.js"></script>
+</body>
+</html>

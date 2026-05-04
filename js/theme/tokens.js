@@ -294,33 +294,38 @@ export const fonts = {
     heading: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     needsLoad: false,
   },
+  // Inter, Playfair, DM Sans: variable fonts — un solo .woff2 copre tutti i pesi
   inter: {
     name: "Inter",
     base:    '"Inter", -apple-system, sans-serif',
     heading: '"Inter", -apple-system, sans-serif',
     needsLoad: true,
-    files: ["inter-400.woff2", "inter-700.woff2"],
+    files: [{ src: "inter.woff2",    format: "woff2", weight: "100 900" }],
+    family: "Inter",
   },
   playfair: {
     name: "Playfair Display",
     base:    '-apple-system, BlinkMacSystemFont, sans-serif',
     heading: '"Playfair Display", Georgia, serif',
     needsLoad: true,
-    files: ["playfair-400.woff2", "playfair-700.woff2"],
+    files: [{ src: "playfair.woff2", format: "woff2", weight: "400 900" }],
+    family: "Playfair Display",
   },
   dmsans: {
     name: "DM Sans",
     base:    '"DM Sans", -apple-system, sans-serif',
     heading: '"DM Sans", -apple-system, sans-serif',
     needsLoad: true,
-    files: ["dmsans-400.woff2", "dmsans-700.woff2"],
+    files: [{ src: "dmsans.woff2",   format: "woff2", weight: "100 1000" }],
+    family: "DM Sans",
   },
   jetbrains: {
     name: "JetBrains Mono",
     base:    '"JetBrains Mono", Menlo, monospace',
     heading: '"JetBrains Mono", Menlo, monospace',
     needsLoad: true,
-    files: ["jetbrains-400.woff2"],
+    files: [{ src: "jetbrains.woff",  format: "woff",  weight: "400" }],
+    family: "JetBrains Mono",
   },
 };
 

@@ -254,6 +254,34 @@
       </div>
     </div>
 
+    <!-- ===== Sezione: Cache & aggiornamenti ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🧹 L'app sembra "bloccata" su una vecchia versione</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Marty Outfit è una PWA: per essere veloce e funzionare offline, conserva i suoi file (JS, CSS, immagini, font) in una cache locale sul tuo dispositivo. A volte questa cache non si aggiorna automaticamente quando arriva una nuova versione, e vedi vecchi dati o vecchio aspetto.</p>
+
+        <p><strong>Sintomi tipici</strong>:</p>
+        <ul class="manual-list">
+          <li>I capi demo che ricarichi mostrano le foto vecchie</li>
+          <li>Una nuova feature non appare anche se è stata rilasciata</li>
+          <li>Modifiche al tema non vengono applicate</li>
+        </ul>
+
+        <p><strong>Soluzione veloce</strong>:</p>
+        <ol class="manual-list">
+          <li>Menu <strong>⋯</strong> → <strong>🎨 Aspetto</strong> → tab <strong>💾 Backup</strong></li>
+          <li>Sezione "Cache PWA" → tap <strong>🧹 Pulisci cache (forza aggiornamento)</strong></li>
+          <li>Conferma → l'app cancella i file in cache locale, scarica la versione più recente dal server, e si ricarica</li>
+        </ol>
+
+        <p class="manual-tip">💡 <strong>Cosa NON viene toccato</strong>: i tuoi capi e outfit (sono su Firebase, non in cache locale), le tue personalizzazioni di tema/font/colori (in localStorage, preservato), il tuo onboarding flag.</p>
+
+        <p class="manual-tip">⚠️ <strong>Cosa viene rimosso</strong>: i file della shell PWA (HTML/JS/CSS/font cached) — vengono ri-scaricati al riavvio. Anche il modello ML dell'editor visuale (~30 MB) — sarà ri-scaricato la prima volta che apri l'editor (richiede internet).</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Dati demo ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

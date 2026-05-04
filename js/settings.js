@@ -338,6 +338,56 @@ function initBackup() {
   });
 
   // ============================================================================
+  // Pulisci cache PWA: unregister SW + delete tutte le Cache Storage
+  // (le tue preferenze in localStorage e i tuoi dati Firestore restano intatti)
+  // ============================================================================
+  const btnClearCache = document.getElementById("btn-clear-cache");
+  btnClearCache.addEventListener("click", async () => {
+    if (!confirm(
+      "Pulisci la cache della app?\n\n" +
+      "Verranno eliminati i file JS/CSS/HTML in cache locale, e l'app si " +
+      "ricaricherà con la versione più recente dal server.\n\n" +
+      "Le tue personalizzazioni (tema, fonts, ecc.) e i tuoi capi/outfit " +
+      "NON vengono toccati."
+    )) return;
+
+    btnClearCache.disabled = true;
+    btnClearCache.textContent = "⏳ Pulizia in corso...";
+
+    try {
+      // 1. Cancello tutte le Cache Storage (shell PWA, font, ecc.)
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+
+      // 2. Unregister tutti i service worker registrati
+      if (navigator.serviceWorker) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+
+      // 3. Brevi flag in localStorage che invalidare aiuta (model imgly, weather)
+      try {
+        localStorage.removeItem("marty_imgly_loaded");
+        localStorage.removeItem("marty_forecast");
+      } catch {}
+
+      toast("Cache pulita. Ricarico l'app...", "success");
+
+      // 4. Reload dopo un attimo per mostrare il toast
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
+    } catch (err) {
+      console.error("Errore pulizia cache:", err);
+      toast("Errore: " + err.message, "error");
+      btnClearCache.disabled = false;
+      btnClearCache.textContent = "🧹 Pulisci cache (forza aggiornamento)";
+    }
+  });
+
+  // ============================================================================
   // Demo data: load / remove / count
   // ============================================================================
   const btnLoad = document.getElementById("btn-load-demo");

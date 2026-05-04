@@ -6,6 +6,11 @@ import { isConfigured } from "./firebase-config.js";
 import * as Wardrobe from "./wardrobe.js";
 import * as Outfit from "./outfit.js";
 import * as Claude from "./claude-api.js";
+import * as Theme from "./theme/manager.js";
+
+// Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
+// al documento prima del primo paint per evitare flash visivo.
+Theme.init();
 
 // Stato in memoria (non serve store/redux per uso single-user)
 const state = {

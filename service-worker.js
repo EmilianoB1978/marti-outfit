@@ -1,20 +1,25 @@
 // Service Worker per PWA My Wardrobe
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v2';
-const CACHE_NAME = `my-wardrobe-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v3-theme-tokens';
+const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
-// File della shell PWA da pre-cachare per uso offline
+// File della shell PWA da pre-cachare per uso offline.
+// Quando aggiungi un file critico al boot, mettilo qui e bumpa CACHE_VERSION.
 const SHELL_FILES = [
   './',
   './index.html',
   './manifest.json',
+  './css/tokens.css',
+  './css/components.css',
   './css/styles.css',
   './js/app.js',
   './js/firebase-config.js',
   './js/claude-api.js',
   './js/wardrobe.js',
   './js/outfit.js',
+  './js/theme/tokens.js',
+  './js/theme/manager.js',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];

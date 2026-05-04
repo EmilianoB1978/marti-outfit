@@ -1,0 +1,114 @@
+/* =============================================================================
+   Design Tokens - Marty Outfit
+   =============================================================================
+   Tutte le variabili CSS che governano l'aspetto dell'app.
+   Modificate runtime dal theme manager (js/theme/manager.js).
+   I valori qui sotto sono il default (tema "light"). I preset alternativi
+   vengono applicati sostituendo questi valori via JS.
+   ============================================================================= */
+
+:root {
+  /* ----- COLORI ----- */
+  --color-bg:           #ffffff;
+  --color-surface:      #f7f7f8;
+  --color-surface-alt:  #ededef;
+  --color-text:         #1a1a1a;
+  --color-text-muted:   #6a6a6a;
+  --color-text-inverse: #ffffff;
+
+  --color-primary:        #d4af37;  /* oro caldo */
+  --color-primary-hover:  #e8c248;
+  --color-primary-active: #b89422;
+  --color-secondary:      #2e2e2e;
+  --color-accent:         #1a1a1a;
+
+  --color-border:  #e0e0e2;
+  --color-divider: #ededef;
+
+  --color-success: #27ae60;
+  --color-warning: #f39c12;
+  --color-error:   #e74c3c;
+  --color-info:    #3498db;
+
+  --color-overlay: rgba(0, 0, 0, 0.55);
+
+  /* Focus accessibilita' (navigazione tastiera + screen reader) */
+  --color-focus:  var(--color-primary);
+  --shadow-focus: 0 0 0 3px rgba(212, 175, 55, 0.45);
+
+  /* ----- TIPOGRAFIA ----- */
+  --font-family-base:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-size-scale: 1;        /* moltiplicatore 0.875 / 1 / 1.125 */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold:   700;
+  --line-height-base:   1.45;
+  --line-height-heading: 1.2;
+
+  /* Font sizes derivati (16px base x scale) */
+  --fs-xs:   calc(11px * var(--font-size-scale));
+  --fs-sm:   calc(13px * var(--font-size-scale));
+  --fs-base: calc(15px * var(--font-size-scale));
+  --fs-md:   calc(17px * var(--font-size-scale));
+  --fs-lg:   calc(20px * var(--font-size-scale));
+  --fs-xl:   calc(24px * var(--font-size-scale));
+  --fs-2xl:  calc(32px * var(--font-size-scale));
+
+  /* ----- FORME ----- */
+  --radius-button: 8px;
+  --radius-card:   14px;
+  --radius-input:  8px;
+  --radius-pill:   999px;
+  --border-width:  1px;
+
+  /* ----- SPAZI ----- */
+  /* Density e' il moltiplicatore: compact=0.75 / comfortable=1 / spacious=1.25 */
+  --density: 1;
+  --space-1: calc(4px  * var(--density));
+  --space-2: calc(8px  * var(--density));
+  --space-3: calc(12px * var(--density));
+  --space-4: calc(16px * var(--density));
+  --space-5: calc(20px * var(--density));
+  --space-6: calc(24px * var(--density));
+  --space-7: calc(32px * var(--density));
+  --space-8: calc(48px * var(--density));
+
+  /* ----- LAYOUT ----- */
+  --grid-columns:    2;       /* 2/3/4 colonne nella griglia guardaroba */
+  --container-max:   720px;
+
+  /* ----- EFFETTI ----- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+
+  --animation-speed:  200ms;     /* override a 100/400/0 per fast/slow/none */
+  --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Safe area iPhone */
+  --safe-top:    env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+/* =============================================================================
+   prefers-reduced-motion (sempre rispettato come baseline accessibilita')
+   ============================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Override esplicito da theme manager (toggle "Animazioni: nessuna") */
+html.no-animations *,
+html.no-animations *::before,
+html.no-animations *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}

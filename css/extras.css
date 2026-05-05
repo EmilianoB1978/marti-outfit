@@ -1254,6 +1254,182 @@ body.editor-page {
   font-weight: var(--font-weight-medium);
 }
 
+/* ============================================================================
+   Today's Outfit card (in cima al guardaroba)
+   ============================================================================ */
+.today-card {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow-md);
+}
+.today-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+}
+.today-card-label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  font-weight: var(--font-weight-bold);
+}
+.today-card-date {
+  font-family: var(--font-family-heading);
+  font-size: var(--fs-md);
+  font-weight: var(--font-weight-bold);
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+.today-card-header .btn-icon {
+  color: inherit;
+  width: 32px;
+  height: 32px;
+  font-size: var(--fs-base);
+}
+
+.today-card-thumbs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  scrollbar-width: none;
+}
+.today-card-thumbs::-webkit-scrollbar { display: none; }
+.today-thumb {
+  flex: 0 0 auto;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-input);
+  background: white;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+.today-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.today-card-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.today-card-actions .btn--primary {
+  background: white;
+  color: var(--color-primary);
+  flex: 1;
+}
+.today-card-actions .btn--ghost {
+  color: white;
+  border: 1px solid rgba(255,255,255,0.4);
+}
+
+/* ============================================================================
+   Banner "Capi a riposo" sopra la griglia
+   ============================================================================ */
+.dormant-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-input);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: background var(--animation-speed) var(--animation-easing);
+}
+.dormant-banner:active { background: var(--color-surface-alt); }
+.dormant-banner-icon { font-size: var(--fs-xl); }
+.dormant-banner-text { flex: 1; }
+.dormant-banner-text > div:first-child {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--fs-sm);
+}
+.dormant-banner-sub {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.dormant-banner-arrow {
+  font-size: var(--fs-xl);
+  color: var(--color-text-muted);
+}
+
+/* ============================================================================
+   Pagina dormant.html (lista capi a riposo)
+   ============================================================================ */
+.dormant-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.dormant-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-input);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+}
+.dormant-photo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-input);
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.dormant-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dormant-info { flex: 1; min-width: 0; }
+.dormant-title {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--fs-base);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dormant-sub {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.dormant-status {
+  font-size: var(--fs-xs);
+  color: var(--color-warning);
+  margin-top: 2px;
+  font-weight: var(--font-weight-medium);
+}
+.dormant-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+.dormant-actions .btn--sm {
+  padding: var(--space-2);
+  min-width: 36px;
+}
+
 /* Badge link sui card del guardaroba */
 .item-link-badge {
   position: absolute;

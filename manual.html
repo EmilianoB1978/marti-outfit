@@ -254,6 +254,103 @@
       </div>
     </div>
 
+    <!-- ===== Sezione: Outfit del giorno ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>☀️ Outfit del giorno</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Quando apri il guardaroba, in cima vedi una <strong>card dorata "Outfit del giorno"</strong>: una composizione automatica suggerita basata sui tuoi capi.</p>
+
+        <p><strong>Come funziona</strong> (algoritmo, niente AI / niente costi):</p>
+        <ul class="manual-list">
+          <li>Pesca casualmente ma <strong>seedato dalla data</strong>: stesso giorno = stesso suggerimento (puoi rifletterci e tornare poi)</li>
+          <li>30% chance di vestito/completo intero, altrimenti top + bottom</li>
+          <li>+ scarpe sempre, capospalla in autunno/inverno o con pioggia</li>
+          <li>50% chance di accessorio</li>
+        </ul>
+
+        <p><strong>Pesi intelligenti</strong>:</p>
+        <ul class="manual-list">
+          <li>Capi <strong>mai indossati</strong>: x3 più probabili (rotation)</li>
+          <li>Capi <strong>non indossati da 60+ giorni</strong>: x2.5</li>
+          <li>Capi <strong>appena indossati</strong>: x0.3 (evita ripetizione)</li>
+          <li>Stagione sbagliata: x0.2</li>
+          <li>Pioggia + scarpe in tela/sandali: x0.1 (le evita)</li>
+        </ul>
+
+        <p><strong>Azioni sulla card</strong>:</p>
+        <ul class="manual-list">
+          <li><strong>✓ Lo indosso oggi</strong>: marca tutti i capi come indossati (+1 wear count) e nasconde la card fino a domani</li>
+          <li><strong>🎲 Nuovo</strong>: rigenera con un seed diverso (puoi rifare quanto vuoi)</li>
+          <li><strong>✕</strong>: nascondi senza indossare; ricompare domani</li>
+        </ul>
+
+        <p class="manual-tip">💡 <strong>Niente AI = niente costi</strong>. L'algoritmo gira tutto sul telefono in millisecondi. Niente chiamate Anthropic per questa feature.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Capi a riposo ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>💤 Capi a riposo</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Marty traccia i capi che non indossi da almeno <strong>60 giorni</strong> (o mai). Sono i tuoi "pezzi morti" — capi che possono essere riattivati o liquidati.</p>
+
+        <p><strong>Banner sul guardaroba</strong>: quando ne hai 3+ a riposo, in cima alla griglia capi appare un banner giallo "💤 N capi a riposo · Tap per gestirli".</p>
+
+        <p><strong>Pagina dedicata</strong>: menu <strong>⋯</strong> → <strong>💤 Capi a riposo</strong>. Vedi:</p>
+        <ul class="manual-list">
+          <li>Conteggio + valore stimato totale (somma prezzi se compilati)</li>
+          <li>Per ogni capo: foto, info, status ("Mai indossato" / "Ultima volta 75gg fa")</li>
+          <li><strong>✓</strong> Marca come indossato oggi (lo riattivi senza eliminarlo)</li>
+          <li><strong>🗑️</strong> Elimina dal guardaroba</li>
+          <li><strong>📥 CSV</strong> Esporta la lista completa in CSV: aprila in Excel/Numbers e usala come traccia per <strong>Vinted, Subito, Vestiaire Collective</strong></li>
+        </ul>
+
+        <p class="manual-tip">💡 <strong>Il CSV ha tutte le info che ti servono per pubblicare</strong>: categoria, sotto-categoria, colore, materiale, stile, prezzo originale, foto URL, descrizione. Apri Vinted, copincolla, allega la foto → annuncio pronto.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Condividi outfit ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📸 Condividi outfit (Instagram-ready)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Per ogni outfit salvato, c'è il bottone <strong>📸 Condividi</strong>. L'app genera un'immagine quadrata 1080×1080 pronta per i social.</p>
+
+        <p><strong>Cosa contiene la card</strong>:</p>
+        <ul class="manual-list">
+          <li>Titolo dell'outfit</li>
+          <li>Data del giorno</li>
+          <li>Linea decorativa oro</li>
+          <li>Foto dei capi disposti in griglia (1, 2, 3, 4 o 6 capi)</li>
+          <li>Watermark "✨ made with Marty Outfit" in fondo</li>
+        </ul>
+
+        <p><strong>Caption auto-generata</strong>: insieme all'immagine, l'app mette negli appunti (o nel share sheet iOS) un testo già pronto:</p>
+        <pre style="background: var(--color-surface-alt); padding: var(--space-3); border-radius: var(--radius-input); font-size: var(--fs-sm); white-space: pre-wrap;">✨ [Titolo Outfit]
+📍 Per: [contesto]
+
+• Camicia bianca
+• Jeans skinny
+• Décolleté nere
+
+🛍️ Shop the look:
+camicia: https://...
+jeans: https://...
+
+#outfit #ootd #lookoftheday #fashion #martyoutfit</pre>
+
+        <p><strong>Su iPhone</strong>: tap → si apre il share sheet nativo → scegli Instagram, WhatsApp, Note, Mail, ecc.</p>
+        <p><strong>Su altri device</strong>: l'immagine viene scaricata e la caption viene messa negli appunti.</p>
+
+        <p class="manual-tip">💡 <strong>I link prodotto</strong> appaiono nella caption SOLO per i capi che ne hanno uno configurato. Se metti dei link affiliati Amazon/Zalando, ogni share è marketing organico per te.</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Compressione e storage ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

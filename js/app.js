@@ -11,6 +11,9 @@ import * as Weather from "./weather.js";
 import * as Haptic from "./haptic.js";
 import * as Search from "./search.js";
 import * as Taxonomies from "./taxonomies.js";
+import * as ShareOutfit from "./share-outfit.js";
+import * as DormantMod from "./dormant.js";
+import * as TodayOutfit from "./today-outfit.js";
 import { showOnboarding } from "./onboarding.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
@@ -70,6 +73,8 @@ async function boot() {
     renderWardrobe();
     renderFilters();
     renderSavedOutfits();
+    renderTodayOutfit();
+    renderDormantBanner();
   } catch (err) {
     console.error("Errore boot:", err);
     toast("Errore caricamento dati", "error");
@@ -77,6 +82,124 @@ async function boot() {
 
   // Onboarding al primo avvio (dopo che l'app e' visibile)
   setTimeout(() => showOnboarding(false), 600);
+}
+
+// =============================================================================
+// Today's Outfit card (algoritmo deterministico, no AI)
+// =============================================================================
+async function renderTodayOutfit() {
+  const card = document.getElementById("today-outfit-card");
+  if (!card) return;
+
+  if (state.items.length < 3) {
+    card.classList.add("hidden");
+    return;
+  }
+
+  if (TodayOutfit.isDismissedToday()) {
+    card.classList.add("hidden");
+    return;
+  }
+
+  const outfitItems = await TodayOutfit.getTodayOutfit(state.items);
+  if (outfitItems.length < 2) {
+    card.classList.add("hidden");
+    return;
+  }
+
+  const today = new Date().toLocaleDateString("it-IT", {
+    weekday: "long", day: "numeric", month: "long"
+  });
+
+  card.innerHTML = `
+    <div class="today-card-header">
+      <div>
+        <div class="today-card-label">Outfit del giorno</div>
+        <div class="today-card-date">${escapeHtml(today)}</div>
+      </div>
+      <button class="btn-icon" id="today-dismiss" aria-label="Nascondi">✕</button>
+    </div>
+    <div class="today-card-thumbs">
+      ${outfitItems.map(it => `
+        <div class="today-thumb">
+          ${it.photo_url
+            ? `<img src="${it.photo_url}" alt="" loading="lazy" />`
+            : '👕'}
+        </div>
+      `).join("")}
+    </div>
+    <div class="today-card-actions">
+      <button class="btn btn--primary btn--block" id="today-worn">
+        ✓ Lo indosso oggi
+      </button>
+      <button class="btn btn--ghost btn--sm" id="today-regen">🎲 Nuovo</button>
+    </div>
+  `;
+  card.classList.remove("hidden");
+
+  document.getElementById("today-dismiss").addEventListener("click", () => {
+    TodayOutfit.dismissToday();
+    card.classList.add("hidden");
+  });
+
+  document.getElementById("today-worn").addEventListener("click", async () => {
+    try {
+      await Wardrobe.markOutfitAsWorn(outfitItems.map(i => i.id), state.items);
+      state.items = await Wardrobe.listItems();
+      TodayOutfit.dismissToday();
+      renderWardrobe();
+      renderDormantBanner();
+      card.classList.add("hidden");
+      toast(`✓ Outfit del giorno indossato (${outfitItems.length} capi)`, "success");
+    } catch (err) {
+      toast("Errore", "error");
+    }
+  });
+
+  // "Nuovo": rigenera con un offset alla data (cycle 1 sec come bias del seed)
+  document.getElementById("today-regen").addEventListener("click", async () => {
+    // Dato che l'algoritmo e' deterministico per data, per "rinfrescare"
+    // lo eseguo con una data offset (oggi + sec offset). Cumulativo per re-tap.
+    if (!card._regenOffset) card._regenOffset = 0;
+    card._regenOffset += 1;
+    const offsetDate = new Date(Date.now() + card._regenOffset * 86400000);
+    const newItems = await TodayOutfit.getTodayOutfit(state.items, offsetDate);
+    // Ri-render solo i thumbnails
+    const thumbs = card.querySelector(".today-card-thumbs");
+    thumbs.innerHTML = newItems.map(it => `
+      <div class="today-thumb">
+        ${it.photo_url ? `<img src="${it.photo_url}" alt="" loading="lazy" />` : '👕'}
+      </div>
+    `).join("");
+    // Riconnetto handler "lo indosso" coi nuovi items
+    document.getElementById("today-worn").onclick = async () => {
+      try {
+        await Wardrobe.markOutfitAsWorn(newItems.map(i => i.id), state.items);
+        state.items = await Wardrobe.listItems();
+        TodayOutfit.dismissToday();
+        renderWardrobe();
+        renderDormantBanner();
+        card.classList.add("hidden");
+        toast(`✓ Indossato (${newItems.length} capi)`, "success");
+      } catch (err) { toast("Errore", "error"); }
+    };
+  });
+}
+
+// =============================================================================
+// Banner "capi a riposo" (compare se ci sono 3+ dormienti)
+// =============================================================================
+function renderDormantBanner() {
+  const banner = document.getElementById("dormant-banner");
+  if (!banner) return;
+  const dormants = DormantMod.getDormantItems(state.items);
+  if (dormants.length < 3) {
+    banner.classList.add("hidden");
+    return;
+  }
+  document.getElementById("dormant-banner-title").textContent =
+    `${dormants.length} capi a riposo`;
+  banner.classList.remove("hidden");
 }
 
 // =============================================================================
@@ -896,12 +1019,37 @@ function renderSavedOutfits() {
           `).join("")}
         </div>
         <div class="outfit-actions">
-          <button class="btn-worn" data-worn="${outfit.id}">✓ Indossato oggi</button>
+          <button class="btn-worn" data-worn="${outfit.id}">✓ Indossato</button>
+          <button class="btn-secondary" data-share="${outfit.id}">📸 Condividi</button>
           <button class="btn-secondary" data-del="${outfit.id}">🗑️</button>
         </div>
       </div>
     `;
   }).join("");
+
+  // Condividi outfit (genera card 1080x1080 + caption con link)
+  container.querySelectorAll("[data-share]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const outfit = state.savedOutfits.find(o => o.id === btn.dataset.share);
+      if (!outfit) return;
+      btn.disabled = true;
+      btn.textContent = "...";
+      try {
+        const result = await ShareOutfit.shareOutfit(outfit, state.items);
+        if (result.method === "share") {
+          toast("Condiviso", "success");
+        } else if (result.method === "fallback") {
+          toast(result.clipboardOk ? "Immagine scaricata + caption negli appunti" : "Immagine scaricata", "success");
+        }
+      } catch (err) {
+        console.error(err);
+        toast("Errore: " + err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "📸 Condividi";
+      }
+    });
+  });
 
   // "Indossato oggi" → incrementa wearCount su tutti i capi dell'outfit
   container.querySelectorAll("[data-worn]").forEach(btn => {

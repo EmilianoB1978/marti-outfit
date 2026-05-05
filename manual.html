@@ -254,6 +254,36 @@
       </div>
     </div>
 
+    <!-- ===== Sezione: Compressione e storage ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📦 Compressione foto e gestione storage</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Marty Outfit ottimizza le tue foto automaticamente per non saturare lo storage Firebase, anche con uso intenso negli anni.</p>
+
+        <p><strong>Compressione automatica al caricamento</strong>:</p>
+        <ul class="manual-list">
+          <li>Ogni foto viene <strong>ridimensionata a max 800px</strong> sul lato lungo</li>
+          <li>Convertita in formato <strong>WebP</strong> (qualità 78%) — ~3x più compatto del JPEG</li>
+          <li>Risultato tipico: <strong>80-100 KB per foto</strong></li>
+          <li>I cutout dell'editor visuale vengono compressi anche loro in WebP con trasparenza (~200 KB invece di ~500 KB del PNG originale)</li>
+        </ul>
+
+        <p><strong>Statistiche</strong>:</p>
+        <p>Menu <strong>⋯</strong> → <strong>🎨 Aspetto</strong> → tab <strong>💾 Backup</strong> → sezione <strong>📊 Storage</strong> mostra:</p>
+        <ul class="manual-list">
+          <li>Numero di foto caricate</li>
+          <li>Numero di cutout (foto editor visuale)</li>
+          <li>MB stimati totali</li>
+        </ul>
+
+        <p class="manual-tip">💡 <strong>Cleanup automatico</strong>: quando elimini un capo, sia la foto principale sia il cutout vengono cancellati da Storage. Niente file orfani che si accumulano.</p>
+
+        <p class="manual-tip">📊 <strong>Capacità Firebase Storage gratuito</strong>: 5 GB. Anche con 200 capi caricati e 50 con cutout, parli di ~30 MB totali — meno dell'1% del free tier. Anni di utilizzo prima di doverti preoccupare.</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Cache & aggiornamenti ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

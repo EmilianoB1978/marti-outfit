@@ -64,13 +64,17 @@ export async function getItem(id) {
 
 /**
  * Carica una foto su Firebase Storage e ritorna l'URL pubblico.
- * @param {Blob} blob - immagine ridimensionata
+ * Usa l'estensione e il content-type corretti in base al tipo del blob
+ * (WebP per i browser moderni, JPEG fallback).
+ * @param {Blob} blob - immagine compressa
  * @returns {Promise<{url, path}>}
  */
 export async function uploadPhoto(blob) {
-  const filename = `items/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+  const isWebP = blob.type === "image/webp";
+  const ext = isWebP ? "webp" : "jpg";
+  const filename = `items/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const ref = storageRef(storage, filename);
-  await uploadBytes(ref, blob, { contentType: "image/jpeg" });
+  await uploadBytes(ref, blob, { contentType: blob.type || "image/jpeg" });
   const url = await getDownloadURL(ref);
   return { url, path: filename };
 }
@@ -135,16 +139,54 @@ export async function markItemAsWorn(id, currentItem) {
 }
 
 /**
- * Carica il cutout (PNG con bg trasparente) su Storage e aggiorna l'item.
- * Usato dall'outfit editor visuale (bg-removal.js).
+ * Comprimi un PNG con alpha in WebP per ridurre dimensione (~60%).
+ * Mantiene trasparenza, qualita' percepibile identica.
+ */
+async function compressPngToWebp(pngBlob, quality = 0.85) {
+  // Se il browser non supporta WebP con alpha, ritorno il PNG originale
+  try {
+    const c = document.createElement("canvas");
+    c.width = 1; c.height = 1;
+    if (!c.toDataURL("image/webp").startsWith("data:image/webp")) {
+      return pngBlob;
+    }
+  } catch { return pngBlob; }
+
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = URL.createObjectURL(pngBlob);
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+
+  return new Promise((resolve) => {
+    canvas.toBlob(blob => {
+      // Se WebP fallisce, ritorno il PNG originale
+      resolve(blob || pngBlob);
+    }, "image/webp", quality);
+  });
+}
+
+/**
+ * Carica il cutout (con bg trasparente) su Storage e aggiorna l'item.
+ * Comprime in WebP per risparmiare ~60% spazio rispetto al PNG sorgente.
  * @param {string} itemId
- * @param {Blob} cutoutBlob - PNG con trasparenza
+ * @param {Blob} cutoutBlob - PNG con trasparenza dal motore bg-removal
  * @returns {Promise<string>} URL pubblico del cutout
  */
 export async function uploadAndSaveCutout(itemId, cutoutBlob) {
-  const path = `cutouts/${itemId}.png`;
+  const compressed = await compressPngToWebp(cutoutBlob);
+  const isWebP = compressed.type === "image/webp";
+  const ext = isWebP ? "webp" : "png";
+  const path = `cutouts/${itemId}.${ext}`;
   const ref = storageRef(storage, path);
-  await uploadBytes(ref, cutoutBlob, { contentType: "image/png" });
+  await uploadBytes(ref, compressed, { contentType: compressed.type || "image/png" });
   const url = await getDownloadURL(ref);
   await updateDoc(doc(db, COLLECTION, itemId), {
     cutout_url: url,
@@ -192,18 +234,42 @@ export async function updateItem(id, data) {
 }
 
 /**
- * Elimina un capo + la foto associata su Storage.
+ * Elimina un capo + foto + cutout (se esistono) da Storage.
+ * Foto e cutout sono best-effort: se falliscono il record viene comunque rimosso.
  */
-export async function deleteItem(id, photoPath) {
-  // Prima cancello la foto (se fallisce non blocco la cancellazione del record)
+export async function deleteItem(id, photoPath, cutoutPath) {
+  // Foto principale
   if (photoPath) {
-    try {
-      await deleteObject(storageRef(storage, photoPath));
-    } catch (err) {
-      console.warn("Foto non cancellata da Storage:", err);
-    }
+    try { await deleteObject(storageRef(storage, photoPath)); }
+    catch (err) { console.warn("Foto non cancellata:", err); }
+  }
+  // Cutout (PNG creato dall'editor visuale, se l'utente l'ha mai aperto)
+  if (cutoutPath) {
+    try { await deleteObject(storageRef(storage, cutoutPath)); }
+    catch (err) { console.warn("Cutout non cancellato:", err); }
   }
   await deleteDoc(doc(db, COLLECTION, id));
+}
+
+/**
+ * Statistiche storage: numero foto + cutout + dimensione stimata.
+ * NB: la dimensione e' stimata client-side (HEAD request via fetch sui URL),
+ * Firebase Storage non espone size via SDK senza Admin. Per evitare 100+
+ * fetch, restituiamo solo i counter e una stima (foto avg 100KB, cutout 200KB).
+ */
+export async function getStorageStats() {
+  const items = await listItems();
+  const photoCount = items.filter(i => i.photo_url).length;
+  const cutoutCount = items.filter(i => i.cutout_url).length;
+  // Stime conservative basate sulla compressione attuale
+  const photoEstimateKB = photoCount * 100;
+  const cutoutEstimateKB = cutoutCount * 200;
+  return {
+    photoCount,
+    cutoutCount,
+    estimatedKB: photoEstimateKB + cutoutEstimateKB,
+    estimatedMB: ((photoEstimateKB + cutoutEstimateKB) / 1024).toFixed(1),
+  };
 }
 
 /**

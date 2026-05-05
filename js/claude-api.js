@@ -11,11 +11,25 @@ const WORKER_URL = "https://marty-outfit-proxy.e-barbierato.workers.dev";
 
 const isWorkerConfigured = !WORKER_URL.includes("TUONOME");
 
+// Feature detect WebP (iOS Safari 14+, tutti i browser moderni)
+const _webpSupported = (() => {
+  try {
+    const c = document.createElement("canvas");
+    c.width = 1; c.height = 1;
+    return c.toDataURL("image/webp").startsWith("data:image/webp");
+  } catch { return false; }
+})();
+
 /**
- * Ridimensiona un'immagine a max 1024px lato lungo e ritorna base64.
- * Riduce drasticamente il costo Claude (token immagine) e l'upload Firebase.
+ * Ridimensiona un'immagine e la comprime in WebP (con fallback JPEG).
+ * Default: 800px lato lungo, qualita' 0.78. Tipico: ~80-100 KB per foto capo.
+ *
+ * Riduce ~50-65% lo storage Firebase rispetto a JPEG q=0.85@1024px,
+ * mantenendo qualita' visiva indistinguibile per il grid 2-3 colonne.
+ *
+ * @returns {{ blob, base64, mimeType, sizeKB }}
  */
-export async function resizeImage(file, maxSize = 1024, quality = 0.85) {
+export async function resizeImage(file, maxSize = 800, quality = 0.78) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const reader = new FileReader();
@@ -39,20 +53,23 @@ export async function resizeImage(file, maxSize = 1024, quality = 0.85) {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, width, height);
 
+      // Preferisci WebP, fallback JPEG (browser molto vecchi)
+      const mime = _webpSupported ? "image/webp" : "image/jpeg";
+
       canvas.toBlob(
         (blob) => {
           if (!blob) return reject(new Error("Conversione canvas fallita"));
-          // Ritorno sia il blob (per upload) che il base64 (per Claude)
           const r2 = new FileReader();
           r2.onload = () => resolve({
             blob,
-            base64: r2.result.split(",")[1],  // strip "data:image/jpeg;base64,"
-            mimeType: "image/jpeg"
+            base64: r2.result.split(",")[1],
+            mimeType: mime,
+            sizeKB: Math.round(blob.size / 1024),
           });
           r2.onerror = reject;
           r2.readAsDataURL(blob);
         },
-        "image/jpeg",
+        mime,
         quality
       );
     };

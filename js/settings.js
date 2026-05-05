@@ -10,6 +10,7 @@
 import * as Theme from "./theme/manager.js";
 import * as Weather from "./weather.js";
 import * as DemoLoader from "./demo-loader.js";
+import * as Wardrobe from "./wardrobe.js";
 
 // Inizializzo il theme manager (legge localStorage, applica al documento)
 Theme.init();
@@ -457,6 +458,21 @@ function initBackup() {
   });
 
   syncDemoStatus();
+
+  // ============================================================================
+  // Storage stats (calcolato al caricamento del tab Backup)
+  // ============================================================================
+  async function loadStorageStats() {
+    try {
+      const stats = await Wardrobe.getStorageStats();
+      document.getElementById("stat-photo-count").textContent = stats.photoCount;
+      document.getElementById("stat-cutout-count").textContent = stats.cutoutCount;
+      document.getElementById("stat-storage-mb").textContent = stats.estimatedMB;
+    } catch (err) {
+      console.warn("Storage stats failed:", err);
+    }
+  }
+  loadStorageStats();
 }
 
 // =============================================================================

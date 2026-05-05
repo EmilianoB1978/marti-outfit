@@ -15,12 +15,14 @@ function daysAgo(n) {
   return new Date(Date.now() - n * 86400 * 1000).toISOString();
 }
 
-// Helper: URL foto con dimensione 600px
+// Helper: URL foto con dimensione 500px e qualita' 70 (~50-80 KB ognuna)
+// I demo non sono nel tuo Storage, ma qualita' inferiore = caricamento piu' veloce
+// e meno dati cellulare consumati
 function unsplash(id) {
   const base = id.startsWith("premium_")
     ? `https://plus.unsplash.com/${id}`
     : `https://images.unsplash.com/${id}`;
-  return `${base}?w=600&auto=format&fit=crop&q=80`;
+  return `${base}?w=500&auto=format&fit=crop&q=70`;
 }
 
 export const DEMO_ITEMS = [

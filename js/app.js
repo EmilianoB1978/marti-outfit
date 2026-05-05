@@ -355,7 +355,7 @@ function attachSwipeActions(card) {
       if (!confirm("Eliminare definitivamente questo capo?")) return;
       const item = state.items.find(i => i.id === card.dataset.id);
       try {
-        await Wardrobe.deleteItem(card.dataset.id, item?.photo_path);
+        await Wardrobe.deleteItem(card.dataset.id, item?.photo_path, item?.cutout_path);
         state.items = state.items.filter(i => i.id !== card.dataset.id);
         Haptic.pulse();
         renderWardrobe();
@@ -768,7 +768,7 @@ async function deleteCurrentItem() {
 
   const item = state.items.find(i => i.id === state.editingId);
   try {
-    await Wardrobe.deleteItem(state.editingId, item?.photo_path);
+    await Wardrobe.deleteItem(state.editingId, item?.photo_path, item?.cutout_path);
     state.items = state.items.filter(i => i.id !== state.editingId);
     renderWardrobe();
     renderFilters();

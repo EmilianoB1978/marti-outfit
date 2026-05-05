@@ -328,6 +328,32 @@
         🗑️ Rimuovi tutti i demo
       </button>
 
+      <h2 class="settings-section-title">📊 Storage</h2>
+      <p class="settings-hint">
+        Stima dello spazio occupato dalle foto dei tuoi capi su Firebase.
+        Le foto sono compresse automaticamente in WebP a 800px (~80-100 KB
+        l'una), i cutout dell'editor visuale ~200 KB.
+      </p>
+
+      <div id="storage-stats" class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap: var(--space-2);">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-photo-count">—</div>
+          <div class="stat-label">Foto</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-cutout-count">—</div>
+          <div class="stat-label">Cutout</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-storage-mb">—</div>
+          <div class="stat-label">MB stimati</div>
+        </div>
+      </div>
+
+      <p class="settings-hint" style="margin-top: var(--space-2);">
+        Firebase Storage gratuito: 5 GB. Ai tuoi ritmi ci vorranno anni per riempirlo.
+      </p>
+
       <h2 class="settings-section-title">Cache PWA</h2>
       <p class="settings-hint">
         Se l'app sembra "bloccata" su una vecchia versione (foto sbagliate, modifiche

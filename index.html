@@ -315,6 +315,68 @@
     </div>
   </div>
 
+  <!-- Modale: scegli template per condivisione outfit -->
+  <div id="modal-share" class="modal hidden">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-cancel-share">✕</button>
+        <h2>Condividi outfit</h2>
+        <button class="btn-text" id="btn-confirm-share">📸 Condividi</button>
+      </header>
+      <div class="modal-body">
+
+        <h3 class="settings-section-title" style="margin-top:0">Scegli un template</h3>
+        <div id="share-templates-grid" class="share-templates-grid"></div>
+
+        <h3 class="settings-section-title">Anteprima</h3>
+        <div class="share-preview-container">
+          <img id="share-preview-img" class="share-preview-img" alt="Anteprima" />
+          <div id="share-preview-loading" class="share-preview-loading hidden">⏳ Generazione...</div>
+        </div>
+
+        <h3 class="settings-section-title">Personalizzazione</h3>
+
+        <div class="form-group">
+          <label for="share-custom-title">Titolo personalizzato (opzionale)</label>
+          <input type="text" id="share-custom-title" placeholder="Lascia vuoto per usare il nome outfit" />
+        </div>
+
+        <div class="settings-row">
+          <label class="settings-row-title" for="share-include-date">Mostra data di oggi</label>
+          <label class="switch">
+            <input type="checkbox" id="share-include-date" checked />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <label class="settings-row-title" for="share-include-watermark">Includi watermark "Marty Outfit"</label>
+          <label class="switch">
+            <input type="checkbox" id="share-include-watermark" checked />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <label class="settings-row-title" for="share-include-links">Includi link prodotti nella caption</label>
+          <label class="switch">
+            <input type="checkbox" id="share-include-links" checked />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <label class="settings-row-title" for="share-include-hashtags">Includi hashtag standard</label>
+          <label class="switch">
+            <input type="checkbox" id="share-include-hashtags" checked />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- Menu drawer (icona ⋯ in header) -->
   <div id="menu-drawer" class="menu-overlay hidden">
     <div class="menu-panel">

@@ -347,4 +347,5 @@ export const defaultPreferences = {
   customOverrides: {},        // override manuali sui singoli token (color picker)
   // Behavior preferences
   linkDurationDays: 180,      // 30..720 giorni - dopo questa soglia, alert scadenza link
+  shareTemplate: "classic",   // template default per outfit card (classic|dark|pastel|magazine)
 };

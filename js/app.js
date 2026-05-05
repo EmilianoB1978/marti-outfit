@@ -187,6 +187,129 @@ async function renderTodayOutfit() {
 }
 
 // =============================================================================
+// Modal "Condividi outfit": scelta template + opzioni + preview live
+// =============================================================================
+let _shareCurrentOutfit = null;
+let _previewDebTimer = null;
+
+async function openShareModal(outfit) {
+  _shareCurrentOutfit = outfit;
+
+  // Reset opzioni dai default + theme prefs
+  const prefs = Theme.getPreferences();
+  document.getElementById("share-custom-title").value = "";
+  document.getElementById("share-include-date").checked = true;
+  document.getElementById("share-include-watermark").checked = true;
+  document.getElementById("share-include-links").checked = true;
+  document.getElementById("share-include-hashtags").checked = true;
+
+  // Render i template card
+  const grid = document.getElementById("share-templates-grid");
+  // Importo dinamico per non bloccare boot quando il modulo non e' usato
+  const { TEMPLATES } = await import("./share-templates.js");
+  const currentTemplate = prefs.shareTemplate || "classic";
+
+  grid.innerHTML = Object.entries(TEMPLATES).map(([key, tpl]) => `
+    <button class="share-template-card ${key === currentTemplate ? 'is-active' : ''}" data-template="${key}">
+      <div class="share-template-preview" style="background: ${tpl.preview};">
+        <div class="share-template-accent" style="background: ${tpl.accent};"></div>
+      </div>
+      <div class="share-template-name">${tpl.name}</div>
+      <div class="share-template-desc">${tpl.description}</div>
+    </button>
+  `).join("");
+
+  grid.querySelectorAll(".share-template-card").forEach(card => {
+    card.addEventListener("click", () => {
+      grid.querySelectorAll(".share-template-card").forEach(c => c.classList.remove("is-active"));
+      card.classList.add("is-active");
+      Theme.set("shareTemplate", card.dataset.template);  // salva preferenza
+      schedulePreviewRefresh();
+    });
+  });
+
+  // Listeners su tutte le checkbox/input -> ri-genera preview
+  ["share-custom-title", "share-include-date", "share-include-watermark"].forEach(id => {
+    document.getElementById(id).addEventListener("change", schedulePreviewRefresh);
+  });
+  document.getElementById("share-custom-title").addEventListener("input", schedulePreviewRefresh);
+
+  // Mostra modale + genera preview iniziale
+  document.getElementById("modal-share").classList.remove("hidden");
+  schedulePreviewRefresh();
+}
+
+function closeShareModal() {
+  document.getElementById("modal-share").classList.add("hidden");
+  _shareCurrentOutfit = null;
+}
+
+function schedulePreviewRefresh() {
+  clearTimeout(_previewDebTimer);
+  _previewDebTimer = setTimeout(refreshSharePreview, 200);
+}
+
+async function refreshSharePreview() {
+  if (!_shareCurrentOutfit) return;
+  const img = document.getElementById("share-preview-img");
+  const loading = document.getElementById("share-preview-loading");
+  loading.classList.remove("hidden");
+
+  const opts = collectShareOptions();
+  try {
+    const dataUrl = await ShareOutfit.generatePreview(_shareCurrentOutfit, state.items, opts);
+    if (dataUrl) {
+      img.src = dataUrl;
+      img.style.display = "block";
+    }
+  } catch (err) {
+    console.error("Preview fail:", err);
+  } finally {
+    loading.classList.add("hidden");
+  }
+}
+
+function collectShareOptions() {
+  const activeCard = document.querySelector(".share-template-card.is-active");
+  return {
+    template: activeCard?.dataset.template || "classic",
+    customTitle: document.getElementById("share-custom-title").value.trim(),
+    includeDate: document.getElementById("share-include-date").checked,
+    includeWatermark: document.getElementById("share-include-watermark").checked,
+    includeLinks: document.getElementById("share-include-links").checked,
+    includeHashtags: document.getElementById("share-include-hashtags").checked,
+  };
+}
+
+async function confirmShare() {
+  if (!_shareCurrentOutfit) return;
+  const btn = document.getElementById("btn-confirm-share");
+  btn.disabled = true;
+  btn.textContent = "...";
+  try {
+    const opts = collectShareOptions();
+    const result = await ShareOutfit.shareOutfit(_shareCurrentOutfit, state.items, opts);
+    if (result.method === "share") {
+      toast("Condiviso", "success");
+      closeShareModal();
+    } else if (result.method === "fallback") {
+      toast(result.clipboardOk
+        ? "Scaricato + caption negli appunti"
+        : "Immagine scaricata", "success");
+      closeShareModal();
+    } else if (result.method === "cancelled") {
+      // utente ha annullato il share sheet, lasciamo aperto
+    }
+  } catch (err) {
+    console.error(err);
+    toast("Errore: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "📸 Condividi";
+  }
+}
+
+// =============================================================================
 // Banner "capi a riposo" (compare se ci sono 3+ dormienti)
 // =============================================================================
 function renderDormantBanner() {
@@ -1027,27 +1150,11 @@ function renderSavedOutfits() {
     `;
   }).join("");
 
-  // Condividi outfit (genera card 1080x1080 + caption con link)
+  // Condividi outfit -> apre modal scelta template + opzioni
   container.querySelectorAll("[data-share]").forEach(btn => {
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", () => {
       const outfit = state.savedOutfits.find(o => o.id === btn.dataset.share);
-      if (!outfit) return;
-      btn.disabled = true;
-      btn.textContent = "...";
-      try {
-        const result = await ShareOutfit.shareOutfit(outfit, state.items);
-        if (result.method === "share") {
-          toast("Condiviso", "success");
-        } else if (result.method === "fallback") {
-          toast(result.clipboardOk ? "Immagine scaricata + caption negli appunti" : "Immagine scaricata", "success");
-        }
-      } catch (err) {
-        console.error(err);
-        toast("Errore: " + err.message, "error");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "📸 Condividi";
-      }
+      if (outfit) openShareModal(outfit);
     });
   });
 
@@ -1284,6 +1391,13 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-save-item").addEventListener("click", saveItem);
   document.getElementById("btn-delete-item").addEventListener("click", deleteCurrentItem);
   document.getElementById("btn-mark-worn").addEventListener("click", markCurrentItemAsWorn);
+
+  // Share modal binding
+  document.getElementById("btn-cancel-share").addEventListener("click", closeShareModal);
+  document.getElementById("btn-confirm-share").addEventListener("click", confirmShare);
+  document.getElementById("share-include-links").addEventListener("change", () => {
+    // Le opzioni link/hashtag NON ri-generano la preview perché sono solo nella caption
+  });
 
   // Slider formality: aggiorno il display live
   const formalitySlider = document.getElementById("field-formality");

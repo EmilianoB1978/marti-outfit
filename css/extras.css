@@ -1513,6 +1513,47 @@ body.editor-page {
   border-radius: var(--radius-pill);
 }
 
+/* Filtri foto chip row */
+.share-filters-row {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  margin-bottom: var(--space-3);
+  scrollbar-width: none;
+}
+.share-filters-row::-webkit-scrollbar { display: none; }
+
+/* Card "Nuovo template" */
+.share-template-card--add { /* hover/active states */ }
+.share-template-preview--add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface) !important;
+  border: 2px dashed var(--color-border);
+  color: var(--color-primary);
+}
+
+/* User template card con bottone edit */
+.share-template-card--user {
+  position: relative;
+}
+.share-template-edit {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.share-template-edit:active { transform: scale(0.95); }
+
 /* Badge link sui card del guardaroba */
 .item-link-badge {
   position: absolute;

@@ -192,10 +192,13 @@ async function renderTodayOutfit() {
 let _shareCurrentOutfit = null;
 let _previewDebTimer = null;
 
+// Stato share modal (selezione corrente template + filtro)
+let _shareSelection = { type: "builtin", key: "classic", userTemplateConfig: null };
+let _currentFilter = "none";
+
 async function openShareModal(outfit) {
   _shareCurrentOutfit = outfit;
 
-  // Reset opzioni dai default + theme prefs
   const prefs = Theme.getPreferences();
   document.getElementById("share-custom-title").value = "";
   document.getElementById("share-include-date").checked = true;
@@ -203,40 +206,134 @@ async function openShareModal(outfit) {
   document.getElementById("share-include-links").checked = true;
   document.getElementById("share-include-hashtags").checked = true;
 
-  // Render i template card
-  const grid = document.getElementById("share-templates-grid");
-  // Importo dinamico per non bloccare boot quando il modulo non e' usato
-  const { TEMPLATES } = await import("./share-templates.js");
-  const currentTemplate = prefs.shareTemplate || "classic";
+  _currentFilter = "none";
+  _shareSelection = { type: "builtin", key: prefs.shareTemplate || "classic", userTemplateConfig: null };
 
-  grid.innerHTML = Object.entries(TEMPLATES).map(([key, tpl]) => `
-    <button class="share-template-card ${key === currentTemplate ? 'is-active' : ''}" data-template="${key}">
-      <div class="share-template-preview" style="background: ${tpl.preview};">
-        <div class="share-template-accent" style="background: ${tpl.accent};"></div>
-      </div>
-      <div class="share-template-name">${tpl.name}</div>
-      <div class="share-template-desc">${tpl.description}</div>
-    </button>
-  `).join("");
+  await renderTemplateGrid();
+  await renderUserTemplatesGrid();
+  renderFilterChips();
+
+  // Listeners
+  ["share-custom-title", "share-include-date", "share-include-watermark"].forEach(id => {
+    const el = document.getElementById(id);
+    el.removeEventListener("change", schedulePreviewRefresh);
+    el.addEventListener("change", schedulePreviewRefresh);
+  });
+  const titleInput = document.getElementById("share-custom-title");
+  titleInput.removeEventListener("input", schedulePreviewRefresh);
+  titleInput.addEventListener("input", schedulePreviewRefresh);
+
+  document.getElementById("modal-share").classList.remove("hidden");
+  schedulePreviewRefresh();
+}
+
+async function renderTemplateGrid() {
+  const grid = document.getElementById("share-templates-grid");
+  const { TEMPLATES } = await import("./share-templates.js");
+
+  grid.innerHTML = Object.entries(TEMPLATES).map(([key, tpl]) => {
+    const active = _shareSelection.type === "builtin" && _shareSelection.key === key;
+    return `
+      <button class="share-template-card ${active ? 'is-active' : ''}" data-template="${key}">
+        <div class="share-template-preview" style="background: ${tpl.preview};">
+          <div class="share-template-accent" style="background: ${tpl.accent};"></div>
+        </div>
+        <div class="share-template-name">${tpl.name}</div>
+        <div class="share-template-desc">${tpl.description}</div>
+      </button>
+    `;
+  }).join("");
 
   grid.querySelectorAll(".share-template-card").forEach(card => {
     card.addEventListener("click", () => {
-      grid.querySelectorAll(".share-template-card").forEach(c => c.classList.remove("is-active"));
-      card.classList.add("is-active");
-      Theme.set("shareTemplate", card.dataset.template);  // salva preferenza
+      _shareSelection = { type: "builtin", key: card.dataset.template, userTemplateConfig: null };
+      Theme.set("shareTemplate", card.dataset.template);
+      // Ri-render entrambe le grid per togliere active dalla user grid
+      renderTemplateGrid();
+      renderUserTemplatesGrid();
       schedulePreviewRefresh();
     });
   });
+}
 
-  // Listeners su tutte le checkbox/input -> ri-genera preview
-  ["share-custom-title", "share-include-date", "share-include-watermark"].forEach(id => {
-    document.getElementById(id).addEventListener("change", schedulePreviewRefresh);
+async function renderUserTemplatesGrid() {
+  const grid = document.getElementById("share-user-templates");
+  const UT = await import("./share-user-templates.js");
+  await UT.load();
+  const userTpls = UT.get();
+
+  // Card "Nuovo" + i template salvati
+  const newCard = `
+    <button class="share-template-card share-template-card--add" id="btn-new-custom-template">
+      <div class="share-template-preview share-template-preview--add">
+        <span style="font-size: 40px;">+</span>
+      </div>
+      <div class="share-template-name">Nuovo</div>
+      <div class="share-template-desc">Crea il tuo template</div>
+    </button>
+  `;
+
+  const userCards = userTpls.map(t => {
+    const active = _shareSelection.type === "user" && _shareSelection.key === t.id;
+    const bg = t.config.background;
+    const previewBg = bg.type === "gradient"
+      ? `linear-gradient(135deg, ${bg.color1 || '#fff'} 0%, ${bg.color2 || '#eee'} 100%)`
+      : bg.color || "#ffffff";
+    return `
+      <button class="share-template-card share-template-card--user ${active ? 'is-active' : ''}" data-uid="${t.id}">
+        <div class="share-template-preview" style="background: ${previewBg};">
+          <div class="share-template-accent" style="background: ${t.config.accent || '#d4af37'};"></div>
+          <button class="share-template-edit" data-edit="${t.id}" aria-label="Modifica">✏️</button>
+        </div>
+        <div class="share-template-name">${escapeHtml(t.name)}</div>
+        <div class="share-template-desc">Template tuo</div>
+      </button>
+    `;
+  }).join("");
+
+  grid.innerHTML = newCard + userCards;
+
+  grid.querySelector("#btn-new-custom-template").addEventListener("click", () => openBuilder(null));
+  grid.querySelectorAll("[data-edit]").forEach(b => {
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = b.dataset.edit;
+      const t = userTpls.find(x => x.id === id);
+      if (t) openBuilder(t);
+    });
   });
-  document.getElementById("share-custom-title").addEventListener("input", schedulePreviewRefresh);
+  grid.querySelectorAll(".share-template-card--user").forEach(card => {
+    card.addEventListener("click", (e) => {
+      if (e.target.closest("[data-edit]")) return;
+      const id = card.dataset.uid;
+      const t = userTpls.find(x => x.id === id);
+      if (!t) return;
+      _shareSelection = { type: "user", key: id, userTemplateConfig: t.config };
+      renderTemplateGrid();
+      renderUserTemplatesGrid();
+      schedulePreviewRefresh();
+    });
+  });
+}
 
-  // Mostra modale + genera preview iniziale
-  document.getElementById("modal-share").classList.remove("hidden");
-  schedulePreviewRefresh();
+function renderFilterChips() {
+  const row = document.getElementById("share-filters-row");
+  // Lista filtri (chiavi di PHOTO_FILTERS)
+  import("./share-templates.js").then(({ PHOTO_FILTERS }) => {
+    row.innerHTML = Object.entries(PHOTO_FILTERS).map(([key, f]) => `
+      <button class="filter-chip ${key === _currentFilter ? 'active' : ''}" data-filter="${key}">
+        ${f.label}
+      </button>
+    `).join("");
+    row.querySelectorAll(".filter-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        _currentFilter = chip.dataset.filter;
+        row.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        schedulePreviewRefresh();
+      });
+    });
+  });
 }
 
 function closeShareModal() {
@@ -270,14 +367,15 @@ async function refreshSharePreview() {
 }
 
 function collectShareOptions() {
-  const activeCard = document.querySelector(".share-template-card.is-active");
   return {
-    template: activeCard?.dataset.template || "classic",
+    template: _shareSelection.type === "user" ? "custom" : _shareSelection.key,
+    userTemplateConfig: _shareSelection.userTemplateConfig,
     customTitle: document.getElementById("share-custom-title").value.trim(),
     includeDate: document.getElementById("share-include-date").checked,
     includeWatermark: document.getElementById("share-include-watermark").checked,
     includeLinks: document.getElementById("share-include-links").checked,
     includeHashtags: document.getElementById("share-include-hashtags").checked,
+    filter: _currentFilter,
   };
 }
 
@@ -307,6 +405,184 @@ async function confirmShare() {
     btn.disabled = false;
     btn.textContent = "📸 Condividi";
   }
+}
+
+// =============================================================================
+// CUSTOM TEMPLATE BUILDER
+// =============================================================================
+let _builderEditing = null;     // null = creazione, oggetto = modifica
+let _builderDebTimer = null;
+
+function openBuilder(template) {
+  _builderEditing = template;
+  // Default config (se nuovo)
+  const config = template ? template.config : {
+    background: { type: "gradient", color1: "#ffffff", color2: "#f0ebde", direction: "vertical" },
+    title: { font: "system", weight: "bold", size: 56, color: "#1a1a1a", align: "center", italic: false, y: 110 },
+    date: { color: "#888" },
+    accent: "#d4af37",
+    line: { show: true },
+    emoji: "",
+    photoStyle: { radius: 12, borderColor: "#e0e0e0", borderWidth: 2, gap: 24, padding: 60, shadow: false, cardBg: "#fff" },
+    watermark: { text: "✨ Marty Outfit", color: "#aaaaaa", font: "system" },
+  };
+
+  // Popola form
+  document.getElementById("ct-name").value = template ? template.name : "";
+  document.querySelector(`input[name="ct-bg-type"][value="${config.background.type}"]`).checked = true;
+  document.getElementById("ct-bg-color1").value = config.background.color1 || config.background.color || "#ffffff";
+  document.getElementById("ct-bg-color2").value = config.background.color2 || "#f0ebde";
+  document.getElementById("ct-bg-direction").value = config.background.direction || "vertical";
+
+  document.getElementById("ct-title-font").value = config.title.font || "system";
+  document.getElementById("ct-title-color").value = config.title.color || "#1a1a1a";
+  document.getElementById("ct-title-size").value = config.title.size || 56;
+  document.getElementById("ct-title-size-val").textContent = config.title.size || 56;
+  document.querySelector(`input[name="ct-title-align"][value="${config.title.align || 'center'}"]`).checked = true;
+  document.getElementById("ct-title-italic").checked = !!config.title.italic;
+
+  document.getElementById("ct-accent").value = config.accent || "#d4af37";
+  document.getElementById("ct-line").checked = config.line?.show !== false;
+  document.getElementById("ct-emoji").value = config.emoji || "";
+
+  document.getElementById("ct-photo-radius").value = config.photoStyle.radius || 0;
+  document.getElementById("ct-photo-radius-val").textContent = config.photoStyle.radius || 0;
+  document.getElementById("ct-photo-border").value = config.photoStyle.borderWidth || 0;
+  document.getElementById("ct-photo-border-val").textContent = config.photoStyle.borderWidth || 0;
+  document.getElementById("ct-photo-border-color").value = config.photoStyle.borderColor || "#e0e0e0";
+  document.getElementById("ct-photo-gap").value = config.photoStyle.gap || 24;
+  document.getElementById("ct-photo-gap-val").textContent = config.photoStyle.gap || 24;
+  document.getElementById("ct-photo-shadow").checked = !!config.photoStyle.shadow;
+
+  document.getElementById("ct-wm-text").value = config.watermark?.text || "✨ Marty Outfit";
+  document.getElementById("ct-wm-color").value = config.watermark?.color || "#aaaaaa";
+
+  // Show/hide gradient color2 row
+  toggleGradientFields();
+
+  // Show delete button only when editing
+  document.getElementById("btn-delete-builder").classList.toggle("hidden", !template);
+
+  // Mostra modal
+  document.getElementById("modal-builder").classList.remove("hidden");
+  scheduleBuilderPreview();
+}
+
+function closeBuilder() {
+  document.getElementById("modal-builder").classList.add("hidden");
+  _builderEditing = null;
+}
+
+function toggleGradientFields() {
+  const isGradient = document.querySelector('input[name="ct-bg-type"]:checked').value === "gradient";
+  document.getElementById("ct-bg-color2-row").classList.toggle("hidden", !isGradient);
+  document.getElementById("ct-bg-direction-row").classList.toggle("hidden", !isGradient);
+}
+
+function readBuilderConfig() {
+  return {
+    background: {
+      type: document.querySelector('input[name="ct-bg-type"]:checked').value,
+      color1: document.getElementById("ct-bg-color1").value,
+      color: document.getElementById("ct-bg-color1").value,  // alias per "solid"
+      color2: document.getElementById("ct-bg-color2").value,
+      direction: document.getElementById("ct-bg-direction").value,
+    },
+    title: {
+      font: document.getElementById("ct-title-font").value,
+      color: document.getElementById("ct-title-color").value,
+      size: +document.getElementById("ct-title-size").value,
+      align: document.querySelector('input[name="ct-title-align"]:checked').value,
+      italic: document.getElementById("ct-title-italic").checked,
+      weight: "bold",
+      y: 110,
+    },
+    date: { color: "#888" },
+    accent: document.getElementById("ct-accent").value,
+    line: { show: document.getElementById("ct-line").checked, color: document.getElementById("ct-accent").value },
+    emoji: document.getElementById("ct-emoji").value.trim(),
+    photoStyle: {
+      radius: +document.getElementById("ct-photo-radius").value,
+      borderWidth: +document.getElementById("ct-photo-border").value,
+      borderColor: document.getElementById("ct-photo-border-color").value,
+      gap: +document.getElementById("ct-photo-gap").value,
+      padding: 60,
+      shadow: document.getElementById("ct-photo-shadow").checked,
+      cardBg: "#ffffff",
+    },
+    watermark: {
+      text: document.getElementById("ct-wm-text").value,
+      color: document.getElementById("ct-wm-color").value,
+      font: "system",
+    },
+  };
+}
+
+function scheduleBuilderPreview() {
+  clearTimeout(_builderDebTimer);
+  _builderDebTimer = setTimeout(refreshBuilderPreview, 200);
+}
+
+async function refreshBuilderPreview() {
+  if (!_shareCurrentOutfit) return;
+  const img = document.getElementById("ct-preview-img");
+  const loading = document.getElementById("ct-preview-loading");
+  loading.classList.remove("hidden");
+
+  const config = readBuilderConfig();
+  try {
+    const dataUrl = await ShareOutfit.generatePreview(_shareCurrentOutfit, state.items, {
+      template: "custom",
+      customConfig: config,
+      filter: _currentFilter,
+    });
+    if (dataUrl) {
+      img.src = dataUrl;
+      img.style.display = "block";
+    }
+  } catch (err) {
+    console.error("Builder preview fail:", err);
+  } finally {
+    loading.classList.add("hidden");
+  }
+}
+
+async function saveBuilder() {
+  const name = document.getElementById("ct-name").value.trim();
+  if (!name) {
+    toast("Inserisci un nome", "error");
+    return;
+  }
+  const UT = await import("./share-user-templates.js");
+  const template = _builderEditing || {};
+  template.name = name;
+  template.config = readBuilderConfig();
+  await UT.save(template);
+  toast(_builderEditing ? "Template aggiornato" : "Template salvato", "success");
+  closeBuilder();
+  // Refresh user templates grid in share modal
+  await renderUserTemplatesGrid();
+  // Auto-seleziona il nuovo template
+  _shareSelection = { type: "user", key: template.id, userTemplateConfig: template.config };
+  await renderTemplateGrid();
+  await renderUserTemplatesGrid();
+  schedulePreviewRefresh();
+}
+
+async function deleteBuilderTemplate() {
+  if (!_builderEditing) return;
+  if (!confirm(`Eliminare il template "${_builderEditing.name}"?`)) return;
+  const UT = await import("./share-user-templates.js");
+  await UT.remove(_builderEditing.id);
+  toast("Template eliminato", "success");
+  closeBuilder();
+  // Reset selection se era selezionato
+  if (_shareSelection.type === "user" && _shareSelection.key === _builderEditing.id) {
+    _shareSelection = { type: "builtin", key: "classic", userTemplateConfig: null };
+  }
+  await renderUserTemplatesGrid();
+  await renderTemplateGrid();
+  schedulePreviewRefresh();
 }
 
 // =============================================================================
@@ -1397,6 +1673,49 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-confirm-share").addEventListener("click", confirmShare);
   document.getElementById("share-include-links").addEventListener("change", () => {
     // Le opzioni link/hashtag NON ri-generano la preview perché sono solo nella caption
+  });
+
+  // Builder modal binding
+  document.getElementById("btn-cancel-builder").addEventListener("click", closeBuilder);
+  document.getElementById("btn-save-builder").addEventListener("click", saveBuilder);
+  document.getElementById("btn-delete-builder").addEventListener("click", deleteBuilderTemplate);
+
+  // Tutti i controlli del builder ri-generano la preview
+  const builderInputs = [
+    "ct-bg-color1", "ct-bg-color2", "ct-bg-direction",
+    "ct-title-font", "ct-title-color", "ct-title-italic",
+    "ct-accent", "ct-line", "ct-emoji",
+    "ct-photo-border-color", "ct-photo-shadow",
+    "ct-wm-text", "ct-wm-color",
+  ];
+  builderInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("change", scheduleBuilderPreview);
+    el.addEventListener("input", scheduleBuilderPreview);
+  });
+
+  // Slider con display live + preview
+  const sliders = [
+    { id: "ct-title-size",    valId: "ct-title-size-val" },
+    { id: "ct-photo-radius",  valId: "ct-photo-radius-val" },
+    { id: "ct-photo-border",  valId: "ct-photo-border-val" },
+    { id: "ct-photo-gap",     valId: "ct-photo-gap-val" },
+  ];
+  sliders.forEach(({ id, valId }) => {
+    const el = document.getElementById(id);
+    el.addEventListener("input", () => {
+      document.getElementById(valId).textContent = el.value;
+      scheduleBuilderPreview();
+    });
+  });
+
+  // Radio button bg-type e title-align
+  document.querySelectorAll('input[name="ct-bg-type"]').forEach(r => {
+    r.addEventListener("change", () => { toggleGradientFields(); scheduleBuilderPreview(); });
+  });
+  document.querySelectorAll('input[name="ct-title-align"]').forEach(r => {
+    r.addEventListener("change", scheduleBuilderPreview);
   });
 
   // Slider formality: aggiorno il display live

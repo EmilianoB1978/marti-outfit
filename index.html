@@ -412,12 +412,20 @@
           <div id="ct-preview-loading" class="share-preview-loading hidden">⏳</div>
         </div>
 
+        <!-- ===== ASPECT RATIO ===== -->
+        <h3 class="settings-section-title" style="margin-top:0">📐 Formato</h3>
+        <div class="radio-group">
+          <label class="radio-pill"><input type="radio" name="ct-aspect" value="1:1" checked /><span>1:1 Post</span></label>
+          <label class="radio-pill"><input type="radio" name="ct-aspect" value="4:5" /><span>4:5 Verticale</span></label>
+          <label class="radio-pill"><input type="radio" name="ct-aspect" value="9:16" /><span>9:16 Stories</span></label>
+        </div>
+
         <!-- ===== SFONDO ===== -->
         <h3 class="settings-section-title">🎨 Sfondo</h3>
         <div class="settings-row">
           <label class="settings-row-title">Tipo</label>
           <div class="radio-group" style="flex: 1;">
-            <label class="radio-pill"><input type="radio" name="ct-bg-type" value="solid" /><span>Tinta unita</span></label>
+            <label class="radio-pill"><input type="radio" name="ct-bg-type" value="solid" /><span>Solid</span></label>
             <label class="radio-pill"><input type="radio" name="ct-bg-type" value="gradient" checked /><span>Gradient</span></label>
           </div>
         </div>
@@ -437,6 +445,29 @@
             <option value="diagonal">Diagonale</option>
           </select>
         </div>
+
+        <!-- ===== PATTERN OVERLAY ===== -->
+        <h3 class="settings-section-title">🌀 Pattern decorativo</h3>
+        <div class="settings-row">
+          <label class="settings-row-title" for="ct-pattern-type">Tipo</label>
+          <select id="ct-pattern-type" class="select" style="flex:1; max-width:180px;">
+            <option value="none">Nessuno</option>
+            <option value="dots">Pois</option>
+            <option value="stripes">Righe orizzontali</option>
+            <option value="diag">Diagonali</option>
+            <option value="grid">Griglia</option>
+            <option value="waves">Onde</option>
+            <option value="hearts">Cuori ♡</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label class="settings-row-title" for="ct-pattern-color">Colore pattern</label>
+          <input type="color" id="ct-pattern-color" class="color-picker-input" value="#d4af37" />
+        </div>
+        <div class="settings-row">
+          <label class="settings-row-title">Densità: <span id="ct-pattern-density-val">30</span>px</label>
+        </div>
+        <input type="range" id="ct-pattern-density" class="slider" min="15" max="80" value="30" />
 
         <!-- ===== TITOLO ===== -->
         <h3 class="settings-section-title">📝 Titolo</h3>
@@ -530,6 +561,22 @@
         <div class="settings-row">
           <label class="settings-row-title" for="ct-wm-color">Colore</label>
           <input type="color" id="ct-wm-color" class="color-picker-input" value="#aaaaaa" />
+        </div>
+
+        <!-- ===== OVERLAYS (testi, sticker, logo) ===== -->
+        <h3 class="settings-section-title">🎭 Overlay e sticker</h3>
+        <p class="settings-hint" style="margin-top:0">Aggiungi testi, emoji-sticker o il tuo logo sull'immagine.</p>
+
+        <div id="ct-overlays-list" class="overlays-list"></div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-2); margin-top: var(--space-3);">
+          <button class="btn btn--secondary btn--sm" id="btn-add-text">+ Testo</button>
+          <button class="btn btn--secondary btn--sm" id="btn-add-sticker">+ Sticker</button>
+          <button class="btn btn--secondary btn--sm" id="btn-add-shape">+ Forma</button>
+          <label class="btn btn--secondary btn--sm" style="cursor: pointer;">
+            + Logo
+            <input type="file" id="input-upload-logo" accept="image/*" hidden />
+          </label>
         </div>
 
         <button class="btn btn--danger btn--block hidden" id="btn-delete-builder" style="margin-top: var(--space-5);">

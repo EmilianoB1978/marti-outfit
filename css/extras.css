@@ -1554,6 +1554,49 @@ body.editor-page {
 }
 .share-template-edit:active { transform: scale(0.95); }
 
+/* Lista overlays nel builder */
+.overlays-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.overlay-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-input);
+  border: var(--border-width) solid var(--color-border);
+}
+.overlay-icon {
+  font-size: 24px;
+  width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.overlay-info { flex: 1; min-width: 0; }
+.overlay-label {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.overlay-pos {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+}
+.overlay-controls {
+  display: flex;
+  gap: var(--space-1);
+}
+.overlay-controls .btn-icon {
+  width: 32px;
+  height: 32px;
+  font-size: var(--fs-base);
+}
+
 /* Badge link sui card del guardaroba */
 .item-link-badge {
   position: absolute;

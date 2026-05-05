@@ -413,11 +413,15 @@ async function confirmShare() {
 let _builderEditing = null;     // null = creazione, oggetto = modifica
 let _builderDebTimer = null;
 
+// State degli overlays in editing
+let _builderOverlays = [];
+
 function openBuilder(template) {
   _builderEditing = template;
-  // Default config (se nuovo)
   const config = template ? template.config : {
+    aspectRatio: "1:1",
     background: { type: "gradient", color1: "#ffffff", color2: "#f0ebde", direction: "vertical" },
+    pattern: { type: "none", color: "#d4af37", density: 30 },
     title: { font: "system", weight: "bold", size: 56, color: "#1a1a1a", align: "center", italic: false, y: 110 },
     date: { color: "#888" },
     accent: "#d4af37",
@@ -425,15 +429,27 @@ function openBuilder(template) {
     emoji: "",
     photoStyle: { radius: 12, borderColor: "#e0e0e0", borderWidth: 2, gap: 24, padding: 60, shadow: false, cardBg: "#fff" },
     watermark: { text: "✨ Marty Outfit", color: "#aaaaaa", font: "system" },
+    overlays: [],
   };
 
-  // Popola form
   document.getElementById("ct-name").value = template ? template.name : "";
+
+  // Aspect ratio
+  document.querySelector(`input[name="ct-aspect"][value="${config.aspectRatio || '1:1'}"]`).checked = true;
+
+  // Background
   document.querySelector(`input[name="ct-bg-type"][value="${config.background.type}"]`).checked = true;
   document.getElementById("ct-bg-color1").value = config.background.color1 || config.background.color || "#ffffff";
   document.getElementById("ct-bg-color2").value = config.background.color2 || "#f0ebde";
   document.getElementById("ct-bg-direction").value = config.background.direction || "vertical";
 
+  // Pattern
+  document.getElementById("ct-pattern-type").value = config.pattern?.type || "none";
+  document.getElementById("ct-pattern-color").value = config.pattern?.color || "#d4af37";
+  document.getElementById("ct-pattern-density").value = config.pattern?.density || 30;
+  document.getElementById("ct-pattern-density-val").textContent = config.pattern?.density || 30;
+
+  // Title
   document.getElementById("ct-title-font").value = config.title.font || "system";
   document.getElementById("ct-title-color").value = config.title.color || "#1a1a1a";
   document.getElementById("ct-title-size").value = config.title.size || 56;
@@ -441,10 +457,12 @@ function openBuilder(template) {
   document.querySelector(`input[name="ct-title-align"][value="${config.title.align || 'center'}"]`).checked = true;
   document.getElementById("ct-title-italic").checked = !!config.title.italic;
 
+  // Accent
   document.getElementById("ct-accent").value = config.accent || "#d4af37";
   document.getElementById("ct-line").checked = config.line?.show !== false;
   document.getElementById("ct-emoji").value = config.emoji || "";
 
+  // Photo
   document.getElementById("ct-photo-radius").value = config.photoStyle.radius || 0;
   document.getElementById("ct-photo-radius-val").textContent = config.photoStyle.radius || 0;
   document.getElementById("ct-photo-border").value = config.photoStyle.borderWidth || 0;
@@ -454,16 +472,16 @@ function openBuilder(template) {
   document.getElementById("ct-photo-gap-val").textContent = config.photoStyle.gap || 24;
   document.getElementById("ct-photo-shadow").checked = !!config.photoStyle.shadow;
 
+  // Watermark
   document.getElementById("ct-wm-text").value = config.watermark?.text || "✨ Marty Outfit";
   document.getElementById("ct-wm-color").value = config.watermark?.color || "#aaaaaa";
 
-  // Show/hide gradient color2 row
+  // Overlays
+  _builderOverlays = JSON.parse(JSON.stringify(config.overlays || []));
+  renderOverlaysList();
+
   toggleGradientFields();
-
-  // Show delete button only when editing
   document.getElementById("btn-delete-builder").classList.toggle("hidden", !template);
-
-  // Mostra modal
   document.getElementById("modal-builder").classList.remove("hidden");
   scheduleBuilderPreview();
 }
@@ -481,12 +499,18 @@ function toggleGradientFields() {
 
 function readBuilderConfig() {
   return {
+    aspectRatio: document.querySelector('input[name="ct-aspect"]:checked').value,
     background: {
       type: document.querySelector('input[name="ct-bg-type"]:checked').value,
       color1: document.getElementById("ct-bg-color1").value,
-      color: document.getElementById("ct-bg-color1").value,  // alias per "solid"
+      color: document.getElementById("ct-bg-color1").value,
       color2: document.getElementById("ct-bg-color2").value,
       direction: document.getElementById("ct-bg-direction").value,
+    },
+    pattern: {
+      type: document.getElementById("ct-pattern-type").value,
+      color: document.getElementById("ct-pattern-color").value,
+      density: +document.getElementById("ct-pattern-density").value,
     },
     title: {
       font: document.getElementById("ct-title-font").value,
@@ -515,7 +539,158 @@ function readBuilderConfig() {
       color: document.getElementById("ct-wm-color").value,
       font: "system",
     },
+    overlays: _builderOverlays || [],
   };
+}
+
+// =============================================================================
+// OVERLAYS MANAGEMENT (text, sticker, shape, logo)
+// =============================================================================
+const POSITION_LABELS = {
+  "tl":"↖ Alto sx", "tc":"↑ Alto", "tr":"↗ Alto dx",
+  "ml":"← Centro sx", "mc":"· Centro", "mr":"→ Centro dx",
+  "bl":"↙ Basso sx", "bc":"↓ Basso", "br":"↘ Basso dx",
+};
+
+function renderOverlaysList() {
+  const list = document.getElementById("ct-overlays-list");
+  if (_builderOverlays.length === 0) {
+    list.innerHTML = `<p class="settings-hint" style="text-align:center; padding: var(--space-3); margin:0;">Nessun overlay. Aggiungi uno qui sotto.</p>`;
+    return;
+  }
+  list.innerHTML = _builderOverlays.map((o, idx) => {
+    const icon = ({text:"📝",sticker:"✨",logo:"🖼️",shape:"⬤"})[o.type] || "·";
+    const label = o.type === "text" ? `"${(o.text||'').slice(0,30)}"`
+      : o.type === "sticker" ? o.emoji
+      : o.type === "logo" ? "Logo"
+      : o.shape || "Forma";
+    return `
+      <div class="overlay-row" data-idx="${idx}">
+        <span class="overlay-icon">${icon}</span>
+        <div class="overlay-info">
+          <div class="overlay-label">${escapeHtml(label)}</div>
+          <div class="overlay-pos">${POSITION_LABELS[o.position] || ""}</div>
+        </div>
+        <div class="overlay-controls">
+          <button class="btn-icon" data-overlay-edit="${idx}" aria-label="Modifica">✏️</button>
+          <button class="btn-icon" data-overlay-del="${idx}" aria-label="Elimina">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll("[data-overlay-edit]").forEach(b => {
+    b.addEventListener("click", () => editOverlay(+b.dataset.overlayEdit));
+  });
+  list.querySelectorAll("[data-overlay-del]").forEach(b => {
+    b.addEventListener("click", () => {
+      _builderOverlays.splice(+b.dataset.overlayDel, 1);
+      renderOverlaysList();
+      scheduleBuilderPreview();
+    });
+  });
+}
+
+async function addTextOverlay() {
+  const text = prompt("Testo da sovrapporre:");
+  if (!text) return;
+  const pos = await pickPosition();
+  if (!pos) return;
+  _builderOverlays.push({
+    type: "text", text, position: pos, size: 36, color: "#1a1a1a",
+    font: "system", weight: "600", italic: false, outline: false,
+  });
+  renderOverlaysList();
+  scheduleBuilderPreview();
+}
+
+async function addStickerOverlay() {
+  const emoji = prompt("Emoji sticker (es. ✨ ♡ 🌸 ☀️ 🦋):");
+  if (!emoji) return;
+  const pos = await pickPosition();
+  if (!pos) return;
+  _builderOverlays.push({ type: "sticker", emoji: emoji.trim(), position: pos, size: 100 });
+  renderOverlaysList();
+  scheduleBuilderPreview();
+}
+
+async function addShapeOverlay() {
+  const shape = prompt("Forma: circle / square / line", "circle");
+  if (!shape) return;
+  const pos = await pickPosition();
+  if (!pos) return;
+  _builderOverlays.push({ type: "shape", shape: shape.trim(), position: pos, size: 80, color: "#d4af37" });
+  renderOverlaysList();
+  scheduleBuilderPreview();
+}
+
+async function uploadLogoOverlay(file) {
+  if (!file) return;
+  toast("Caricamento logo...", "default");
+  try {
+    const Logo = await import("./share-logo.js");
+    const { url } = await Logo.uploadLogo(file);
+    const pos = await pickPosition();
+    if (!pos) return;
+    _builderOverlays.push({ type: "logo", imageUrl: url, position: pos, size: 150, opacity: 0.9 });
+    renderOverlaysList();
+    scheduleBuilderPreview();
+    toast("Logo aggiunto", "success");
+  } catch (err) {
+    console.error(err);
+    toast("Errore upload logo: " + err.message, "error");
+  }
+}
+
+function pickPosition() {
+  return new Promise((resolve) => {
+    const positions = ["tl","tc","tr","ml","mc","mr","bl","bc","br"];
+    const chosen = prompt(
+      "Posizione (digitare):\n" +
+      positions.map(p => `${p} = ${POSITION_LABELS[p]}`).join("\n"),
+      "br"
+    );
+    if (!chosen || !positions.includes(chosen.trim())) {
+      resolve(null);
+    } else {
+      resolve(chosen.trim());
+    }
+  });
+}
+
+function editOverlay(idx) {
+  const o = _builderOverlays[idx];
+  if (!o) return;
+  // Edit semplice: prompt per ognuno dei campi principali
+  if (o.type === "text") {
+    const newText = prompt("Testo:", o.text);
+    if (newText !== null) o.text = newText;
+    const newSize = prompt("Dimensione (16-100):", o.size);
+    if (newSize) o.size = +newSize;
+    const newColor = prompt("Colore (hex es #d4af37):", o.color);
+    if (newColor) o.color = newColor;
+  } else if (o.type === "sticker") {
+    const newEmoji = prompt("Emoji:", o.emoji);
+    if (newEmoji) o.emoji = newEmoji;
+    const newSize = prompt("Dimensione (40-200):", o.size);
+    if (newSize) o.size = +newSize;
+  } else if (o.type === "logo") {
+    const newSize = prompt("Larghezza logo (60-300):", o.size);
+    if (newSize) o.size = +newSize;
+    const newOp = prompt("Opacita' (0.1-1):", o.opacity);
+    if (newOp) o.opacity = parseFloat(newOp);
+  } else if (o.type === "shape") {
+    const newColor = prompt("Colore (hex):", o.color);
+    if (newColor) o.color = newColor;
+    const newSize = prompt("Dimensione:", o.size);
+    if (newSize) o.size = +newSize;
+  }
+  // Posizione (qualsiasi tipo)
+  const newPos = prompt("Posizione (tl/tc/tr/ml/mc/mr/bl/bc/br):", o.position);
+  if (newPos) o.position = newPos.trim();
+
+  renderOverlaysList();
+  scheduleBuilderPreview();
 }
 
 function scheduleBuilderPreview() {
@@ -1683,6 +1858,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tutti i controlli del builder ri-generano la preview
   const builderInputs = [
     "ct-bg-color1", "ct-bg-color2", "ct-bg-direction",
+    "ct-pattern-type", "ct-pattern-color",
     "ct-title-font", "ct-title-color", "ct-title-italic",
     "ct-accent", "ct-line", "ct-emoji",
     "ct-photo-border-color", "ct-photo-shadow",
@@ -1697,10 +1873,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Slider con display live + preview
   const sliders = [
-    { id: "ct-title-size",    valId: "ct-title-size-val" },
-    { id: "ct-photo-radius",  valId: "ct-photo-radius-val" },
-    { id: "ct-photo-border",  valId: "ct-photo-border-val" },
-    { id: "ct-photo-gap",     valId: "ct-photo-gap-val" },
+    { id: "ct-title-size",       valId: "ct-title-size-val" },
+    { id: "ct-photo-radius",     valId: "ct-photo-radius-val" },
+    { id: "ct-photo-border",     valId: "ct-photo-border-val" },
+    { id: "ct-photo-gap",        valId: "ct-photo-gap-val" },
+    { id: "ct-pattern-density",  valId: "ct-pattern-density-val" },
   ];
   sliders.forEach(({ id, valId }) => {
     const el = document.getElementById(id);
@@ -1710,12 +1887,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Radio button bg-type e title-align
+  // Radio button bg-type e title-align e aspect
   document.querySelectorAll('input[name="ct-bg-type"]').forEach(r => {
     r.addEventListener("change", () => { toggleGradientFields(); scheduleBuilderPreview(); });
   });
   document.querySelectorAll('input[name="ct-title-align"]').forEach(r => {
     r.addEventListener("change", scheduleBuilderPreview);
+  });
+  document.querySelectorAll('input[name="ct-aspect"]').forEach(r => {
+    r.addEventListener("change", scheduleBuilderPreview);
+  });
+
+  // Bottoni overlay (aggiungi text/sticker/shape/logo)
+  document.getElementById("btn-add-text").addEventListener("click", addTextOverlay);
+  document.getElementById("btn-add-sticker").addEventListener("click", addStickerOverlay);
+  document.getElementById("btn-add-shape").addEventListener("click", addShapeOverlay);
+  document.getElementById("input-upload-logo").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) uploadLogoOverlay(file);
+    e.target.value = "";
   });
 
   // Slider formality: aggiorno il display live

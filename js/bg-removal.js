@@ -12,7 +12,9 @@
 // Tutto il resto dell'app non dipende dai dettagli di questo modulo.
 // =============================================================================
 
-const CDN_URL = "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/index.mjs";
+// esm.sh risolve automaticamente i bare specifier (onnxruntime-web, ecc.)
+// che jsdelivr/unpkg lasciano non risolti -> errore "Module does not resolve to URL"
+const CDN_URL = "https://esm.sh/@imgly/background-removal@1.7.0";
 
 // Import lazy della libreria (solo al primo uso)
 let _libPromise = null;

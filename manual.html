@@ -254,6 +254,80 @@
       </div>
     </div>
 
+    <!-- ===== Sezione: Palette Match ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🎨 Palette Match (foto → outfit)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Funziona così: hai un'ispirazione (un dipinto, una pagina Pinterest, un paesaggio, un post Instagram). Carichi quella foto e l'app:</p>
+        <ol class="manual-list">
+          <li>Estrae i <strong>5 colori dominanti</strong> con algoritmo k-means (zero AI, zero costi)</li>
+          <li>Confronta la palette con i colori dei tuoi capi</li>
+          <li>Ti mostra i <strong>top 12 capi</strong> ordinati per match score (0-100)</li>
+          <li>Genera un <strong>outfit completo</strong> usando solo i capi più compatibili</li>
+        </ol>
+
+        <p><strong>Come accedere</strong>: menu <strong>⋯</strong> → <strong>🎨 Palette Match</strong>.</p>
+
+        <p><strong>Esempi d'uso</strong>:</p>
+        <ul class="manual-list">
+          <li>Vedi un quadro Monet, vuoi vestirti "alla Giverny": l'app pesca azzurri/verdi/oro dal tuo guardaroba</li>
+          <li>Pinterest mood board romantica: pesca rosa/cipria/oro</li>
+          <li>Foto di un tramonto: arancio/rosa/viola</li>
+          <li>Pagina di una rivista: ricostruisci il look con i tuoi capi</li>
+        </ul>
+
+        <p class="manual-tip">💡 <strong>Come funziona la prima estrazione</strong>: la prima volta che usi Palette Match, l'app analizza le foto dei tuoi capi (potrebbe metterci ~10 secondi su 50 capi). Da lì in poi, il match è istantaneo (palette cached in memoria fino a chiusura app).</p>
+
+        <p class="manual-tip">🎯 <strong>Match score</strong>: 90+ = combinazione perfetta, 70-89 = molto buono, 50-69 = accettabile, &lt;50 = colori opposti.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Live Outfit ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🤳 Live & Memory (outfit indossati)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Mentre sei fuori vestita di un outfit, scatta foto live per documentarlo davvero. Crea una <strong>timeline visiva</strong> dei tuoi outfit reali nel mondo, non solo le foto cataloghizzate.</p>
+
+        <p><strong>Come funziona</strong>:</p>
+        <ol class="manual-list">
+          <li>Menu <strong>⋯</strong> → <strong>🤳 Live & Memory</strong></li>
+          <li>Tap <strong>🤳 Nuova sessione live</strong></li>
+          <li>Tap <strong>📸 Scatta</strong> → si apre la fotocamera iPhone (camera posteriore di default), oppure <strong>🖼️ Galleria</strong> per selezionare foto già scattate</li>
+          <li>Aggiungi più foto (selfie, dettagli, full-body)</li>
+          <li>Opzionale: collega l'outfit a uno dei tuoi outfit salvati, oppure tagga manualmente i capi che indossi</li>
+          <li>Opzionale: aggiungi <strong>📍 posizione corrente</strong> (richiede permesso geolocalizzazione)</li>
+          <li>Opzionale: nota di testo (es. "Aperitivo da Lucia")</li>
+          <li>Salva</li>
+        </ol>
+
+        <p><strong>Cosa succede al salvataggio</strong>:</p>
+        <ul class="manual-list">
+          <li>Le foto vengono compresse a 800px WebP e caricate su Firebase Storage</li>
+          <li>I capi taggati ricevono <strong>+1 wear count</strong> automatico</li>
+          <li>La sessione appare nella timeline ordinata cronologicamente</li>
+        </ul>
+
+        <p><strong>Timeline</strong>: cronologia delle tue sessioni, ognuna con:</p>
+        <ul class="manual-list">
+          <li>Foto cover (la prima che hai scattato)</li>
+          <li>Conteggio foto totali</li>
+          <li>Data/ora</li>
+          <li>Posizione (se aggiunta)</li>
+          <li>Nota</li>
+          <li>Tap → galleria full delle foto + capi indossati</li>
+          <li>Possibile eliminare una sessione (cancella anche le foto da Storage)</li>
+        </ul>
+
+        <p class="manual-tip">📸 <strong>Solo iPhone (e simili)</strong>: il tag <code>capture="environment"</code> apre direttamente la fotocamera posteriore. Su desktop apre il file picker normale.</p>
+
+        <p class="manual-tip">🔒 <strong>Privacy</strong>: foto e posizione restano nel tuo Firebase, non condivise. Le coordinate GPS vengono mostrate come "lat, lon" — non c'è geocoding inverso (per evitare chiamate API esterne).</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Outfit del giorno ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

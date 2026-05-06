@@ -11,6 +11,7 @@ import { computeWrappedStats, buildWrappedImageBlob } from "./trip-wrapped.js";
 import { buildMoodBoardBlob } from "./trip-mood-board.js";
 import { getDressCode, STRICTNESS_LABELS } from "./trips-dresscode.js";
 import { fetchTripWeather, weatherEmoji } from "./trips-weather.js";
+import { buildCompatibilityMap } from "./trips-weather-compat.js";
 
 Theme.init();
 
@@ -289,6 +290,11 @@ function renderDays(outfitsByDay) {
   const occasionsByDay = state.trip.occasions_by_day || {};
   const occList = state.trip.occasions || [];
 
+  // Compat-map: capi che vanno male col meteo del giorno
+  const compatMap = state.weatherData
+    ? buildCompatibilityMap(state.trip, state.items, state.weatherData)
+    : {};
+
   list.innerHTML = days.map((iso, idx) => {
     const itemIds = outfitsByDay[iso] || [];
     const occKey = occasionsByDay[iso] || (occList.length ? occList[idx % occList.length] : null);
@@ -297,14 +303,27 @@ function renderDays(outfitsByDay) {
       ? `<span class="td-day-occ">${occOpt.icon} ${escapeHtml(occOpt.label)}</span>`
       : "";
 
+    const issues = compatMap[iso] || [];
+    const issueByItem = new Map(issues.map(x => [x.itemId, x]));
+
     const thumbs = itemIds.map(id => {
       const it = state.itemsById.get(id);
       if (!it) return `<div class="td-thumb td-thumb--missing">?</div>`;
-      if (it.photo_url) return `<div class="td-thumb"><img src="${it.photo_url}" alt="" loading="lazy" /></div>`;
-      return `<div class="td-thumb td-thumb--placeholder">${categoryEmoji(it.category)}</div>`;
+      const issue = issueByItem.get(id);
+      const warnClass = issue ? ` td-thumb--warn td-thumb--${issue.severity}` : "";
+      const warnTitle = issue ? ` title="${escapeHtml(issue.message)}"` : "";
+      const warnBadge = issue
+        ? `<span class="td-thumb-warn-badge">${issue.severity === "too_light" ? "🥶" : "🥵"}</span>`
+        : "";
+      if (it.photo_url) return `<div class="td-thumb${warnClass}"${warnTitle}><img src="${it.photo_url}" alt="" loading="lazy" />${warnBadge}</div>`;
+      return `<div class="td-thumb td-thumb--placeholder${warnClass}"${warnTitle}>${categoryEmoji(it.category)}${warnBadge}</div>`;
     }).join("");
 
-    return `<article class="td-day-card" data-iso="${iso}">
+    const dayWarn = issues.length > 0
+      ? `<div class="td-day-warn">⚠️ ${issues.length} ${issues.length === 1 ? "capo" : "capi"} non ideali per il meteo</div>`
+      : "";
+
+    return `<article class="td-day-card${issues.length ? ' has-warning' : ''}" data-iso="${iso}">
       <header class="td-day-head">
         <div class="td-day-title">
           <strong>${escapeHtml(formatDayHeader(iso))}</strong>
@@ -315,6 +334,7 @@ function renderDays(outfitsByDay) {
       <div class="td-thumbs">
         ${thumbs || '<div class="td-day-empty">Nessun capo</div>'}
       </div>
+      ${dayWarn}
     </article>`;
   }).join("");
 
@@ -619,6 +639,12 @@ async function renderWeatherSection() {
   } else {
     box.classList.add("hidden");
   }
+
+  // Ora che ho il meteo, re-rendero i giorni cosi' i thumb mostrano
+  // i warning compatibilita' capo-clima
+  if (state.trip.outfits_by_day && Object.keys(state.trip.outfits_by_day).length) {
+    renderDays(state.trip.outfits_by_day);
+  }
 }
 
 function renderForecastBanner(daily) {
@@ -691,6 +717,10 @@ function renderThermalProfile() {
     try {
       await updateTrip(state.trip.id, { thermal_offset: newOffset });
     } catch (err) { toast("Errore salvataggio profilo termico", "error"); }
+    // Re-render giorni con compat-map aggiornata (l'offset shifta soglie)
+    if (state.trip.outfits_by_day && Object.keys(state.trip.outfits_by_day).length) {
+      renderDays(state.trip.outfits_by_day);
+    }
   };
 }
 

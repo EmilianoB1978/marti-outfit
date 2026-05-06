@@ -47,7 +47,12 @@
   font-family: var(--font-family-base);
   font-size: var(--fs-base);
   font-weight: var(--font-weight-medium);
+  border: none;
   border-bottom: var(--border-width) solid var(--color-divider);
+  background: transparent;  /* override default <button> bianco */
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
   transition: background var(--animation-speed) var(--animation-easing);
 }
 .menu-link:active { background: var(--color-surface-alt); }

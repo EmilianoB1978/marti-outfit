@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v60-valigia-visiva';
+const CACHE_VERSION = 'v61-no-lavanderia';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -110,7 +110,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🧳 La valigia prende vita! Scegli trolley, borsone, zaino o borsa: vedi i tuoi capi cadere dentro, controlla peso e capacità in tempo reale.";
+const WHATS_NEW = "✨ Piccoli affinamenti alla pagina viaggi.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

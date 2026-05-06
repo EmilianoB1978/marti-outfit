@@ -23,7 +23,6 @@ const COLLECTION = "trips";
 //   days:        6,                        // computed
 //   occasions:   ["business","cena"],       // tag chip
 //   status:      "planning|active|done|frozen",
-//   laundry_available: false,              // toggle utente
 //   thermal_offset: 0,                     // -3..+3 °C, profilo termico
 //   outfits_by_day: { "2026-06-15": outfit_id, ... },
 //   packed_items:  [item_id, ...],
@@ -103,7 +102,6 @@ export async function createTrip(data) {
     occasions:          Array.isArray(data.occasions) ? data.occasions : [],
     luggage_type:       data.luggage_type || "cabina",
     status:             "planning",
-    laundry_available:  !!data.laundry_available,
     thermal_offset:     Number(data.thermal_offset) || 0,
     outfits_by_day:     {},
     packed_items:       [],

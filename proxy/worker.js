@@ -96,7 +96,7 @@ function corsHeaders(origin, allowedOrigin) {
   const allow = allowedOrigin && allowedOrigin !== "*" ? allowedOrigin : (origin || "*");
   return {
     "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400"
   };
@@ -222,6 +222,210 @@ async function handleSuggest(req, env, cors) {
 }
 
 // =============================================================================
+// Endpoint: GET /scrape?url=...
+// Estrae metadata prodotto da una pagina e-commerce (Zalando, Zara, H&M, ...)
+// Sources (priorita'):
+//   1. JSON-LD <script type="application/ld+json"> con @type Product
+//   2. Open Graph + meta product:* tags
+// Restituisce { title, description, image_url, price, currency, brand,
+//               color, material, source_url }
+// =============================================================================
+async function handleScrape(req, cors) {
+  const url = new URL(req.url);
+  const target = url.searchParams.get("url");
+  if (!target) return errorResponse("Param 'url' mancante", 400, cors);
+
+  let parsed;
+  try {
+    parsed = new URL(target);
+  } catch {
+    return errorResponse("URL non valido", 400, cors);
+  }
+  if (!/^https?:$/.test(parsed.protocol)) {
+    return errorResponse("Solo http/https", 400, cors);
+  }
+
+  // Fetch HTML con UA realistico per evitare blocchi anti-bot
+  const html = await fetch(parsed.href, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "it-IT,it;q=0.9,en;q=0.5",
+      "Accept-Encoding": "gzip, deflate, br",
+    },
+    redirect: "follow",
+    cf: { cacheTtl: 300 },  // cache 5min lato Cloudflare
+  }).then(r => r.ok ? r.text() : null).catch(() => null);
+
+  if (!html) {
+    return errorResponse("Impossibile leggere la pagina (blocco anti-bot o offline)", 502, cors);
+  }
+
+  const data = extractProductData(html, parsed.href);
+  return jsonResponse(data, 200, cors);
+}
+
+// Estrae dati prodotto da HTML grezzo (JSON-LD prima, OG meta come fallback).
+function extractProductData(html, sourceUrl) {
+  const result = {
+    title: null, description: null, image_url: null,
+    price: null, currency: null, brand: null,
+    color: null, material: null, source_url: sourceUrl,
+  };
+
+  // 1. JSON-LD: cerco tutti gli script ld+json e prendo il primo Product
+  const ldRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = ldRegex.exec(html)) !== null) {
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      const products = collectProducts(parsed);
+      if (products.length > 0) {
+        const p = products[0];
+        result.title       = result.title       || textOf(p.name);
+        result.description = result.description || textOf(p.description);
+        result.image_url   = result.image_url   || firstImageUrl(p.image);
+        result.brand       = result.brand       || textOf(p.brand?.name || p.brand);
+        result.color       = result.color       || textOf(p.color);
+        result.material    = result.material    || textOf(p.material);
+        const offer = Array.isArray(p.offers) ? p.offers[0] : p.offers;
+        if (offer) {
+          result.price    = result.price    || (offer.price !== undefined ? Number(offer.price) : null);
+          result.currency = result.currency || textOf(offer.priceCurrency);
+        }
+      }
+    } catch { /* JSON malformato, prosegui */ }
+  }
+
+  // 2. Open Graph / meta come fallback per i campi vuoti
+  const og = (prop) => extractMeta(html, `property=["']${prop}["']`) || extractMeta(html, `name=["']${prop}["']`);
+  result.title       = result.title       || og("og:title")        || extractTitleTag(html);
+  result.description = result.description || og("og:description")  || og("description");
+  result.image_url   = result.image_url   || og("og:image")        || og("twitter:image");
+  result.brand       = result.brand       || og("product:brand")   || og("og:brand");
+  if (!result.price) {
+    const p = og("product:price:amount") || og("og:price:amount");
+    if (p) result.price = Number(p);
+  }
+  if (!result.currency) {
+    result.currency = og("product:price:currency") || og("og:price:currency");
+  }
+  if (!result.color)    result.color    = og("product:color");
+  if (!result.material) result.material = og("product:material");
+
+  // Normalizzazioni
+  if (result.image_url && result.image_url.startsWith("//")) {
+    result.image_url = "https:" + result.image_url;
+  }
+  if (result.title) result.title = decodeHtmlEntities(result.title.trim());
+  if (result.description) result.description = decodeHtmlEntities(result.description.trim()).slice(0, 500);
+  if (result.brand) result.brand = decodeHtmlEntities(result.brand.trim());
+
+  return result;
+}
+
+// Raccoglie tutti i nodi Product da un JSON-LD, gestendo @graph e array
+function collectProducts(node) {
+  const out = [];
+  const visit = (n) => {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) { n.forEach(visit); return; }
+    if (n["@graph"]) visit(n["@graph"]);
+    const t = n["@type"];
+    const isProduct = (Array.isArray(t) ? t : [t]).some(x => x === "Product");
+    if (isProduct) out.push(n);
+  };
+  visit(node);
+  return out;
+}
+
+function textOf(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  if (Array.isArray(v)) return v.map(textOf).filter(Boolean).join(", ") || null;
+  return null;
+}
+
+function firstImageUrl(v) {
+  if (!v) return null;
+  if (typeof v === "string") return v;
+  if (Array.isArray(v) && v.length) return firstImageUrl(v[0]);
+  if (typeof v === "object" && v.url) return v.url;
+  return null;
+}
+
+function extractMeta(html, attrPattern) {
+  const re = new RegExp(`<meta[^>]+${attrPattern}[^>]+content=["']([^"']+)["']`, "i");
+  const m = html.match(re);
+  if (m) return m[1];
+  // alt order: content prima di property
+  const re2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+${attrPattern}`, "i");
+  const m2 = html.match(re2);
+  return m2 ? m2[1] : null;
+}
+
+function extractTitleTag(html) {
+  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  return m ? m[1].trim() : null;
+}
+
+function decodeHtmlEntities(s) {
+  if (!s) return s;
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, c) => String.fromCharCode(Number(c)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, c) => String.fromCharCode(parseInt(c, 16)));
+}
+
+// =============================================================================
+// Endpoint: GET /scrape-image?url=...
+// Scarica immagine e la rispedisce (bypass CORS per upload Storage).
+// =============================================================================
+async function handleScrapeImage(req, cors) {
+  const url = new URL(req.url);
+  const target = url.searchParams.get("url");
+  if (!target) return errorResponse("Param 'url' mancante", 400, cors);
+
+  let parsed;
+  try { parsed = new URL(target); } catch { return errorResponse("URL non valido", 400, cors); }
+  if (!/^https?:$/.test(parsed.protocol)) return errorResponse("Solo http/https", 400, cors);
+
+  const imgRes = await fetch(parsed.href, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+      "Referer": parsed.origin + "/",
+    },
+    cf: { cacheTtl: 86400 },
+  }).catch(() => null);
+
+  if (!imgRes || !imgRes.ok) {
+    return errorResponse("Immagine non disponibile", 502, cors);
+  }
+
+  const ct = imgRes.headers.get("content-type") || "image/jpeg";
+  if (!ct.startsWith("image/")) {
+    return errorResponse("Risposta non e' un'immagine", 502, cors);
+  }
+
+  return new Response(imgRes.body, {
+    status: 200,
+    headers: {
+      "Content-Type": ct,
+      "Cache-Control": "public, max-age=86400",
+      ...cors,
+    },
+  });
+}
+
+// =============================================================================
 // Entrypoint Worker
 // =============================================================================
 export default {
@@ -235,15 +439,22 @@ export default {
       return new Response(null, { status: 204, headers: cors });
     }
 
-    if (request.method !== "POST") {
-      return errorResponse("Method not allowed", 405, cors);
-    }
-
-    if (!env.ANTHROPIC_API_KEY) {
-      return errorResponse("ANTHROPIC_API_KEY non configurata nel Worker", 500, cors);
-    }
-
     try {
+      // GET endpoints (scraping pubblico, no API key)
+      if (request.method === "GET") {
+        if (url.pathname === "/scrape")       return await handleScrape(request, cors);
+        if (url.pathname === "/scrape-image") return await handleScrapeImage(request, cors);
+        return errorResponse("Endpoint GET non trovato", 404, cors);
+      }
+
+      if (request.method !== "POST") {
+        return errorResponse("Method not allowed", 405, cors);
+      }
+
+      if (!env.ANTHROPIC_API_KEY) {
+        return errorResponse("ANTHROPIC_API_KEY non configurata nel Worker", 500, cors);
+      }
+
       if (url.pathname === "/analyze") return await handleAnalyze(request, env, cors);
       if (url.pathname === "/suggest") return await handleSuggest(request, env, cors);
       return errorResponse("Endpoint non trovato", 404, cors);

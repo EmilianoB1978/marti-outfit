@@ -203,6 +203,9 @@
               🖼️ Galleria
               <input type="file" accept="image/*" id="input-photo-gallery" hidden />
             </label>
+            <button type="button" class="btn-secondary" id="btn-import-link">
+              🔗 Importa da link
+            </button>
           </div>
           <button id="btn-analyze" class="btn-primary hidden">
             🤖 Analizza con AI
@@ -353,6 +356,40 @@
   </div>
 
   <!-- Modale: scegli template per condivisione outfit -->
+  <!-- ====================================================================
+       MODAL: Importa da link prodotto
+       ==================================================================== -->
+  <div id="modal-import-link" class="modal hidden">
+    <div class="modal-content modal-content--small">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-cancel-import">✕</button>
+        <h2>Importa da link</h2>
+        <span></span>
+      </header>
+      <div class="modal-body">
+        <p class="settings-hint" style="margin-top:0">
+          Incolla l'URL di un prodotto (Zalando, Zara, H&amp;M, Mango, COS, ecc.).
+          Estraggo automaticamente foto, titolo, prezzo e altre info.
+        </p>
+
+        <div class="form-group">
+          <label for="import-url">Link prodotto</label>
+          <textarea id="import-url" rows="3" placeholder="https://www.zalando.it/..." autocomplete="off" inputmode="url"></textarea>
+          <div class="import-link-actions">
+            <button type="button" class="btn btn--ghost btn--sm" id="btn-paste-import">📋 Incolla</button>
+            <button type="button" class="btn btn--ghost btn--sm" id="btn-clear-import">✕ Pulisci</button>
+          </div>
+        </div>
+
+        <div id="import-status" class="import-status"></div>
+
+        <button type="button" class="btn btn--gold btn--block" id="btn-confirm-import">
+          🔗 Importa
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-share" class="modal hidden">
     <div class="modal-content">
       <header class="modal-header">

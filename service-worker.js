@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v40-sub-disabled-until-cat';
+const CACHE_VERSION = 'v41-import-da-link';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -63,6 +63,7 @@ const SHELL_FILES = [
   './js/dormant-page.js',
   './js/today-outfit.js',
   './js/it-format.js',
+  './js/import-link.js',
   './dormant.html',
   './js/theme/tokens.js',
   './js/theme/manager.js',

@@ -16,6 +16,7 @@ import * as DormantMod from "./dormant.js";
 import * as TodayOutfit from "./today-outfit.js";
 import { renderBottomNav, NAV_DESTINATIONS } from "./bottom-nav.js";
 import { showOnboarding } from "./onboarding.js";
+import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
@@ -905,9 +906,26 @@ function populateTaxonomyOptions() {
   populateMultiSelect("field-season", Taxonomies.listSimpleValues("seasons"));
 
   // DATALIST per i campi free-text
-  populateDatalist("dl-subcategories", Taxonomies.listSimpleValues("subcategories"));
+  refreshSubcategoryDatalist();  // cascade-aware (filtra per categoria scelta)
   populateDatalist("dl-colors",        Taxonomies.listSimpleValues("colors"));
   populateDatalist("dl-occasions",     Taxonomies.listSimpleValues("occasions"));
+}
+
+// =============================================================================
+// Refresh dl-subcategories filtrato per la categoria attualmente selezionata.
+// Cascade: cambiando "field-category" il datalist si restringe alle sub
+// pertinenti (con fallback a tutte se categoria vuota o sconosciuta).
+// La sub-categoria resta a scrittura libera — i valori non in lista sono
+// comunque accettati al save.
+// =============================================================================
+function refreshSubcategoryDatalist() {
+  const catEl = document.getElementById("field-category");
+  const cat = catEl ? catEl.value : "";
+  const userSubs = Array.from(new Set(
+    state.items.map(it => (it.subcategory || "").trim()).filter(Boolean)
+  ));
+  const list = Taxonomies.getSubcategoriesForCategory(cat, userSubs);
+  populateDatalist("dl-subcategories", list);
 }
 
 function populateSelect(id, values) {
@@ -1227,7 +1245,7 @@ function openEditItem(id) {
   document.getElementById("field-style").value = item.style || "";
   document.getElementById("field-occasion").value = item.occasion || "";
   document.getElementById("field-notes").value = item.notes || "";
-  document.getElementById("field-price").value = item.price ?? "";
+  document.getElementById("field-price").value = item.price !== null && item.price !== undefined ? formatNumberIT(item.price) : "";
   document.getElementById("field-link").value = item.link_url || "";
 
   // Slider formality (1-5, oppure 0 se non specificato)
@@ -1395,7 +1413,7 @@ async function analyzePendingPhoto() {
 // =============================================================================
 async function saveItem() {
   const priceRaw = document.getElementById("field-price").value;
-  const price = priceRaw ? parseFloat(priceRaw) : null;
+  const price = parseNumberIT(priceRaw);  // gestisce formato italiano "1.234,50"
   const formalityRaw = +document.getElementById("field-formality").value;
   const formality = formalityRaw >= 1 && formalityRaw <= 5 ? formalityRaw : null;
   const colorPrimary = document.getElementById("field-color").value.trim() || null;
@@ -1984,6 +2002,26 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  // Cascade: quando cambia categoria, ripopola dl-subcategories filtrato
+  document.getElementById("field-category").addEventListener("change", () => {
+    refreshSubcategoryDatalist();
+    // Se la sub-categoria attuale non e' compatibile con la nuova categoria,
+    // la lascio com'e' (e' a scrittura libera, l'utente puo' tenerla).
+  });
+
+  // Prezzo: sanifica input (solo cifre, punti, virgole) e formatta su blur
+  const priceField = document.getElementById("field-price");
+  if (priceField) {
+    priceField.addEventListener("input", () => {
+      const cleaned = sanitizeNumericInput(priceField.value);
+      if (cleaned !== priceField.value) priceField.value = cleaned;
+    });
+    priceField.addEventListener("blur", () => {
+      const num = parseNumberIT(priceField.value);
+      priceField.value = num !== null ? formatNumberIT(num) : "";
+    });
+  }
 
   // Link prodotto: bottone "Apri" e visibilità reattiva
   const fieldLink = document.getElementById("field-link");

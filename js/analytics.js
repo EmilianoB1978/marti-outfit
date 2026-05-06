@@ -5,6 +5,7 @@
 import * as Theme from "./theme/manager.js";
 import * as Wardrobe from "./wardrobe.js";
 import * as Outfit from "./outfit.js";
+import { formatEuroIT, formatEuroITCompact } from "./it-format.js";
 
 Theme.init();
 
@@ -60,7 +61,7 @@ function renderStatCards() {
 
   document.getElementById("stat-total").textContent = total;
   document.getElementById("stat-value").textContent = totalValue > 0
-    ? `€${totalValue.toFixed(0)}`
+    ? formatEuroITCompact(totalValue)
     : "—";
   document.getElementById("stat-outfits").textContent = outfits;
   document.getElementById("stat-wears").textContent = totalWears;
@@ -229,9 +230,9 @@ function renderCostPerWear() {
       </div>
       <div class="ranked-info">
         <div class="ranked-title">${escapeHtml(it.category || 'Capo')}${it.color ? ' · ' + escapeHtml(it.color) : ''}</div>
-        <div class="ranked-sub">€${it.price.toFixed(2)} · ${it.wears} ${it.wears === 1 ? 'uso' : 'usi'}</div>
+        <div class="ranked-sub">${formatEuroIT(it.price)} · ${it.wears} ${it.wears === 1 ? 'uso' : 'usi'}</div>
       </div>
-      <div class="ranked-stat">€${it.cpw.toFixed(2)}/uso</div>
+      <div class="ranked-stat">${formatEuroIT(it.cpw)}/uso</div>
     </div>
   `).join("");
 }

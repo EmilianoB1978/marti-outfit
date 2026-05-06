@@ -5,6 +5,7 @@
 import * as Theme from "./theme/manager.js";
 import * as Wardrobe from "./wardrobe.js";
 import * as Dormant from "./dormant.js";
+import { formatEuroITCompact } from "./it-format.js";
 
 Theme.init();
 
@@ -42,7 +43,7 @@ function render() {
     `${state.dormants.length} ${state.dormants.length === 1 ? 'capo' : 'capi'} a riposo`;
   const totalValue = state.dormants.reduce((s, it) => s + (it.price || 0), 0);
   document.getElementById("dormant-value").textContent = totalValue > 0
-    ? `Valore totale stimato: €${totalValue.toFixed(0)}`
+    ? `Valore totale stimato: ${formatEuroITCompact(totalValue)}`
     : "Senza prezzo configurato";
 
   if (state.dormants.length === 0) {

@@ -71,6 +71,88 @@ export const DEFAULT_TAXONOMIES = {
 const STRUCTURED = ["categories"];
 
 // =============================================================================
+// Mappa cascade: categoria -> sotto-categorie suggerite.
+// Usata per filtrare il datalist della sotto-categoria quando l'utente sceglie
+// una categoria. La sotto-categoria resta a scrittura libera, quindi i valori
+// non in mappa sono comunque ammessi.
+// =============================================================================
+export const CATEGORY_TO_SUBCATEGORIES = {
+  top: [
+    "t-shirt", "camicia", "camicetta", "blusa", "polo",
+    "felpa", "maglione", "cardigan", "gilet", "top",
+    "dolcevita", "crop top", "canotta", "tunica",
+  ],
+  bottom: [
+    "jeans", "pantaloni", "chinos", "leggings",
+    "gonna", "shorts", "bermuda", "pantaloncini",
+  ],
+  vestito: [
+    "abito corto", "abito lungo", "abito midi",
+    "tubino", "abito da sera", "abito casual",
+  ],
+  scarpe: [
+    "sneakers", "stivali", "stivaletti", "mocassini",
+    "sandali", "scarpe eleganti", "decolleté", "ballerine",
+    "tacchi", "infradito", "espadrillas",
+  ],
+  accessori: [
+    "cappello", "berretto", "sciarpa", "foulard",
+    "cintura", "borsa", "borsetta", "zaino",
+    "occhiali", "orologio", "gioiello", "guanti",
+  ],
+  capospalla: [
+    "blazer", "giacca", "cappotto", "piumino",
+    "trench", "bomber", "parka", "kimono", "spolverino",
+  ],
+  completo: [
+    "completo giacca-pantalone", "completo gonna-giacca",
+    "tailleur", "smoking",
+  ],
+};
+
+/**
+ * Ritorna le sotto-categorie suggerite per una categoria, unendo:
+ * 1. La mappa CATEGORY_TO_SUBCATEGORIES (default per la categoria)
+ * 2. Le sotto-categorie effettivamente usate dall'utente nei suoi capi
+ *    (passate come secondo argomento, in modo che la pagina che chiama
+ *    questo helper abbia gia' i valori in memoria — wardrobe.state.items).
+ *
+ * Se categoria e' vuota / sconosciuta, ritorna l'intera lista delle
+ * sotto-categorie note.
+ *
+ * @param {string} category
+ * @param {string[]} [allUserSubcategories] - tutte le sub usate dall'utente
+ * @returns {string[]} unione ordinata, deduplicata, lowercased
+ */
+export function getSubcategoriesForCategory(category, allUserSubcategories = []) {
+  const cat = (category || "").toLowerCase().trim();
+  const fromMap = CATEGORY_TO_SUBCATEGORIES[cat] || [];
+
+  // Quando categoria assente -> ritorna tutte le subcategorie note
+  if (!cat) {
+    const all = listSimpleValues("subcategories");
+    return Array.from(new Set([...all, ...allUserSubcategories])).sort();
+  }
+
+  // Filtra le subcategorie utente che "appartengono" alla categoria.
+  // Heuristica: se il valore e' presente nella mappa di QUALCHE altra
+  // categoria, NON e' della categoria corrente. Altrimenti lo includiamo
+  // (potrebbe essere una sub libera scritta dall'utente).
+  const allMappedValues = new Set();
+  for (const subs of Object.values(CATEGORY_TO_SUBCATEGORIES)) {
+    subs.forEach(s => allMappedValues.add(s.toLowerCase()));
+  }
+  const userMatching = allUserSubcategories.filter(s => {
+    const lower = (s || "").toLowerCase();
+    if (!lower) return false;
+    if (fromMap.map(x => x.toLowerCase()).includes(lower)) return true;
+    return !allMappedValues.has(lower);  // valore "libero" -> includi
+  });
+
+  return Array.from(new Set([...fromMap, ...userMatching])).sort();
+}
+
+// =============================================================================
 // Cache in memoria (singleton)
 // =============================================================================
 let _cache = null;

@@ -234,20 +234,20 @@
         </div>
 
         <div class="form-group">
-          <label>Sotto-categoria <small>(es. t-shirt, jeans, sneakers...)</small></label>
-          <input type="text" id="field-subcategory" placeholder="opzionale" list="dl-subcategories" />
+          <label>Sotto-categoria <small>(scegli dalla lista o scrivi liberamente)</small></label>
+          <input type="text" id="field-subcategory" placeholder="seleziona ▾ o digita..." list="dl-subcategories" autocomplete="off" />
           <datalist id="dl-subcategories"></datalist>
         </div>
 
         <div class="form-group">
-          <label>Colore principale</label>
-          <input type="text" id="field-color" placeholder="es. blu navy, bianco..." list="dl-colors" />
+          <label>Colore principale <small>(scegli o scrivi)</small></label>
+          <input type="text" id="field-color" placeholder="seleziona ▾ o digita es. blu navy" list="dl-colors" autocomplete="off" />
           <datalist id="dl-colors"></datalist>
         </div>
 
         <div class="form-group">
-          <label>Colore secondario <small>(opzionale)</small></label>
-          <input type="text" id="field-color-secondary" placeholder="se presente" list="dl-colors" />
+          <label>Colore secondario <small>(opzionale, scegli o scrivi)</small></label>
+          <input type="text" id="field-color-secondary" placeholder="seleziona ▾ o digita se presente" list="dl-colors" autocomplete="off" />
         </div>
 
         <div class="form-group">
@@ -314,15 +314,15 @@
         </div>
 
         <div class="form-group">
-          <label>Occasione</label>
-          <input type="text" id="field-occasion" placeholder="es. lavoro, sport, sera..." list="dl-occasions" />
+          <label>Occasione <small>(scegli o scrivi)</small></label>
+          <input type="text" id="field-occasion" placeholder="seleziona ▾ o digita es. lavoro, sport..." list="dl-occasions" autocomplete="off" />
           <datalist id="dl-occasions"></datalist>
         </div>
 
         <div class="form-group">
           <label>Prezzo (opzionale)</label>
-          <input type="number" id="field-price" min="0" step="0.01" placeholder="es. 49.90 (€)" inputmode="decimal" />
-          <small>Serve per le statistiche cost-per-wear</small>
+          <input type="text" id="field-price" placeholder="es. 49,90 oppure 1.299,00 (€)" inputmode="decimal" autocomplete="off" />
+          <small>Formato italiano: virgola per i decimali, punto per le migliaia. Serve per cost-per-wear.</small>
         </div>
 
         <div class="form-group">

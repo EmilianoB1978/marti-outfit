@@ -2009,6 +2009,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnPastePhoto = document.getElementById("btn-paste-photo");
   if (btnPastePhoto) btnPastePhoto.addEventListener("click", pastePhotoFromClipboard);
 
+  // Forza aggiornamento PWA (utile quando il SW e' bloccato su versione vecchia)
+  const btnForceUpdate = document.getElementById("btn-force-update");
+  if (btnForceUpdate) btnForceUpdate.addEventListener("click", async () => {
+    if (!confirm("Forzo aggiornamento app?\nIl service worker e tutte le cache verranno cancellate, l'app si ricarichera'. I tuoi capi e outfit (su Firebase) non vengono toccati.")) return;
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch (err) { console.error("Force update fail:", err); }
+    location.reload();
+  });
+
   // Chip stagione: toggle is-active al click
   const seasonRoot = document.getElementById("field-season");
   if (seasonRoot) {

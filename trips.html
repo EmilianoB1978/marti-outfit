@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Viaggi · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/trips.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./calendar.html" class="btn-icon" aria-label="Torna al calendario">←</a>
+    <h1>✈️ Viaggi</h1>
+    <button class="btn-icon" id="btn-new-trip" aria-label="Nuovo viaggio">＋</button>
+  </header>
+
+  <main class="settings-main">
+
+    <!-- Stato: nessun viaggio (empty state) -->
+    <section id="trips-empty" class="trips-empty">
+      <div class="trips-empty-illustration">🌍✈️</div>
+      <h2>Pronta a partire?</h2>
+      <p>
+        Crea un viaggio e Marty genera la valigia outfit-per-outfit dal tuo
+        guardaroba reale: meteo storico della destinazione, dress code locale,
+        ottimizzazione bagaglio cabina, anti-conflitto col calendario eventi.
+      </p>
+      <button class="btn btn--gold btn--block" id="btn-new-trip-empty">
+        ✈️ Crea il primo viaggio
+      </button>
+
+      <!-- Showcase delle feature in arrivo -->
+      <div class="trips-features">
+        <div class="trip-feat-card">
+          <span class="trip-feat-icon">🧳</span>
+          <span class="trip-feat-title">Valigia visiva</span>
+          <span class="trip-feat-sub">Vedi i tuoi capi reali "cadere" dentro il trolley</span>
+        </div>
+        <div class="trip-feat-card">
+          <span class="trip-feat-icon">🌦️</span>
+          <span class="trip-feat-title">Meteo storico</span>
+          <span class="trip-feat-sub">Medie 3 anni stesso mese · alert UV / pioggia</span>
+        </div>
+        <div class="trip-feat-card">
+          <span class="trip-feat-icon">🧺</span>
+          <span class="trip-feat-title">Lavanderia-aware</span>
+          <span class="trip-feat-sub">14 giorni con 7 capi? L'app calcola il ciclo</span>
+        </div>
+        <div class="trip-feat-card">
+          <span class="trip-feat-icon">⚖️</span>
+          <span class="trip-feat-title">Bagaglio cabina</span>
+          <span class="trip-feat-sub">Barra peso/volume Ryanair-aware in tempo reale</span>
+        </div>
+        <div class="trip-feat-card">
+          <span class="trip-feat-icon">🕌</span>
+          <span class="trip-feat-title">Dress code paese</span>
+          <span class="trip-feat-sub">Spalle coperte UAE, sarong tempio Bali, ecc.</span>
+        </div>
+        <div class="trip-feat-card">
+          <span class="trip-feat-icon">📅</span>
+          <span class="trip-feat-title">Anti-conflitto</span>
+          <span class="trip-feat-sub">Il vestito rosso è già al matrimonio del 14? Lo sa</span>
+        </div>
+        <div class="trip-feat-card">
+          <span class="trip-feat-icon">🎬</span>
+          <span class="trip-feat-title">Mood board condivisibile</span>
+          <span class="trip-feat-sub">9 outfit del viaggio in una immagine social-ready</span>
+        </div>
+        <div class="trip-feat-card">
+          <span class="trip-feat-icon">📊</span>
+          <span class="trip-feat-title">Trip Wrapped</span>
+          <span class="trip-feat-sub">Al rientro: capi indossati, MVP, accuracy %</span>
+        </div>
+      </div>
+
+      <p class="settings-hint" style="margin-top: var(--space-5); text-align:center;">
+        🚧 La feature è in costruzione. Crea pure il primo viaggio: la
+        struttura base esiste, le funzioni piene arriveranno nei prossimi
+        update.
+      </p>
+    </section>
+
+    <!-- Lista viaggi (se ce ne sono) -->
+    <section id="trips-list" class="trips-list hidden">
+      <!-- popolata da js/trips.js -->
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/trips.js"></script>
+</body>
+</html>

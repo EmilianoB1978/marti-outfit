@@ -19,6 +19,7 @@ export const NAV_DESTINATIONS = {
   wardrobe:    { icon: "👕",  label: "Guardaroba",   type: "section", page: "wardrobe" },
   outfits:     { icon: "✨",  label: "Outfit",       type: "section", page: "outfits" },
   calendar:    { icon: "📅",  label: "Calendario",   type: "link",    href: "./calendar.html" },
+  trips:       { icon: "✈️",  label: "Viaggi",       type: "link",    href: "./trips.html" },
   capsules:    { icon: "🎒",  label: "Capsule",      type: "link",    href: "./capsules.html" },
   analytics:   { icon: "📊",  label: "Statistiche",  type: "link",    href: "./analytics.html" },
   settings:    { icon: "🎨",  label: "Aspetto",      type: "link",    href: "./settings.html" },

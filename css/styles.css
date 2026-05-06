@@ -99,7 +99,7 @@ html, body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(56px + var(--safe-bottom));
+  padding-bottom: calc(50px + var(--safe-bottom));
 }
 
 .page { display: none; padding: var(--space-4); }
@@ -207,9 +207,13 @@ html, body {
   position: fixed; bottom: 0; left: 0; right: 0;
   display: flex;
   justify-content: space-around;
-  align-items: stretch;          /* nav-btn riempie altezza barra */
+  align-items: stretch;
   background: var(--color-surface);
   border-top: var(--border-width) solid var(--color-border);
+  /* min-height ESPLICITA per area visibile (sopra il home indicator iOS).
+     Cosi' i nav-btn (flex stretch) hanno altezza vera e il loro
+     justify-content: center centra il contenuto VERAMENTE in mezzo. */
+  min-height: 46px;
   padding: 0 4px calc(0px + var(--safe-bottom));
   z-index: 50;
 }
@@ -222,10 +226,10 @@ html, body {
   color: var(--color-text-muted);
   display: flex; flex-direction: column;
   align-items: center;
-  justify-content: center;       /* contenuto centrato verticalmente */
-  gap: 1px;
-  font-size: 9px;
-  line-height: 1.1;
+  justify-content: center;       /* contenuto centrato in 46px verticali */
+  gap: 0;
+  font-size: 8.5px;
+  line-height: 1.05;
   font-family: var(--font-family-base);
   cursor: pointer;
   padding: 0 2px;
@@ -241,22 +245,22 @@ html, body {
   text-overflow: ellipsis;
 }
 .nav-btn.active { color: var(--color-primary); }
-.nav-icon { font-size: 16px; line-height: 1; }
+.nav-icon { font-size: 15px; line-height: 1; }
 
-/* FAB centrale: cerchio perfetto, NON stretched dal parent (align-self center) */
+/* FAB centrale: cerchio perfetto, NON stretched (align-self: center) */
 .nav-btn.fab {
-  flex: 0 0 46px;
-  width: 46px;
-  height: 46px;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
   aspect-ratio: 1 / 1;
   padding: 0;
-  align-self: center;            /* non si stretcha, mantiene 46x46 */
+  align-self: center;            /* mantiene dimensione fissa */
   background: var(--fab-bg, var(--color-primary));
   border-radius: 50%;
-  margin-top: -10px;             /* protrusione contenuta */
+  margin-top: -8px;              /* protrusione minima */
   color: var(--fab-icon, var(--color-text-inverse));
   font-weight: var(--font-weight-bold);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,7 +268,7 @@ html, body {
   border: 2px solid var(--color-surface);
 }
 .nav-btn.fab:active { transform: scale(0.92); }
-.nav-icon-fab { font-size: 22px; line-height: 1; font-weight: 600; }
+.nav-icon-fab { font-size: 20px; line-height: 1; font-weight: 600; }
 .nav-fab-logo {
   width: 100%;
   height: 100%;

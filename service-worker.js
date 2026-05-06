@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v78-budget';
+const CACHE_VERSION = 'v79-budget-link-capo';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -121,7 +121,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "💰 Budget mensile! Imposta il limite mese-per-mese, registra le spese, e a fine mese decidi se rolli avanzo/sforamento o azzeri.";
+const WHATS_NEW = "🛍️ Quando aggiungi un capo con prezzo, lo registriamo automaticamente nel budget del mese (con toggle ON di default che puoi disattivare).";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

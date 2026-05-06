@@ -547,6 +547,29 @@ html, body {
   min-height: 56px;
 }
 
+/* Toggle 'Registra in budget' nel modal capo */
+.budget-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+}
+.budget-toggle-info {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.budget-toggle-info strong { font-size: 14px; color: var(--color-text); }
+.budget-toggle-info small {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
 /* =============================================================================
    Multi-chips (campi multi-select del modal capo: colori, pattern,
    materiali, occasioni). Wrappano in un container che si auto-flow,

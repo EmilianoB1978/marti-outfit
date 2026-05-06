@@ -16,6 +16,7 @@ import * as DormantMod from "./dormant.js";
 import * as TodayOutfit from "./today-outfit.js";
 import { renderBottomNav, NAV_DESTINATIONS } from "./bottom-nav.js";
 import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
+import { addTransaction as addBudgetTransaction, monthKey, formatMonth as formatBudgetMonth } from "./budget-data.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
@@ -1021,6 +1022,22 @@ function setSelectedWeight(key) {
   });
 }
 
+// Toggle "Registra in budget": visibile solo se prezzo > 0 E capo nuovo
+function updateBudgetToggleVisibility() {
+  const wrap = document.getElementById("field-budget-toggle-wrap");
+  const lbl = document.getElementById("budget-toggle-month-label");
+  if (!wrap) return;
+  const isNew = !state.editingId;
+  const price = parseNumberIT(document.getElementById("field-price")?.value || "");
+  const hasPrice = price !== null && price > 0;
+  if (isNew && hasPrice) {
+    wrap.classList.remove("hidden");
+    if (lbl) lbl.textContent = formatBudgetMonth(monthKey());
+  } else {
+    wrap.classList.add("hidden");
+  }
+}
+
 // =============================================================================
 // Multi-chip stagione (8 stagioni: 4 reali + 4 mezze stagioni di transizione).
 // I chip sono renderizzati dinamicamente in base a prefs.seasons.
@@ -1425,6 +1442,11 @@ function openAddItem() {
   setSelectedSeasons([]);
   setSelectedWeight("");
 
+  // Reset toggle budget (default attivo, mostrato solo se prezzo > 0)
+  const budgetToggle = document.getElementById("field-budget-toggle");
+  if (budgetToggle) budgetToggle.checked = true;
+  updateBudgetToggleVisibility();
+
   // Cascade: reset filtraggio sub-categoria a "tutte" (categoria vuota)
   refreshSubcategorySelect();
 
@@ -1479,6 +1501,9 @@ function openEditItem(id) {
 
   setSelectedSeasons(Array.isArray(item.season) ? item.season : []);
   setSelectedWeight(item.weight_class || "");
+  // In modifica il toggle budget e' nascosto (la spesa, se serviva, e'
+  // gia' stata registrata al primo save).
+  updateBudgetToggleVisibility();
 
   // Wear stats sezione (visibile in modifica, nascosta in nuovo)
   renderWearStats(item);
@@ -1743,9 +1768,33 @@ async function saveItem() {
         btn.disabled = false; btn.textContent = "Salva";
         return;
       }
-      await Wardrobe.createItem(data);
+      const newItem = await Wardrobe.createItem(data);
       Haptic.success();
-      toast("Capo aggiunto", "success");
+
+      // Se il prezzo e' > 0 e il toggle 'Registra in budget' e' attivo,
+      // crea automaticamente una transazione nel budget del mese corrente.
+      const budgetToggle = document.getElementById("field-budget-toggle");
+      if (data.price && data.price > 0 && budgetToggle && budgetToggle.checked) {
+        try {
+          const subcat = data.subcategory || data.category || "Capo";
+          const colorPart = (data.color_primary && data.color_primary.length)
+            ? " " + data.color_primary[0] : "";
+          const label = capitalize(subcat) + colorPart;
+          await addBudgetTransaction(monthKey(), {
+            label,
+            amount: data.price,
+            date: new Date().toISOString().slice(0, 10),
+            item_id: newItem?.id || null,
+            link: data.link_url || null,
+          });
+          toast(`Capo aggiunto · spesa registrata in budget`, "success");
+        } catch (err) {
+          console.warn("Budget add fail:", err);
+          toast("Capo aggiunto · errore registrazione budget", "default");
+        }
+      } else {
+        toast("Capo aggiunto", "success");
+      }
     }
 
     // Ricarico la lista (semplice e affidabile)
@@ -2338,15 +2387,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Prezzo: sanifica input (solo cifre, punti, virgole) e formatta su blur
+  // + toggle "Registra in budget" visibile solo se prezzo > 0 e capo nuovo
   const priceField = document.getElementById("field-price");
   if (priceField) {
     priceField.addEventListener("input", () => {
       const cleaned = sanitizeNumericInput(priceField.value);
       if (cleaned !== priceField.value) priceField.value = cleaned;
+      updateBudgetToggleVisibility();
     });
     priceField.addEventListener("blur", () => {
       const num = parseNumberIT(priceField.value);
       priceField.value = num !== null ? formatNumberIT(num) : "";
+      updateBudgetToggleVisibility();
     });
   }
 

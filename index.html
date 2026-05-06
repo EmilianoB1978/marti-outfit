@@ -362,6 +362,20 @@
           <small>Formato italiano: virgola per i decimali, punto per le migliaia. Serve per cost-per-wear.</small>
         </div>
 
+        <!-- Toggle 'Registra in budget' (visibile se prezzo > 0 e capo nuovo) -->
+        <div class="form-group hidden" id="field-budget-toggle-wrap">
+          <label class="budget-toggle-row">
+            <span class="budget-toggle-info">
+              <strong>💰 Registra in budget</strong>
+              <small id="budget-toggle-month-label">—</small>
+            </span>
+            <span class="switch">
+              <input type="checkbox" id="field-budget-toggle" checked />
+              <span class="switch-slider"></span>
+            </span>
+          </label>
+        </div>
+
         <div class="form-group">
           <label>Link prodotto (opzionale)</label>
           <div class="link-field-row">

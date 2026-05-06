@@ -921,23 +921,30 @@ function populateTaxonomyOptions() {
 function refreshSubcategorySelect() {
   const catEl = document.getElementById("field-category");
   const cat = catEl ? catEl.value : "";
+  const sel = document.getElementById("field-subcategory");
+  if (!sel) return;
+
+  // Senza categoria scelta -> sub DISABLED, vuoto, ghost
+  if (!cat) {
+    sel.innerHTML = '<option value="">Scegli prima una categoria</option>';
+    sel.value = "";
+    sel.disabled = true;
+    return;
+  }
+
+  // Con categoria scelta -> popola con le sub pertinenti, abilita
+  sel.disabled = false;
   const userSubs = Array.from(new Set(
     state.items.map(it => (it.subcategory || "").trim()).filter(Boolean)
   ));
   const list = Taxonomies.getSubcategoriesForCategory(cat, userSubs);
   populateSelect("field-subcategory", list);
 
-  // Indicatore visivo: cambio label "— Scegli —" per riflettere il filtro attivo
-  // + count opzioni reali (escluse vuoto e sentinel "+ Aggiungi nuovo")
-  const sel = document.getElementById("field-subcategory");
-  if (sel) {
-    const emptyOpt = sel.querySelector('option[value=""]');
+  // Aggiorno il placeholder con il count visibile
+  const emptyOpt = sel.querySelector('option[value=""]');
+  if (emptyOpt) {
     const realCount = sel.querySelectorAll('option').length - 2; // -1 vuoto, -1 sentinel
-    if (emptyOpt) {
-      emptyOpt.textContent = cat
-        ? `— Scegli (${realCount} per "${cat}") —`
-        : `— Scegli (${realCount} totali) —`;
-    }
+    emptyOpt.textContent = `— Scegli sotto-categoria (${realCount}) —`;
   }
 }
 

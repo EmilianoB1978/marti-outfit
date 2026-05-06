@@ -427,6 +427,15 @@ html, body {
 }
 .form-group select[multiple] { min-height: 100px; padding: var(--space-2); }
 
+.form-group select:disabled,
+.form-group input:disabled,
+.form-group textarea:disabled {
+  opacity: 0.45;
+  background: var(--color-surface-alt);
+  cursor: not-allowed;
+  color: var(--color-text-muted);
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {

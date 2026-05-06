@@ -53,14 +53,24 @@ export function renderBottomNav(onSection, onFab) {
     }
   };
 
-  // Default active: wardrobe (se presente in barra), altrimenti il primo section
+  // Default active: wardrobe (se presente in barra)
   const defaultPage = keys.find(k => NAV_DESTINATIONS[k]?.page === "wardrobe") ? "wardrobe" : null;
+
+  // FAB customization: bg color, icon color, logo image
+  const fab = prefs.fab || {};
+  const fabStyles = [];
+  if (fab.bgColor) fabStyles.push(`--fab-bg: ${fab.bgColor}`);
+  if (fab.iconColor) fabStyles.push(`--fab-icon: ${fab.iconColor}`);
+  const fabStyle = fabStyles.length ? `style="${fabStyles.join('; ')}"` : "";
+  const fabContent = fab.logoUrl
+    ? `<img class="nav-fab-logo" src="${fab.logoUrl}" alt="" />`
+    : `<span class="nav-icon-fab">+</span>`;
 
   nav.innerHTML = `
     ${buildBtn(keys[0], NAV_DESTINATIONS[keys[0]]?.page === defaultPage)}
     ${buildBtn(keys[1], NAV_DESTINATIONS[keys[1]]?.page === defaultPage)}
-    <button class="nav-btn fab" id="btn-add-item" aria-label="Aggiungi capo">
-      <span class="nav-icon-fab">+</span>
+    <button class="nav-btn fab" id="btn-add-item" ${fabStyle} aria-label="Aggiungi capo">
+      ${fabContent}
     </button>
     ${buildBtn(keys[2], NAV_DESTINATIONS[keys[2]]?.page === defaultPage)}
     ${buildBtn(keys[3], NAV_DESTINATIONS[keys[3]]?.page === defaultPage)}

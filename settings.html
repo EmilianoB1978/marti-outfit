@@ -211,6 +211,45 @@
         Nota: se hai attivato "Riduci movimento" nelle impostazioni iOS, le animazioni saranno comunque
         ridotte automaticamente.
       </p>
+
+      <h2 class="settings-section-title">🟡 Pulsante + (FAB)</h2>
+      <p class="settings-hint">Personalizza il pulsante + nella barra inferiore.</p>
+
+      <!-- Anteprima FAB -->
+      <div class="fab-preview-row">
+        <div class="fab-preview" id="fab-preview"></div>
+        <div class="fab-preview-text">
+          <div class="fab-preview-label">Anteprima</div>
+          <div class="fab-preview-sub" id="fab-preview-sub">Tap per personalizzare</div>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <label class="settings-row-title" for="fab-bg-color">Colore sfondo</label>
+        <input type="color" id="fab-bg-color" class="color-picker-input" value="#d4af37" />
+      </div>
+
+      <div class="settings-row">
+        <label class="settings-row-title" for="fab-icon-color">Colore icona "+"</label>
+        <input type="color" id="fab-icon-color" class="color-picker-input" value="#ffffff" />
+      </div>
+
+      <h2 class="settings-section-title">Logo personalizzato</h2>
+      <p class="settings-hint">Carica un'immagine (logo, foto, illustrazione). Sostituirà il "+" rotondo.</p>
+
+      <div id="fab-logo-current" class="fab-logo-current hidden">
+        <img id="fab-logo-img" alt="Logo corrente" />
+        <button class="btn btn--ghost btn--sm" id="btn-remove-fab-logo">Rimuovi logo</button>
+      </div>
+
+      <label class="btn btn--secondary btn--block">
+        🖼️ Carica logo
+        <input type="file" id="input-fab-logo" accept="image/*" hidden />
+      </label>
+
+      <button class="btn btn--ghost btn--block" id="btn-reset-fab" style="margin-top: var(--space-3);">
+        ↺ Ripristina default (oro + "+")
+      </button>
     </section>
 
     <!-- ==================================================================

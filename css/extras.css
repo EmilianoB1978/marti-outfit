@@ -1765,6 +1765,57 @@ body.editor-page {
   cursor: pointer;
 }
 
+/* FAB customization preview (Settings -> Layout) */
+.fab-preview-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-3);
+}
+.fab-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+.fab-preview-text { flex: 1; }
+.fab-preview-label {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--fs-sm);
+  margin-bottom: 2px;
+}
+.fab-preview-sub {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+}
+
+.fab-logo-current {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface-alt);
+  padding: var(--space-3);
+  border-radius: var(--radius-input);
+  margin-bottom: var(--space-2);
+}
+.fab-logo-current img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 /* Personalizza barra inferiore: slot rows */
 .nav-slot-row {
   display: flex;

@@ -99,7 +99,7 @@ html, body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(68px + var(--safe-bottom));
+  padding-bottom: calc(60px + var(--safe-bottom));
 }
 
 .page { display: none; padding: var(--space-4); }
@@ -210,7 +210,7 @@ html, body {
   align-items: center;
   background: var(--color-surface);
   border-top: var(--border-width) solid var(--color-border);
-  padding: 2px 4px calc(2px + var(--safe-bottom));
+  padding: 0 4px calc(0px + var(--safe-bottom));
   z-index: 50;
   text-decoration: none;
 }
@@ -226,32 +226,40 @@ html, body {
   line-height: 1.1;
   font-family: var(--font-family-base);
   cursor: pointer;
-  padding: 4px 2px;
+  padding: 3px 2px;
   text-decoration: none;
   transition: color var(--animation-speed) var(--animation-easing);
 }
 .nav-btn.active { color: var(--color-primary); }
-.nav-icon { font-size: 18px; line-height: 1; margin-bottom: 1px; }
+.nav-icon { font-size: 17px; line-height: 1; margin-bottom: 1px; }
 
-/* FAB centrale: cerchio perfetto 52x52, sollevato sopra la barra */
+/* FAB centrale: cerchio perfetto, sollevato sopra la barra */
 .nav-btn.fab {
-  flex: 0 0 52px;
-  width: 52px;
-  height: 52px;
+  flex: 0 0 50px;
+  width: 50px;
+  height: 50px;
   aspect-ratio: 1 / 1;
   padding: 0;
-  background: var(--color-primary);
+  background: var(--fab-bg, var(--color-primary));
   border-radius: 50%;
-  margin-top: -14px;
-  color: var(--color-text-inverse);
+  margin-top: -12px;
+  color: var(--fab-icon, var(--color-text-inverse));
   font-weight: var(--font-weight-bold);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--color-surface);  /* ring intorno al cerchio */
 }
 .nav-btn.fab:active { transform: scale(0.92); }
-.nav-icon-fab { font-size: 26px; line-height: 1; font-weight: 600; }
+.nav-icon-fab { font-size: 24px; line-height: 1; font-weight: 600; }
+.nav-fab-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 
 /* ============================================================================
    Pulsanti legacy (.btn-primary/.btn-secondary/...)

@@ -350,4 +350,11 @@ export const defaultPreferences = {
   shareTemplate: "classic",   // template default per outfit card (classic|dark|pastel|magazine)
   // Bottom nav (4 destinazioni: 2 a sinistra del FAB, 2 a destra)
   bottomNav: ["wardrobe", "calendar", "capsules", "outfits"],
+  // FAB customization (pulsante + nella barra inferiore)
+  fab: {
+    bgColor: "",         // vuoto = usa --color-primary
+    iconColor: "",       // vuoto = usa --color-text-inverse
+    logoUrl: null,       // se settato, sostituisce il "+" con immagine
+    logoPath: null,      // path Storage per cleanup
+  },
 };

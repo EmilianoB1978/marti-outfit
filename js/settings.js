@@ -608,5 +608,118 @@ document.addEventListener("DOMContentLoaded", () => {
   initLayout();
   initWeather();
   initLinks();
+  initFAB();
   initBackup();
 });
+
+// =============================================================================
+// FAB customization (Layout tab)
+// =============================================================================
+function initFAB() {
+  const bgInput = document.getElementById("fab-bg-color");
+  const iconInput = document.getElementById("fab-icon-color");
+  const fileInput = document.getElementById("input-fab-logo");
+  const btnRemoveLogo = document.getElementById("btn-remove-fab-logo");
+  const btnReset = document.getElementById("btn-reset-fab");
+  const preview = document.getElementById("fab-preview");
+  const previewSub = document.getElementById("fab-preview-sub");
+  const logoCurrent = document.getElementById("fab-logo-current");
+  const logoImg = document.getElementById("fab-logo-img");
+
+  function readDefaults() {
+    const css = getComputedStyle(document.documentElement);
+    return {
+      bg: css.getPropertyValue("--color-primary").trim() || "#d4af37",
+      icon: css.getPropertyValue("--color-text-inverse").trim() || "#ffffff",
+    };
+  }
+
+  function syncUI() {
+    const prefs = Theme.getPreferences();
+    const fab = prefs.fab || {};
+    const def = readDefaults();
+
+    bgInput.value = hexFromCss(fab.bgColor || def.bg);
+    iconInput.value = hexFromCss(fab.iconColor || def.icon);
+
+    // Anteprima
+    preview.style.background = fab.bgColor || def.bg;
+    preview.style.color = fab.iconColor || def.icon;
+    if (fab.logoUrl) {
+      preview.innerHTML = `<img src="${fab.logoUrl}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+      logoCurrent.classList.remove("hidden");
+      logoImg.src = fab.logoUrl;
+      previewSub.textContent = "Logo personalizzato attivo";
+    } else {
+      preview.innerHTML = `<span style="font-size: 28px; font-weight: 700;">+</span>`;
+      logoCurrent.classList.add("hidden");
+      previewSub.textContent = "Tap sul + dalla home apre 'Nuovo capo'";
+    }
+  }
+
+  bgInput.addEventListener("input", () => {
+    const prefs = Theme.getPreferences();
+    Theme.set("fab", { ...(prefs.fab || {}), bgColor: bgInput.value });
+    syncUI();
+  });
+  iconInput.addEventListener("input", () => {
+    const prefs = Theme.getPreferences();
+    Theme.set("fab", { ...(prefs.fab || {}), iconColor: iconInput.value });
+    syncUI();
+  });
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    toast("Caricamento logo...", "default");
+    try {
+      const Logo = await import("./share-logo.js");
+      const { url, path } = await Logo.uploadLogo(file);
+      const prefs = Theme.getPreferences();
+      // Cleanup logo precedente
+      const oldPath = prefs.fab?.logoPath;
+      if (oldPath) {
+        try { await Logo.deleteLogo(oldPath); } catch {}
+      }
+      Theme.set("fab", { ...(prefs.fab || {}), logoUrl: url, logoPath: path });
+      syncUI();
+      toast("Logo caricato", "success");
+    } catch (err) {
+      console.error(err);
+      toast("Errore upload: " + err.message, "error");
+    } finally {
+      e.target.value = "";
+    }
+  });
+
+  btnRemoveLogo.addEventListener("click", async () => {
+    const prefs = Theme.getPreferences();
+    const oldPath = prefs.fab?.logoPath;
+    if (oldPath) {
+      try {
+        const Logo = await import("./share-logo.js");
+        await Logo.deleteLogo(oldPath);
+      } catch {}
+    }
+    Theme.set("fab", { ...(prefs.fab || {}), logoUrl: null, logoPath: null });
+    syncUI();
+    toast("Logo rimosso", "success");
+  });
+
+  btnReset.addEventListener("click", async () => {
+    const prefs = Theme.getPreferences();
+    const oldPath = prefs.fab?.logoPath;
+    if (oldPath) {
+      try {
+        const Logo = await import("./share-logo.js");
+        await Logo.deleteLogo(oldPath);
+      } catch {}
+    }
+    Theme.set("fab", { bgColor: "", iconColor: "", logoUrl: null, logoPath: null });
+    syncUI();
+    toast("FAB ripristinato al default", "success");
+  });
+
+  syncUI();
+  Theme.subscribe(syncUI);
+}

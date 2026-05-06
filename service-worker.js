@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v75-manual-update';
+const CACHE_VERSION = 'v76-instagram-stories';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -72,6 +72,7 @@ const SHELL_FILES = [
   './js/calendar-trip-banner.js',
   './js/trips-weather.js',
   './js/trips-weather-compat.js',
+  './js/instagram-share.js',
   './css/trips.css',
   './trips.html',
   './trip-detail.html',
@@ -116,7 +117,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📖 Manuale aggiornato con tutte le novità Viaggi: 14 sotto-sezioni con esempi e dettagli su valigia, meteo, dress code, mood board…";
+const WHATS_NEW = "📷 Stories Instagram diretto! Mood Board e Trip Wrapped si aprono in Instagram pronti da pubblicare con un tap (su iPhone).";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

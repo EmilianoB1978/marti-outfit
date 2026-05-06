@@ -9,6 +9,7 @@ import { generateTripOutfits, regenerateDay } from "./trips-generator.js";
 import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume, estimateItemsWeightGrams } from "./trips-data.js";
 import { computeWrappedStats, buildWrappedImageBlob } from "./trip-wrapped.js";
 import { buildMoodBoardBlob } from "./trip-mood-board.js";
+import { shareToInstagramStories, isInstagramSupported } from "./instagram-share.js";
 import { getDressCode, STRICTNESS_LABELS } from "./trips-dresscode.js";
 import { fetchTripWeather, weatherEmoji } from "./trips-weather.js";
 import { buildCompatibilityMap } from "./trips-weather-compat.js";
@@ -574,6 +575,8 @@ async function onShareWrapped() {
   try {
     const blob = await buildWrappedImageBlob(state.trip, state.wrappedStats);
     if (!blob) throw new Error("Impossibile generare immagine");
+    state.lastWrappedBlob = blob;
+    showInstagramShortcut("btn-ig-story-wrapped");
     const file = new File([blob], `wrapped-${state.trip.id}.png`, { type: "image/png" });
     const shareData = {
       title: state.trip.name || "Trip Wrapped",
@@ -1155,6 +1158,8 @@ async function onCreateMoodBoard() {
   try {
     const blob = await buildMoodBoardBlob(state.trip, state.items);
     if (!blob) throw new Error("Impossibile generare immagine");
+    state.lastMoodBoardBlob = blob;
+    showInstagramShortcut("btn-ig-story-mood");
     const file = new File([blob], `mood-board-${state.trip.id}.png`, { type: "image/png" });
     const shareData = {
       title: state.trip.name || "Mood board viaggio",
@@ -1183,6 +1188,42 @@ async function onCreateMoodBoard() {
 }
 
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+// =============================================================================
+// INSTAGRAM SHORTCUT
+// =============================================================================
+function showInstagramShortcut(btnId) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (!isInstagramSupported()) return;
+  btn.classList.remove("hidden");
+}
+
+async function onShareIgStoryWrapped() {
+  const blob = state.lastWrappedBlob;
+  if (!blob) {
+    toast("Genera prima l'immagine col bottone '📸 Condividi il Wrapped'", "default");
+    return;
+  }
+  const ok = await shareToInstagramStories(blob, {
+    backgroundTop:    "#1a1a1a",
+    backgroundBottom: "#2a1f08",
+  });
+  if (!ok) toast("Instagram non disponibile su questo dispositivo", "error");
+}
+
+async function onShareIgStoryMood() {
+  const blob = state.lastMoodBoardBlob;
+  if (!blob) {
+    toast("Genera prima il mood board col bottone '🎬 Crea mood board'", "default");
+    return;
+  }
+  const ok = await shareToInstagramStories(blob, {
+    backgroundTop:    "#fdf8ed",
+    backgroundBottom: "#e8b86f",
+  });
+  if (!ok) toast("Instagram non disponibile su questo dispositivo", "error");
+}
 
 async function onDuplicate() {
   if (!confirm(`Duplicare "${state.trip.name || "questo viaggio"}"?\nSarà creato un nuovo viaggio con destinazione e occasioni copiate. Le date e gli outfit saranno da impostare/rigenerare.`)) return;
@@ -1215,6 +1256,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-delete-trip").addEventListener("click", onDelete);
   document.getElementById("btn-share-wrapped").addEventListener("click", onShareWrapped);
   document.getElementById("btn-mood-board").addEventListener("click", onCreateMoodBoard);
+  const igW = document.getElementById("btn-ig-story-wrapped");
+  if (igW) igW.addEventListener("click", onShareIgStoryWrapped);
+  const igM = document.getElementById("btn-ig-story-mood");
+  if (igM) igM.addEventListener("click", onShareIgStoryMood);
   setupLegModalListeners();
   load();
 });

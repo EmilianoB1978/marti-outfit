@@ -924,9 +924,12 @@ function renderSeasonChips() {
   // Conserva selezione corrente prima del rerender
   const previouslyActive = new Set(getSelectedSeasons());
 
+  // Render: griglia 2 colonne (reale | mezza). Se la mezza e' disabilitata,
+  // emetto uno slot vuoto per non spezzare l'accoppiamento.
   const html = order.map(key => {
     const s = map[key];
-    if (!s || s.enabled === false) return "";
+    if (!s) return "";
+    if (s.enabled === false) return `<div class="season-chip-empty"></div>`;
     const half = s.kind === "half" ? " is-half" : "";
     const active = previouslyActive.has(key) ? " is-active" : "";
     return `<button type="button" class="season-chip${half}${active}" data-season="${key}">

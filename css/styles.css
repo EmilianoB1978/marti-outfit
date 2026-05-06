@@ -498,39 +498,39 @@ html, body {
   line-height: 1.2;
 }
 
-/* Chip stagione: 1 colonna verticale per evocare il ciclo del tempo
-   annuale. Le mezze stagioni (kind="half") sono leggermente piu' piccole
-   e indentate, per gerarchia visiva. */
+/* Chip stagione: griglia 2 colonne. Stagione reale | mezza stagione successiva.
+   4 righe: Primavera|Primestate, Estate|Estunno, Autunno|Autinverno,
+   Inverno|Inveravera. Le mezze stagioni mantengono italico + opacity per
+   gerarchia visiva, ma sono allineate alle reali (no indent). */
 .season-chips {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-2);
 }
 .season-chip {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-input);
   font-family: var(--font-family-base);
-  font-size: 15px;
+  font-size: 14px;
   color: var(--color-text);
   cursor: pointer;
   text-align: left;
+  min-height: 56px;
   transition: background var(--animation-speed) var(--animation-easing),
               border-color var(--animation-speed) var(--animation-easing),
               transform var(--animation-speed) var(--animation-easing);
 }
 .season-chip:active { transform: scale(0.98); }
-.season-chip .season-chip-icon { font-size: 22px; line-height: 1; flex: 0 0 auto; }
-.season-chip .season-chip-label { flex: 1; }
+.season-chip .season-chip-icon { font-size: 20px; line-height: 1; flex: 0 0 auto; }
+.season-chip .season-chip-label { flex: 1; line-height: 1.15; }
 .season-chip.is-half {
-  margin-left: var(--space-5);     /* indent mezze stagioni */
-  font-size: 14px;
   font-style: italic;
-  opacity: 0.85;
+  opacity: 0.78;
 }
 .season-chip.is-active {
   background: var(--color-primary);
@@ -539,6 +539,12 @@ html, body {
   font-weight: var(--font-weight-bold);
   font-style: normal;
   opacity: 1;
+}
+/* Slot vuoto: mantiene la griglia allineata quando una mezza stagione
+   e' stata disattivata in Settings -> Stagioni */
+.season-chip-empty {
+  visibility: hidden;
+  min-height: 56px;
 }
 
 .analyze-status {

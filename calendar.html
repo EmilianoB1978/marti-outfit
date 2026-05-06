@@ -28,6 +28,18 @@
 
   <main class="settings-main">
 
+    <!-- Card prossimo viaggio (popolata se c'e' un viaggio in arrivo / in corso) -->
+    <a id="next-trip-card" class="next-trip-card hidden" href="#">
+      <div class="next-trip-flag" id="next-trip-flag">🌍</div>
+      <div class="next-trip-info">
+        <div class="next-trip-eyebrow" id="next-trip-eyebrow">Prossimo viaggio</div>
+        <div class="next-trip-name" id="next-trip-name">—</div>
+        <div class="next-trip-meta" id="next-trip-meta">—</div>
+      </div>
+      <div class="next-trip-countdown" id="next-trip-countdown">—</div>
+    </a>
+
+    <!-- Mese corrente + nav -->
     <div class="cal-month-nav">
       <button class="btn-icon" id="btn-prev-month" aria-label="Mese precedente">‹</button>
       <div class="cal-month-name" id="cal-month-name">—</div>
@@ -42,21 +54,36 @@
 
     <div id="cal-grid" class="cal-grid"></div>
 
-    <p class="settings-hint" style="margin-top: var(--space-5);">
-      Tap su un giorno per assegnare un outfit. Il pallino dorato indica i giorni con outfit pianificato; verde i giorni che hai indossato.
+    <p class="settings-hint" style="margin-top: var(--space-3);">
+      Tap su un giorno per assegnare un outfit. Pallino dorato = pianificato; verde = indossato; ✈️ = giorni di viaggio.
     </p>
 
-    <a href="./trips.html" class="trips-cta">
-      <span class="trips-cta-icon">✈️</span>
-      <span class="trips-cta-content">
-        <span class="trips-cta-title">Pianifica un viaggio</span>
-        <span class="trips-cta-sub">Genera la valigia outfit-by-outfit dal tuo guardaroba</span>
-      </span>
-      <span class="trips-cta-arrow">→</span>
+    <!-- HERO Viaggi (gradient evocativo + nuvole + aereo) -->
+    <a href="./trips.html" class="travel-hero">
+      <div class="travel-hero-deco">
+        <span class="travel-hero-cloud travel-hero-cloud--1">☁️</span>
+        <span class="travel-hero-cloud travel-hero-cloud--2">☁️</span>
+        <span class="travel-hero-cloud travel-hero-cloud--3">☁️</span>
+      </div>
+      <div class="travel-hero-plane">✈️</div>
+      <div class="travel-hero-content">
+        <div class="travel-hero-eyebrow">Hai voglia di partire?</div>
+        <div class="travel-hero-title">Pianifica il prossimo viaggio</div>
+        <div class="travel-hero-sub">Marty compone la valigia outfit-per-outfit dal tuo guardaroba ✨</div>
+        <span class="travel-hero-cta">Inizia →</span>
+      </div>
     </a>
+
+    <!-- Inspiration tiles -->
+    <div class="travel-tiles">
+      <div class="travel-tile"><span class="travel-tile-icon">🧳</span><span>Valigia visiva 5 tipi</span></div>
+      <div class="travel-tile"><span class="travel-tile-icon">🌍</span><span>Stagioni del posto</span></div>
+      <div class="travel-tile"><span class="travel-tile-icon">🎬</span><span>Mood board condivisibile</span></div>
+    </div>
 
   </main>
 
+  <!-- Modal: assegnazione outfit a una data -->
   <div id="modal-assign" class="modal hidden">
     <div class="modal-content">
       <header class="modal-header">
@@ -79,5 +106,6 @@
 
   <script type="module" src="./js/theme/manager.js"></script>
   <script type="module" src="./js/calendar.js"></script>
+  <script type="module" src="./js/calendar-trip-banner.js"></script>
 </body>
 </html>

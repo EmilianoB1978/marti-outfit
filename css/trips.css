@@ -2,6 +2,189 @@
    Viaggi — pagina trips.html + CTA in calendar.html + wizard creazione
    ============================================================================= */
 
+/* =============================================================================
+   Calendar page — card prossimo viaggio + hero "fai venire voglia di partire"
+   ============================================================================= */
+
+/* Card prossimo viaggio (sopra la griglia mensile) */
+.next-trip-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-card);
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.28);
+  transition: transform var(--animation-speed) var(--animation-easing);
+}
+.next-trip-card.hidden { display: none; }
+.next-trip-card:active { transform: scale(0.98); }
+.next-trip-flag { font-size: 38px; line-height: 1; flex: 0 0 auto; }
+.next-trip-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.next-trip-eyebrow {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+  opacity: 0.85;
+}
+.next-trip-name {
+  font-family: var(--font-family-heading);
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.15;
+}
+.next-trip-meta {
+  font-size: 12px;
+  opacity: 0.92;
+  line-height: 1.3;
+}
+.next-trip-countdown {
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  min-width: 60px;
+}
+.next-trip-countdown .ntc-num {
+  font-family: var(--font-family-heading);
+  font-size: 24px;
+  font-weight: var(--font-weight-bold);
+}
+.next-trip-countdown .ntc-tot {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 1px;
+}
+.next-trip-countdown .ntc-lbl {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+/* HERO Viaggi (gradient cielo-oro, nuvole, aereo che fluttua) */
+.travel-hero {
+  position: relative;
+  display: block;
+  margin-top: var(--space-5);
+  padding: var(--space-5) var(--space-4);
+  background: linear-gradient(135deg, #c9e6f5 0%, #fce8a8 50%, #e8b86f 100%);
+  border-radius: var(--radius-card);
+  text-decoration: none;
+  color: #1a1a1a;
+  overflow: hidden;
+  min-height: 180px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.1);
+  transition: transform var(--animation-speed) var(--animation-easing);
+}
+.travel-hero:active { transform: scale(0.99); }
+
+.travel-hero-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.travel-hero-cloud {
+  position: absolute;
+  font-size: 38px;
+  opacity: 0.7;
+  animation: cloud-drift 16s linear infinite;
+}
+.travel-hero-cloud--1 { top: 10%;  left: 65%; animation-delay: 0s;   font-size: 32px; }
+.travel-hero-cloud--2 { top: 38%;  left: 78%; animation-delay: -6s;  font-size: 26px; opacity: 0.55; }
+.travel-hero-cloud--3 { top: 72%;  left: 55%; animation-delay: -10s; font-size: 22px; opacity: 0.45; }
+@keyframes cloud-drift {
+  0%   { transform: translateX(0)   translateY(0); }
+  50%  { transform: translateX(-30px) translateY(-6px); }
+  100% { transform: translateX(0)   translateY(0); }
+}
+
+.travel-hero-plane {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-size: 56px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12));
+  animation: plane-fly 4s ease-in-out infinite;
+}
+@keyframes plane-fly {
+  0%, 100% { transform: translateX(0)   translateY(0)  rotate(-8deg); }
+  50%      { transform: translateX(-6px) translateY(-4px) rotate(-12deg); }
+}
+
+.travel-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 80%;
+}
+.travel-hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+  color: #6b4d10;
+  margin-bottom: 6px;
+}
+.travel-hero-title {
+  font-family: var(--font-family-heading);
+  font-size: 26px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.15;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+.travel-hero-sub {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #3d2817;
+  margin-bottom: var(--space-3);
+}
+.travel-hero-cta {
+  display: inline-block;
+  padding: 8px 18px;
+  background: #1a1a1a;
+  color: #d4af37;
+  border-radius: 22px;
+  font-weight: var(--font-weight-bold);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+/* Inspiration tiles */
+.travel-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.travel-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  line-height: 1.2;
+  min-height: 80px;
+  justify-content: center;
+}
+.travel-tile-icon { font-size: 26px; line-height: 1; }
+
 /* CTA Pianifica un viaggio (mostrato in fondo a /calendar.html) */
 .trips-cta {
   display: flex;

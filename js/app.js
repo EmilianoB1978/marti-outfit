@@ -14,6 +14,7 @@ import * as Taxonomies from "./taxonomies.js";
 import * as ShareOutfit from "./share-outfit.js";
 import * as DormantMod from "./dormant.js";
 import * as TodayOutfit from "./today-outfit.js";
+import { renderBottomNav, NAV_DESTINATIONS } from "./bottom-nav.js";
 import { showOnboarding } from "./onboarding.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
@@ -405,6 +406,51 @@ async function confirmShare() {
     btn.disabled = false;
     btn.textContent = "📸 Condividi";
   }
+}
+
+// =============================================================================
+// PERSONALIZZA BARRA INFERIORE
+// =============================================================================
+function populateNavSlots() {
+  const prefs = Theme.getPreferences();
+  const current = prefs.bottomNav || ["wardrobe", "calendar", "capsules", "outfits"];
+  const allDestinations = Object.entries(NAV_DESTINATIONS);
+
+  for (let i = 0; i < 4; i++) {
+    const sel = document.getElementById(`nav-slot-${i}`);
+    sel.innerHTML = allDestinations.map(([key, d]) =>
+      `<option value="${key}">${d.icon} ${d.label}</option>`
+    ).join("");
+    sel.value = current[i] || "wardrobe";
+  }
+}
+
+function openCustomizeNav() {
+  populateNavSlots();
+  document.getElementById("modal-customize-nav").classList.remove("hidden");
+}
+
+function closeCustomizeNav() {
+  document.getElementById("modal-customize-nav").classList.add("hidden");
+}
+
+function saveCustomizeNav() {
+  const slots = [];
+  for (let i = 0; i < 4; i++) {
+    slots.push(document.getElementById(`nav-slot-${i}`).value);
+  }
+  Theme.set("bottomNav", slots);
+  // Re-render barra
+  renderBottomNav(switchPage, openAddItem);
+  closeCustomizeNav();
+  toast("Barra aggiornata", "success");
+}
+
+function resetCustomizeNav() {
+  Theme.set("bottomNav", ["wardrobe", "calendar", "capsules", "outfits"]);
+  populateNavSlots();
+  renderBottomNav(switchPage, openAddItem);
+  toast("Default ripristinato", "success");
 }
 
 // =============================================================================
@@ -1819,13 +1865,10 @@ function capitalize(s) {
 // Event bindings
 // =============================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  // Bottom nav
-  document.querySelectorAll(".nav-btn[data-page]").forEach(btn => {
-    btn.addEventListener("click", () => switchPage(btn.dataset.page));
-  });
-
-  // FAB "+"
-  document.getElementById("btn-add-item").addEventListener("click", openAddItem);
+  // Bottom nav (dinamica, leggi da theme prefs)
+  renderBottomNav(switchPage, openAddItem);
+  // Re-render se cambia la configurazione
+  Theme.subscribe?.(() => renderBottomNav(switchPage, openAddItem));
 
   // Foto inputs
   document.getElementById("input-photo-camera").addEventListener("change", e => {
@@ -1965,6 +2008,15 @@ document.addEventListener("DOMContentLoaded", () => {
     menuDrawer.classList.add("hidden");
     showOnboarding(true);
   });
+
+  // Personalizza barra inferiore
+  document.getElementById("btn-customize-nav").addEventListener("click", () => {
+    menuDrawer.classList.add("hidden");
+    openCustomizeNav();
+  });
+  document.getElementById("btn-cancel-nav").addEventListener("click", closeCustomizeNav);
+  document.getElementById("btn-save-nav").addEventListener("click", saveCustomizeNav);
+  document.getElementById("btn-reset-nav").addEventListener("click", resetCustomizeNav);
 
   // Ricerca globale
   document.getElementById("btn-search").addEventListener("click", () => {

@@ -210,7 +210,7 @@ html, body {
   align-items: center;
   background: var(--color-surface);
   border-top: var(--border-width) solid var(--color-border);
-  padding: var(--space-2) 0 calc(var(--space-2) + var(--safe-bottom));
+  padding: 4px 0 calc(4px + var(--safe-bottom));
   z-index: 50;
 }
 .nav-btn {
@@ -220,27 +220,35 @@ html, body {
   color: var(--color-text-muted);
   display: flex; flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-size: var(--fs-xs);
+  gap: 1px;
+  font-size: 10px;
   font-family: var(--font-family-base);
   cursor: pointer;
-  padding: var(--space-1);
+  padding: 2px;
   transition: color var(--animation-speed) var(--animation-easing);
 }
 .nav-btn.active { color: var(--color-primary); }
-.nav-icon { font-size: var(--fs-xl); }
+.nav-icon { font-size: 20px; }
 
+/* FAB centrale: cerchio perfetto 56×56, sollevato sopra la barra */
 .nav-btn.fab {
-  flex: 0;
-  width: 56px; height: 56px;
+  flex: 0 0 56px;       /* impedisce qualunque stretch dal flex parent */
+  width: 56px;
+  height: 56px;
+  aspect-ratio: 1 / 1;  /* lock di sicurezza */
+  padding: 0;
   background: var(--color-primary);
-  border-radius: var(--radius-pill);
-  margin-top: -20px;
+  border-radius: 50%;   /* cerchio puro, non dipende da --radius-pill */
+  margin-top: -16px;
   color: var(--color-text-inverse);
   font-weight: var(--font-weight-bold);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.nav-btn.fab:active { transform: scale(0.95); }
-.nav-icon-fab { font-size: var(--fs-xl); line-height: 1; }
+.nav-btn.fab:active { transform: scale(0.92); }
+.nav-icon-fab { font-size: 28px; line-height: 1; font-weight: 600; }
 
 /* ============================================================================
    Pulsanti legacy (.btn-primary/.btn-secondary/...)

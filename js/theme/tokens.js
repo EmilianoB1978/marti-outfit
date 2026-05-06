@@ -348,4 +348,6 @@ export const defaultPreferences = {
   // Behavior preferences
   linkDurationDays: 180,      // 30..720 giorni - dopo questa soglia, alert scadenza link
   shareTemplate: "classic",   // template default per outfit card (classic|dark|pastel|magazine)
+  // Bottom nav (4 destinazioni: 2 a sinistra del FAB, 2 a destra)
+  bottomNav: ["wardrobe", "calendar", "capsules", "outfits"],
 };

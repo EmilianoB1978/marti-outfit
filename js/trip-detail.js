@@ -4,7 +4,7 @@
 
 import * as Theme from "./theme/manager.js";
 import { listItems } from "./wardrobe.js";
-import { getTrip, updateTrip, deleteTrip, duplicateTrip, toggleTripFreeze, getReservedItemIds, formatTripDates } from "./trips-data.js";
+import { getTrip, updateTrip, deleteTrip, duplicateTrip, toggleTripFreeze, getReservedItemIds, formatTripDates, tripLegs, findLegForDay, updateTripLegs, searchDestinations } from "./trips-data.js";
 import { generateTripOutfits, regenerateDay } from "./trips-generator.js";
 import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume, estimateItemsWeightGrams } from "./trips-data.js";
 import { computeWrappedStats, buildWrappedImageBlob } from "./trip-wrapped.js";
@@ -128,6 +128,7 @@ async function load() {
   loading.classList.add("hidden");
   content.classList.remove("hidden");
   renderHeader();
+  renderLegsSection();
   renderThermalProfile();
   renderWeatherSection();
   renderDressCodeSection();
@@ -605,12 +606,263 @@ async function onShareWrapped() {
 // MOOD BOARD — pre/durante viaggio: griglia 3x3 con foto degli outfit
 // =============================================================================
 // =============================================================================
+// LEGS — tappe del viaggio (multi-destinazione)
+// =============================================================================
+function renderLegsSection() {
+  const list = document.getElementById("td-legs-list");
+  const hint = document.getElementById("td-legs-hint");
+  if (!list) return;
+
+  const legs = tripLegs(state.trip);
+  const isMulti = Array.isArray(state.trip.legs) && state.trip.legs.length > 0;
+
+  if (legs.length === 0) {
+    list.innerHTML = `<div class="td-leg-empty">Aggiungi una tappa per iniziare</div>`;
+    hint.textContent = "";
+    return;
+  }
+
+  list.innerHTML = legs.map((leg, i) => {
+    const flag = leg.destination?.country_code ? countryFlagFromCode(leg.destination.country_code) : "📍";
+    const days = leg.start_date && leg.end_date
+      ? Math.round((new Date(leg.end_date + "T00:00:00") - new Date(leg.start_date + "T00:00:00")) / 86400000) + 1
+      : 0;
+    const dates = leg.start_date && leg.end_date ? formatTripDates(leg.start_date, leg.end_date) : "—";
+    const editable = isMulti;
+    return `<div class="td-leg-row${editable ? '' : ' td-leg-row--readonly'}" data-idx="${i}">
+      <span class="td-leg-num">${i + 1}</span>
+      <span class="td-leg-flag">${flag}</span>
+      <div class="td-leg-info">
+        <div class="td-leg-name">${escapeHtml(leg.name || leg.destination?.name || "Tappa")}</div>
+        <div class="td-leg-meta">${escapeHtml(dates)} · ${days} ${days === 1 ? "giorno" : "giorni"}</div>
+      </div>
+      ${editable ? `<button class="td-leg-edit" data-action="edit-leg" data-idx="${i}" aria-label="Modifica">✏️</button>` : ""}
+    </div>`;
+  }).join("");
+
+  hint.textContent = isMulti
+    ? `${legs.length} tappe · usa "+" per aggiungerne, ✏️ per modificare.`
+    : "Nessuna tappa specifica: il viaggio ha una destinazione singola. Tap '+' per spezzarlo in più tappe (es. Roma 3gg + Praga 2gg).";
+
+  // Bind click sulle edit (solo multi-tappa)
+  list.querySelectorAll('[data-action="edit-leg"]').forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openLegModal(Number(btn.dataset.idx));
+    });
+  });
+}
+
+let legState = { editingIdx: -1, destination: null, searchTimer: null };
+
+function openLegModal(editingIdx) {
+  legState.editingIdx = editingIdx;
+  const isEditing = editingIdx >= 0;
+  const legs = tripLegs(state.trip);
+  const isMulti = Array.isArray(state.trip.legs) && state.trip.legs.length > 0;
+  const leg = isEditing ? legs[editingIdx] : null;
+
+  document.getElementById("leg-modal-title").textContent = isEditing ? "Modifica tappa" : "Nuova tappa";
+  document.getElementById("leg-name").value = leg?.name || "";
+  document.getElementById("leg-destination-search").value = leg?.destination?.name || "";
+  document.getElementById("leg-destination-results").innerHTML = "";
+
+  const sel = document.getElementById("leg-destination-selected");
+  if (leg?.destination) {
+    legState.destination = leg.destination;
+    renderLegSelectedDest(leg.destination);
+  } else {
+    legState.destination = null;
+    sel.classList.add("hidden");
+  }
+
+  // Date: se aggiunta nuova in viaggio singolo, suggerisci dopo end_date attuale
+  let startMin = state.trip.start_date || todayISO();
+  let suggestedStart = "";
+  let suggestedEnd = "";
+  if (isEditing && leg) {
+    suggestedStart = leg.start_date || "";
+    suggestedEnd = leg.end_date || "";
+  } else if (!isMulti && state.trip.end_date) {
+    // Aggiunta tappa #2: la data di start suggerita = end_date attuale + 1
+    const next = new Date(state.trip.end_date + "T00:00:00");
+    next.setDate(next.getDate() + 1);
+    suggestedStart = next.toISOString().slice(0, 10);
+    const nextEnd = new Date(next); nextEnd.setDate(nextEnd.getDate() + 2);
+    suggestedEnd = nextEnd.toISOString().slice(0, 10);
+  }
+  document.getElementById("leg-start-date").value = suggestedStart;
+  document.getElementById("leg-end-date").value = suggestedEnd;
+
+  // Bottone elimina solo in modifica E se ci sono almeno 2 legs
+  const delBtn = document.getElementById("btn-leg-delete");
+  delBtn.classList.toggle("hidden", !(isEditing && legs.length >= 2));
+
+  document.getElementById("modal-leg").classList.remove("hidden");
+  setTimeout(() => document.getElementById("leg-destination-search").focus(), 100);
+  refreshLegSaveEnabled();
+}
+
+function closeLegModal() {
+  document.getElementById("modal-leg").classList.add("hidden");
+}
+
+function renderLegSelectedDest(dest) {
+  const sel = document.getElementById("leg-destination-selected");
+  sel.innerHTML = `
+    <span class="wiz-dest-flag" style="font-size:28px">${countryFlagFromCode(dest.country_code)}</span>
+    <span class="wiz-dest-info">
+      <span class="wiz-dest-name">${escapeHtml(dest.name)}</span>
+      <span class="wiz-dest-sub">${escapeHtml(dest.admin1 ? dest.admin1 + ", " : "")}${escapeHtml(dest.country || "")}</span>
+    </span>
+    <span class="wiz-dest-check">✓</span>
+  `;
+  sel.classList.remove("hidden");
+}
+
+function refreshLegSaveEnabled() {
+  const ok = !!legState.destination
+    && document.getElementById("leg-start-date").value
+    && document.getElementById("leg-end-date").value
+    && document.getElementById("leg-start-date").value <= document.getElementById("leg-end-date").value;
+  document.getElementById("btn-leg-save").disabled = !ok;
+}
+
+function setupLegModalListeners() {
+  const inp = document.getElementById("leg-destination-search");
+  const results = document.getElementById("leg-destination-results");
+  const sel = document.getElementById("leg-destination-selected");
+  inp.addEventListener("input", () => {
+    const q = inp.value.trim();
+    sel.classList.add("hidden");
+    legState.destination = null;
+    refreshLegSaveEnabled();
+    if (legState.searchTimer) clearTimeout(legState.searchTimer);
+    if (q.length < 2) { results.innerHTML = ""; return; }
+    results.innerHTML = '<div class="wiz-search-loading">Cerco...</div>';
+    legState.searchTimer = setTimeout(async () => {
+      const found = await searchDestinations(q, 6);
+      if (found.length === 0) {
+        results.innerHTML = '<div class="wiz-search-empty">Nessuna città trovata</div>';
+        return;
+      }
+      results.innerHTML = found.map((d, i) =>
+        `<button type="button" class="wiz-dest-item" data-idx="${i}">
+          <span class="wiz-dest-flag">${countryFlagFromCode(d.country_code)}</span>
+          <span class="wiz-dest-info">
+            <span class="wiz-dest-name">${escapeHtml(d.name)}</span>
+            <span class="wiz-dest-sub">${escapeHtml(d.admin1 ? d.admin1 + ", " : "")}${escapeHtml(d.country || "")}</span>
+          </span>
+        </button>`
+      ).join("");
+      results.querySelectorAll(".wiz-dest-item").forEach((btn, i) => {
+        btn.addEventListener("click", () => {
+          legState.destination = found[i];
+          inp.value = found[i].name;
+          results.innerHTML = "";
+          renderLegSelectedDest(found[i]);
+          refreshLegSaveEnabled();
+        });
+      });
+    }, 300);
+  });
+
+  document.getElementById("leg-start-date").addEventListener("change", refreshLegSaveEnabled);
+  document.getElementById("leg-end-date").addEventListener("change", refreshLegSaveEnabled);
+
+  document.getElementById("btn-leg-cancel").addEventListener("click", closeLegModal);
+  document.getElementById("btn-leg-save").addEventListener("click", saveLeg);
+  document.getElementById("btn-leg-delete").addEventListener("click", deleteLeg);
+  document.getElementById("btn-add-leg").addEventListener("click", () => openLegModal(-1));
+}
+
+async function saveLeg() {
+  const isEditing = legState.editingIdx >= 0;
+  const newLeg = {
+    id: isEditing ? (tripLegs(state.trip)[legState.editingIdx]?.id || crypto.randomUUID()) : crypto.randomUUID(),
+    name: document.getElementById("leg-name").value.trim() || legState.destination?.name || "Tappa",
+    destination: legState.destination,
+    start_date: document.getElementById("leg-start-date").value,
+    end_date: document.getElementById("leg-end-date").value,
+  };
+  // Costruisco il nuovo array legs
+  const current = Array.isArray(state.trip.legs) && state.trip.legs.length > 0
+    ? [...state.trip.legs]
+    : tripLegs(state.trip);   // converte main->array singolo
+  if (isEditing) {
+    current[legState.editingIdx] = newLeg;
+  } else {
+    current.push(newLeg);
+  }
+  try {
+    await updateTripLegs(state.trip.id, current);
+    // Aggiorno state locale
+    state.trip.legs = [...current].sort((a, b) => (a.start_date || "").localeCompare(b.start_date || ""));
+    state.trip.destination = state.trip.legs[0]?.destination || null;
+    state.trip.start_date = state.trip.legs[0]?.start_date || null;
+    state.trip.end_date = state.trip.legs[state.trip.legs.length - 1]?.end_date || null;
+    closeLegModal();
+    renderHeader();
+    renderLegsSection();
+    renderWeatherSection();
+    toast("✓ Tappa salvata", "success");
+  } catch (err) {
+    toast("Errore: " + err.message, "error");
+  }
+}
+
+async function deleteLeg() {
+  if (legState.editingIdx < 0) return;
+  if (!confirm("Eliminare questa tappa?")) return;
+  const current = [...(state.trip.legs || tripLegs(state.trip))];
+  current.splice(legState.editingIdx, 1);
+  try {
+    if (current.length === 0) {
+      // Niente legs -> torna a viaggio singolo (non possibile senza date)
+      // In pratica blocchiamo: serve almeno 1 leg
+      toast("Devi tenere almeno una tappa", "default");
+      return;
+    }
+    await updateTripLegs(state.trip.id, current);
+    state.trip.legs = current;
+    state.trip.destination = current[0]?.destination || null;
+    state.trip.start_date = current[0]?.start_date || null;
+    state.trip.end_date = current[current.length - 1]?.end_date || null;
+    closeLegModal();
+    renderHeader();
+    renderLegsSection();
+    renderWeatherSection();
+    toast("✓ Tappa eliminata", "success");
+  } catch (err) {
+    toast("Errore: " + err.message, "error");
+  }
+}
+
+function countryFlagFromCode(code) {
+  if (!code || code.length !== 2) return "🌍";
+  const A = 0x1F1E6, base = "A".charCodeAt(0);
+  const c = code.toUpperCase();
+  return String.fromCodePoint(A + (c.charCodeAt(0) - base)) +
+         String.fromCodePoint(A + (c.charCodeAt(1) - base));
+}
+
+// =============================================================================
 // WEATHER — forecast (16gg) o storico (medie 3 anni stesso mese)
 // =============================================================================
 async function renderWeatherSection() {
   const box = document.getElementById("td-weather");
   if (!box) return;
   if (!state.trip.destination?.lat) { box.classList.add("hidden"); return; }
+
+  // Multi-tappa: TODO mostrare un banner per leg. Per ora mostro solo
+  // il primo leg / quello attivo (oggi compreso nel range), per non
+  // appesantire l'UI. Il diff cross-leg arriva in iterazione successiva.
+  const legs = tripLegs(state.trip);
+  const today = todayISO();
+  const activeLeg = legs.find(l => l.start_date <= today && l.end_date >= today) || legs[0];
+  const tripForWeather = activeLeg
+    ? { ...state.trip, destination: activeLeg.destination, start_date: activeLeg.start_date, end_date: activeLeg.end_date }
+    : state.trip;
 
   // Mostra loading state
   box.classList.remove("hidden");
@@ -621,7 +873,7 @@ async function renderWeatherSection() {
 
   let data;
   try {
-    data = await fetchTripWeather(state.trip);
+    data = await fetchTripWeather(tripForWeather);
   } catch (e) {
     console.warn("Meteo fail:", e);
     box.classList.add("hidden");
@@ -963,5 +1215,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-delete-trip").addEventListener("click", onDelete);
   document.getElementById("btn-share-wrapped").addEventListener("click", onShareWrapped);
   document.getElementById("btn-mood-board").addEventListener("click", onCreateMoodBoard);
+  setupLegModalListeners();
   load();
 });

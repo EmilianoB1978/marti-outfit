@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v73-weather-changes';
+const CACHE_VERSION = 'v74-multi-tappa';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -116,7 +116,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🔔 Le previsioni cambiano? Marty se ne accorge. Riapri il viaggio e ti dice 'temperature scese di 4°, prendi una felpa'.";
+const WHATS_NEW = "🗺 Viaggi multi-tappa! Roma 3gg + Praga 2gg + Vienna 2gg in un solo viaggio. Ogni tappa con la sua destinazione, date e clima.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

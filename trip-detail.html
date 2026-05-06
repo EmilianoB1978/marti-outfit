@@ -55,6 +55,18 @@
       <!-- Tags occasioni -->
       <div class="td-occasion-tags" id="td-occasions"></div>
 
+      <!-- Tappe del viaggio (multi-leg, opzionale) -->
+      <section class="td-legs">
+        <div class="td-legs-head">
+          <h3 class="td-section-title">🗺 Tappe del viaggio</h3>
+          <button class="btn-icon td-leg-add" id="btn-add-leg" aria-label="Aggiungi tappa">＋</button>
+        </div>
+        <div class="td-legs-list" id="td-legs-list">
+          <!-- popolato dinamicamente -->
+        </div>
+        <p class="td-legs-hint" id="td-legs-hint"></p>
+      </section>
+
       <!-- Banner meteo destinazione (forecast o historical) -->
       <section id="td-weather" class="td-weather hidden">
         <div class="td-weather-head">
@@ -202,6 +214,42 @@
     </section>
 
   </main>
+
+  <!-- Modal aggiungi/modifica tappa -->
+  <div id="modal-leg" class="modal hidden">
+    <div class="modal-content modal-content--small">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-leg-cancel">✕</button>
+        <h2 id="leg-modal-title">Tappa</h2>
+        <button class="btn-text" id="btn-leg-save" disabled>Salva</button>
+      </header>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nome tappa <small>(opzionale)</small></label>
+          <input type="text" id="leg-name" class="wiz-input" placeholder="es. Praga, Tappa 2" maxlength="40" />
+        </div>
+        <div class="form-group">
+          <label>Città di destinazione</label>
+          <input type="text" id="leg-destination-search" class="wiz-input" placeholder="cerca città..." autocomplete="off" />
+          <div id="leg-destination-results" class="wiz-dest-results"></div>
+          <div id="leg-destination-selected" class="wiz-dest-selected hidden"></div>
+        </div>
+        <div class="form-group">
+          <div class="wiz-date-row">
+            <label class="wiz-date-field">
+              <span class="wiz-date-label">Arrivo</span>
+              <input type="date" id="leg-start-date" class="wiz-input" />
+            </label>
+            <label class="wiz-date-field">
+              <span class="wiz-date-label">Partenza</span>
+              <input type="date" id="leg-end-date" class="wiz-input" />
+            </label>
+          </div>
+        </div>
+        <button class="btn btn--danger btn--block hidden" id="btn-leg-delete" style="margin-top: var(--space-3);">🗑 Elimina tappa</button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast hidden"></div>
 

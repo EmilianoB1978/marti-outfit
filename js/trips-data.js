@@ -22,6 +22,7 @@ const COLLECTION = "trips";
 //   end_date:    "2026-06-20",
 //   days:        6,                        // computed
 //   occasions:   ["business","cena"],       // tag chip
+//   legs:        [{id, name, destination{}, start_date, end_date}]  // OPZIONALE multi-tappa
 //   status:      "planning|active|done|frozen",
 //   thermal_offset: 0,                     // -3..+3 °C, profilo termico
 //   outfits_by_day: { "2026-06-15": outfit_id, ... },
@@ -180,6 +181,59 @@ export async function duplicateTrip(id) {
   };
   const ref = await addDoc(collection(db, COLLECTION), payload);
   return { id: ref.id, ...payload };
+}
+
+/**
+ * Ritorna sempre un array di "leg" per un viaggio:
+ * - se trip.legs e' valorizzato e non vuoto -> ritorna quello
+ * - altrimenti costruisce un singolo leg dalla destination/dates principali
+ *
+ * Cosi' la logica di rendering puo' iterare sempre su un array.
+ */
+export function tripLegs(trip) {
+  if (Array.isArray(trip.legs) && trip.legs.length > 0) return trip.legs;
+  if (!trip.start_date || !trip.end_date) return [];
+  return [{
+    id: "main",
+    name: trip.destination?.name || "Tappa unica",
+    destination: trip.destination,
+    start_date: trip.start_date,
+    end_date: trip.end_date,
+  }];
+}
+
+/**
+ * Per un giorno (ISO YYYY-MM-DD) ritorna la leg attiva di un viaggio.
+ * Se non e' multi-tappa, ritorna comunque il "main" leg.
+ */
+export function findLegForDay(trip, dayISO) {
+  const legs = tripLegs(trip);
+  for (const leg of legs) {
+    if (leg.start_date <= dayISO && leg.end_date >= dayISO) return leg;
+  }
+  return null;
+}
+
+/**
+ * Aggiorna le legs di un viaggio: ricalcola destinazione/date principali
+ * coerenti col primo/ultimo leg per retrocompat.
+ */
+export async function updateTripLegs(tripId, legs) {
+  if (!Array.isArray(legs)) throw new Error("legs deve essere array");
+  // Ordina per start_date e calcola wrapper trip-level
+  const sorted = [...legs].sort((a, b) => (a.start_date || "").localeCompare(b.start_date || ""));
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  const days = first && last
+    ? Math.max(1, Math.round((new Date(last.end_date + "T00:00:00") - new Date(first.start_date + "T00:00:00")) / 86400000) + 1)
+    : 0;
+  await updateTrip(tripId, {
+    legs: sorted,
+    destination: first?.destination || null,
+    start_date:  first?.start_date || null,
+    end_date:    last?.end_date || null,
+    days,
+  });
 }
 
 /**

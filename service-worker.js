@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v76-instagram-stories';
+const CACHE_VERSION = 'v77-manual-ig';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -117,7 +117,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📷 Stories Instagram diretto! Mood Board e Trip Wrapped si aprono in Instagram pronti da pubblicare con un tap (su iPhone).";
+const WHATS_NEW = "📖 Manuale aggiornato con la nuova feature Instagram Stories diretto.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

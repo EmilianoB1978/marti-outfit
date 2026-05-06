@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v45-no-tour';
+const CACHE_VERSION = 'v46-resilient-boot';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -83,17 +83,25 @@ const SHELL_FILES = [
   './fonts/jetbrains.woff'
 ];
 
-// Install: pre-cache della shell
+// Install: pre-cache della shell.
+// IMPORTANTE: cache.addAll() e' atomico (1 file 404 fa fallire tutto). Uso
+// cache.add() singolarmente con catch, cosi' anche se un asset e' mancante
+// il SW si installa comunque e l'app non resta bloccata.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(SHELL_FILES))
+      .then(async cache => {
+        await Promise.all(SHELL_FILES.map(async f => {
+          try { await cache.add(f); }
+          catch (err) { console.warn('[SW] skip', f, err.message); }
+        }));
+      })
       .then(() => self.skipWaiting())
-      .catch(err => console.error('[SW] Errore pre-cache:', err))
+      .catch(err => console.error('[SW] install error:', err))
   );
 });
 
-// Activate: pulizia vecchie cache
+// Activate: pulizia vecchie cache + claim immediato dei client aperti
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()

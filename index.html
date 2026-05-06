@@ -230,16 +230,19 @@
             <span class="photo-placeholder">📷</span>
           </div>
           <div class="photo-actions">
-            <label class="btn-secondary">
-              📸 Scatta foto
+            <label class="photo-card">
+              <span class="photo-card-icon">📸</span>
+              <span class="photo-card-label">Scatta<br>foto</span>
               <input type="file" accept="image/*" capture="environment" id="input-photo-camera" hidden />
             </label>
-            <label class="btn-secondary">
-              🖼️ Galleria
+            <label class="photo-card">
+              <span class="photo-card-icon">🖼️</span>
+              <span class="photo-card-label">Galleria<br>telefono</span>
               <input type="file" accept="image/*" id="input-photo-gallery" hidden />
             </label>
-            <button type="button" class="btn-secondary" id="btn-paste-photo">
-              📋 Incolla foto
+            <button type="button" class="photo-card" id="btn-paste-photo">
+              <span class="photo-card-icon">📋</span>
+              <span class="photo-card-label">Incolla<br>foto</span>
             </button>
           </div>
           <p class="settings-hint" style="margin: var(--space-2) 0; text-align:center;">

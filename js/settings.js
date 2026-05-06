@@ -639,11 +639,14 @@ function initSeasons() {
     root.innerHTML = ORDER.map(key => {
       const s = seasons[key] || DEFAULTS[key];
       const half = s.kind === "half";
-      const disabledRow = !s.enabled ? " disabled" : "";
+      const disabledRow = (half && !s.enabled) ? " disabled" : "";
+      const trailing = half
+        ? `<button type="button" class="season-edit-toggle${s.enabled ? " is-on" : ""}" data-key="${key}" role="switch" aria-checked="${s.enabled}" aria-label="${s.enabled ? "Disattiva" : "Attiva"} ${escAttr(s.label)}"></button>`
+        : `<span class="season-edit-lock" aria-label="Sempre attiva">SEMPRE</span>`;
       return `<div class="season-edit-row${half ? " is-half" : ""}${disabledRow}">
         <span class="season-edit-icon">${s.icon || ""}</span>
         <input type="text" class="form-control season-edit-name" data-key="${key}" value="${escAttr(s.label)}" maxlength="24" />
-        <button type="button" class="season-edit-toggle${s.enabled ? " is-on" : ""}" data-key="${key}" ${half ? "" : "disabled"} aria-label="${half ? "Attiva/disattiva" : "Sempre attiva"}">${s.enabled ? "Attiva" : "OFF"}</button>
+        ${trailing}
       </div>`;
     }).join("");
   }

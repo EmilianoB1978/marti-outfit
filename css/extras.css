@@ -1763,49 +1763,91 @@ body.editor-page {
 .seasons-editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 .season-edit-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2);
+  gap: var(--space-3);
+  padding: var(--space-3);
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-card);
+  min-height: 64px;
+  transition: opacity var(--animation-speed) var(--animation-easing);
 }
-.season-edit-row.is-half { padding-left: var(--space-5); }
-.season-edit-row.disabled { opacity: 0.5; }
+.season-edit-row.is-half {
+  background: var(--color-surface-alt);
+  border-style: dashed;
+}
+.season-edit-row.disabled .season-edit-name,
+.season-edit-row.disabled .season-edit-icon {
+  opacity: 0.4;
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text-muted);
+  text-decoration-thickness: 1px;
+}
 .season-edit-icon {
-  font-size: 24px;
-  width: 36px;
+  font-size: 28px;
+  width: 40px;
   text-align: center;
   flex: 0 0 auto;
+  line-height: 1;
 }
 .season-edit-name {
   flex: 1;
+  min-width: 0;
   font-size: 15px !important;
-  padding: 8px 10px !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
 }
+
+/* Per le 4 stagioni reali: NO toggle, solo lock badge informativo */
+.season-edit-lock {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: 14px;
+  white-space: nowrap;
+}
+
+/* Per le 4 mezze stagioni: toggle iOS-style on/off */
 .season-edit-toggle {
   flex: 0 0 auto;
-  padding: 8px 12px;
-  background: transparent;
+  position: relative;
+  width: 50px;
+  height: 30px;
+  padding: 0;
+  border-radius: 15px;
+  background: var(--color-surface-alt);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-muted);
   cursor: pointer;
+  transition: background var(--animation-speed) var(--animation-easing),
+              border-color var(--animation-speed) var(--animation-easing);
+}
+.season-edit-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform var(--animation-speed) var(--animation-easing);
 }
 .season-edit-toggle.is-on {
   background: var(--color-success);
-  color: white;
   border-color: var(--color-success);
 }
-.season-edit-toggle[disabled] {
-  cursor: not-allowed;
-  opacity: 0.4;
+.season-edit-toggle.is-on::after {
+  transform: translateX(20px);
 }
 
 /* Griglia varianti icona PWA (4 immagini) */

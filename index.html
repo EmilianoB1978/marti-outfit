@@ -723,38 +723,47 @@
   <script type="module" src="./js/outfit.js"></script>
   <script type="module" src="./js/app.js"></script>
 
-  <!-- Service Worker per PWA con auto-update -->
+  <!-- Service Worker per PWA con auto-update robusto -->
   <script>
+    let __swReloading = false;
+
+    function reloadWithCacheBust() {
+      if (__swReloading) return;
+      __swReloading = true;
+      // location.reload() su iOS PWA spesso serve dalla cache stale.
+      // Aggiungo querystring _v=timestamp per forzare bypass cache.
+      const sep = location.search ? '&' : '?';
+      location.replace(location.pathname + location.search + sep + '_v=' + Date.now() + location.hash);
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
           const reg = await navigator.serviceWorker.register('./service-worker.js');
           console.log('[SW] registrato');
 
-          // Quando arriva un aggiornamento del SW, mostra banner + auto-reload
-          // dopo l'attivazione del nuovo SW.
+          // Caso 1: c'e' gia' un SW in waiting al boot (l'install era stato
+          // fatto in una sessione precedente). Mostra subito il banner.
+          if (reg.waiting && navigator.serviceWorker.controller) {
+            showUpdateBanner(reg.waiting);
+          }
+
+          // Caso 2: arriva un nuovo SW durante questa sessione.
           reg.addEventListener('updatefound', () => {
             const newSW = reg.installing;
             if (!newSW) return;
             newSW.addEventListener('statechange', () => {
               if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                // Nuova versione installata e c'e' un SW gia' attivo -> e' un update.
                 showUpdateBanner(newSW);
               }
             });
           });
 
-          // Quando il nuovo SW prende il controllo, ricarica la pagina.
-          let reloading = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (reloading) return;
-            reloading = true;
-            location.reload();
-          });
+          // Quando il nuovo SW prende il controllo, ricarica con cache bust.
+          navigator.serviceWorker.addEventListener('controllerchange', reloadWithCacheBust);
 
-          // Check periodico per nuove versioni: ogni 30 minuti +
-          // a ogni ritorno foreground dell'app.
-          setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+          // Check periodico nuove versioni: ogni 15 min + ogni foreground.
+          setInterval(() => reg.update().catch(() => {}), 15 * 60 * 1000);
           document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
               reg.update().catch(() => {});
@@ -766,19 +775,35 @@
       });
     }
 
-    // Banner aggiornamento disponibile (auto-applica dopo 4s, oppure tap manuale)
+    // Banner update: persistente min 5s, auto-apply a 6s, fallback reload
+    // a 3s dopo SKIP_WAITING se controllerchange non scatta (bug iOS noto).
     function showUpdateBanner(newSW) {
       if (document.getElementById('__update_banner__')) return;
       const b = document.createElement('div');
       b.id = '__update_banner__';
-      b.style.cssText = 'position:fixed;bottom:env(safe-area-inset-bottom);left:0;right:0;background:#1a1a1a;color:#d4af37;padding:14px 20px;z-index:99997;display:flex;align-items:center;justify-content:space-between;gap:12px;font:14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 -4px 16px rgba(0,0,0,0.2);';
+      b.style.cssText = 'position:fixed;bottom:env(safe-area-inset-bottom);left:0;right:0;background:#1a1a1a;color:#d4af37;padding:14px 20px;z-index:99997;display:flex;align-items:center;justify-content:space-between;gap:12px;font:14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 -4px 16px rgba(0,0,0,0.2);transform:translateY(100%);transition:transform 0.3s ease-out;';
       b.innerHTML =
-        '<span>✨ Nuova versione disponibile</span>' +
-        '<button id="__update_btn__" style="background:#d4af37;color:#1a1a1a;border:none;padding:8px 16px;border-radius:18px;font-weight:700;font-size:13px;cursor:pointer;">Aggiorna</button>';
+        '<span id="__update_text__">✨ Nuova versione disponibile</span>' +
+        '<button id="__update_btn__" style="background:#d4af37;color:#1a1a1a;border:none;padding:8px 16px;border-radius:18px;font-weight:700;font-size:13px;cursor:pointer;flex:0 0 auto;">Aggiorna</button>';
       document.body.appendChild(b);
-      document.getElementById('__update_btn__').onclick = () => newSW.postMessage('SKIP_WAITING');
-      // Auto-apply dopo 4s se l'utente non interagisce
-      setTimeout(() => newSW.postMessage('SKIP_WAITING'), 4000);
+      // Slide-in
+      requestAnimationFrame(() => { b.style.transform = 'translateY(0)'; });
+
+      let applied = false;
+      const apply = () => {
+        if (applied) return;
+        applied = true;
+        document.getElementById('__update_text__').textContent = '⏳ Aggiornamento in corso...';
+        document.getElementById('__update_btn__').style.opacity = '0.5';
+        document.getElementById('__update_btn__').disabled = true;
+        try { newSW.postMessage('SKIP_WAITING'); } catch (_) {}
+        // Fallback: se controllerchange non scatta entro 3s, ricarica comunque.
+        setTimeout(reloadWithCacheBust, 3000);
+      };
+
+      document.getElementById('__update_btn__').onclick = apply;
+      // Auto-apply dopo 6 secondi (banner visibile abbastanza per leggerlo).
+      setTimeout(apply, 6000);
     }
   </script>
 </body>

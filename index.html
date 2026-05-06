@@ -32,8 +32,7 @@
     <div class="splash-spinner"></div>
   </div>
 
-  <!-- Safety: se il boot non finisce in 8s, nascondo splash comunque
-       cosi' l'utente non resta bloccato su una pagina vuota -->
+  <!-- Safety: se il boot non finisce in 8s, nascondo splash comunque -->
   <script>
     window.__splashSafetyTimer = setTimeout(function() {
       var s = document.getElementById('splash');
@@ -44,6 +43,36 @@
         if (a) a.classList.remove('hidden');
       }
     }, 8000);
+
+    // Debug: cattura errori JS e li mostra in overlay rosso a schermo.
+    // Cosi' l'utente puo' vedere/screenshotare l'errore anche senza DevTools.
+    window.addEventListener('error', function(e) {
+      try {
+        var msg = '[ERROR] ' + (e.message || 'unknown');
+        if (e.filename) msg += '\n@ ' + e.filename + ':' + (e.lineno || '?');
+        var d = document.getElementById('__error_overlay__');
+        if (!d) {
+          d = document.createElement('div');
+          d.id = '__error_overlay__';
+          d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;padding:12px;z-index:99999;font:12px ui-monospace,Menlo,monospace;white-space:pre-wrap;max-height:50vh;overflow-y:auto;border-bottom:2px solid white;';
+          document.body.appendChild(d);
+        }
+        d.textContent = (d.textContent ? d.textContent + '\n\n' : '') + msg;
+      } catch(_){}
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+      try {
+        var msg = '[UNHANDLED] ' + (e.reason && e.reason.message ? e.reason.message : (e.reason || 'unknown promise reject'));
+        var d = document.getElementById('__error_overlay__');
+        if (!d) {
+          d = document.createElement('div');
+          d.id = '__error_overlay__';
+          d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;padding:12px;z-index:99999;font:12px ui-monospace,Menlo,monospace;white-space:pre-wrap;max-height:50vh;overflow-y:auto;border-bottom:2px solid white;';
+          document.body.appendChild(d);
+        }
+        d.textContent = (d.textContent ? d.textContent + '\n\n' : '') + msg;
+      } catch(_){}
+    });
   </script>
 
   <!-- Schermata di setup (mostrata se Firebase non e' configurato) -->

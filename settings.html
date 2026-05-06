@@ -36,6 +36,7 @@
     <button class="tab" data-tab="typo">🔤 Font</button>
     <button class="tab" data-tab="layout">📱 Layout</button>
     <button class="tab" data-tab="bar">⚙️ Barra</button>
+    <button class="tab" data-tab="seasons">🌍 Stagioni</button>
     <button class="tab" data-tab="weather">🌤️ Meteo</button>
     <button class="tab" data-tab="links">🔗 Link</button>
   </nav>
@@ -330,6 +331,28 @@
       </button>
       <button class="btn btn--ghost btn--block" id="btn-reset-bar" style="margin-top: var(--space-2);">
         ↺ Ripristina default (Guardaroba · Calendario · 🛍️ Aggiungi · Capsule · Outfit)
+      </button>
+    </section>
+
+    <!-- ==================================================================
+         TAB: STAGIONI (8 stagioni: 4 reali + 4 mezze stagioni)
+         ================================================================== -->
+    <section id="tab-seasons" class="settings-tab-panel">
+      <h2 class="settings-section-title" style="margin-top:0">🌍 Le 8 stagioni di Marty</h2>
+      <p class="settings-hint">
+        Marty Outfit ha 8 stagioni invece delle solite 4: alle 4 reali si
+        affiancano 4 <strong>mezze stagioni</strong> di transizione, perché
+        l'armadio cambia gradualmente. Puoi <strong>rinominare</strong> ogni
+        voce o <strong>disattivare</strong> le mezze stagioni se preferisci
+        tornare a 4 sole.
+      </p>
+
+      <div id="seasons-editor" class="seasons-editor">
+        <!-- popolato dinamicamente da settings.js -->
+      </div>
+
+      <button class="btn btn--ghost btn--block" id="btn-reset-seasons" style="margin-top: var(--space-3);">
+        ↺ Ripristina nomi e icone di default
       </button>
     </section>
 

@@ -1759,6 +1759,55 @@ body.editor-page {
   box-shadow: 0 0 0 2px var(--color-primary) inset;
 }
 
+/* Editor 8 stagioni in Settings */
+.seasons-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.season-edit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-input);
+}
+.season-edit-row.is-half { padding-left: var(--space-5); }
+.season-edit-row.disabled { opacity: 0.5; }
+.season-edit-icon {
+  font-size: 24px;
+  width: 36px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+.season-edit-name {
+  flex: 1;
+  font-size: 15px !important;
+  padding: 8px 10px !important;
+}
+.season-edit-toggle {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.season-edit-toggle.is-on {
+  background: var(--color-success);
+  color: white;
+  border-color: var(--color-success);
+}
+.season-edit-toggle[disabled] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
 /* Griglia varianti icona PWA (4 immagini) */
 .appicon-grid {
   display: grid;

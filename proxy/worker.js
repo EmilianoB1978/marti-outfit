@@ -30,7 +30,7 @@ const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO 
   "material": "cotone|denim|lana|pelle|lino|sintetico|cashmere|seta|maglia|altro",
   "style": "casual|elegante|sportivo|formale|streetwear",
   "formality": numero 1-5 (1=molto casual home/sport, 3=neutro, 5=molto formale gala/cerimonia),
-  "season": ["primavera","estate","autunno","inverno"] (array, includi tutte le stagioni adatte),
+  "season": array di stagioni adatte. Valori ammessi (in ordine cronologico annuale, includi tutte quelle che si applicano): "primavera", "primestate" (transizione primavera-estate), "estate", "estunno" (fine estate), "autunno", "autinverno" (autunno freddo), "inverno", "inveravera" (fine inverno).
   "occasion": "occasioni d'uso suggerite, separate da virgola (es. 'lavoro, aperitivo')",
   "description": "breve descrizione visiva del capo in italiano, max 80 caratteri (es. 'maglietta cotone bianco taglio classico')"
 }

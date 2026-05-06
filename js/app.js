@@ -903,15 +903,41 @@ function populateTaxonomyOptions() {
   populateSelect("field-color",     Taxonomies.listSimpleValues("colors"));
   populateSelect("field-color-secondary", Taxonomies.listSimpleValues("colors"));
   populateSelect("field-occasion",  Taxonomies.listSimpleValues("occasions"));
-  // Stagione: chip toggleabili (no select multiple, troppo brutto su iOS).
-  // Le opzioni sono fisse nel DOM; popolo solo se la taxonomy ha valori
-  // custom diversi dai 4 default.
+  // Stagione: chip toggleabili (8 stagioni dinamiche)
+  renderSeasonChips();
 
   // SELECT cascade: sub-categoria filtrata per categoria scelta
   refreshSubcategorySelect();
 }
 
-// Helper per il multi-chip stagione
+// =============================================================================
+// Multi-chip stagione (8 stagioni: 4 reali + 4 mezze stagioni di transizione).
+// I chip sono renderizzati dinamicamente in base a prefs.seasons.
+// =============================================================================
+function renderSeasonChips() {
+  const root = document.getElementById("field-season");
+  if (!root) return;
+  const prefs = Theme.getPreferences();
+  const order = prefs.seasonsOrder || ["primavera","primestate","estate","estunno","autunno","autinverno","inverno","inveravera"];
+  const map = prefs.seasons || {};
+
+  // Conserva selezione corrente prima del rerender
+  const previouslyActive = new Set(getSelectedSeasons());
+
+  const html = order.map(key => {
+    const s = map[key];
+    if (!s || s.enabled === false) return "";
+    const half = s.kind === "half" ? " is-half" : "";
+    const active = previouslyActive.has(key) ? " is-active" : "";
+    return `<button type="button" class="season-chip${half}${active}" data-season="${key}">
+      <span class="season-chip-icon">${escapeHtml(s.icon || "")}</span>
+      <span class="season-chip-label">${escapeHtml(s.label || key)}</span>
+    </button>`;
+  }).join("");
+
+  root.innerHTML = html;
+}
+
 function getSelectedSeasons() {
   const root = document.getElementById("field-season");
   if (!root) return [];
@@ -1999,6 +2025,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof Theme.subscribe === "function") {
       Theme.subscribe(() => {
         try { renderBottomNav(switchPage, openAddItem); } catch (e) { console.error("renderBottomNav fail:", e); }
+        try { renderSeasonChips(); } catch (e) { console.error("renderSeasonChips fail:", e); }
       });
     }
   } catch (err) {

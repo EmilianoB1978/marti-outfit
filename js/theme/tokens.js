@@ -350,6 +350,22 @@ export const defaultPreferences = {
   shareTemplate: "classic",   // template default per outfit card (classic|dark|pastel|magazine)
   // Bottom nav (5 slot personalizzabili. Slot 2 = centrale ingrandito.)
   bottomNav: ["wardrobe", "calendar", "add_item", "capsules", "outfits"],
+  // 8 stagioni in ordine cronologico annuale (4 reali + 4 mezze stagioni di
+  // transizione). Ogni stagione: { label, icon, enabled, kind }.
+  // kind="full" -> sempre attiva (non disabilitabile), nome editabile.
+  // kind="half" -> disabilitabile dall'utente, nome editabile.
+  seasons: {
+    primavera:   { label: "Primavera",   icon: "🌸", enabled: true, kind: "full" },
+    primestate:  { label: "Primestate",  icon: "🌼", enabled: true, kind: "half" },
+    estate:      { label: "Estate",      icon: "☀️", enabled: true, kind: "full" },
+    estunno:     { label: "Estunno",     icon: "🌻", enabled: true, kind: "half" },
+    autunno:     { label: "Autunno",     icon: "🍂", enabled: true, kind: "full" },
+    autinverno:  { label: "Autinverno",  icon: "🌧️", enabled: true, kind: "half" },
+    inverno:     { label: "Inverno",     icon: "❄️", enabled: true, kind: "full" },
+    inveravera:  { label: "Inveravera",  icon: "🌱", enabled: true, kind: "half" },
+  },
+  // Ordine cronologico (annuale) - usato per renderizzare i chip in verticale
+  seasonsOrder: ["primavera", "primestate", "estate", "estunno", "autunno", "autinverno", "inverno", "inveravera"],
   // FAB customization (pulsante centrale nella barra inferiore)
   fab: {
     icon: "🛍️",          // emoji o testo singolo carattere; ignorato se logoUrl

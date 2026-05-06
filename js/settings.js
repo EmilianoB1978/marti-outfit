@@ -610,7 +610,83 @@ document.addEventListener("DOMContentLoaded", () => {
   initLinks();
   initFAB();
   initAppIcon();
+  initSeasons();
 });
+
+// =============================================================================
+// 8 stagioni: editor nomi/icone + toggle on/off mezze stagioni
+// =============================================================================
+function initSeasons() {
+  const root = document.getElementById("seasons-editor");
+  const btnReset = document.getElementById("btn-reset-seasons");
+  if (!root) return;
+
+  const DEFAULTS = {
+    primavera:   { label: "Primavera",   icon: "🌸", enabled: true, kind: "full" },
+    primestate:  { label: "Primestate",  icon: "🌼", enabled: true, kind: "half" },
+    estate:      { label: "Estate",      icon: "☀️", enabled: true, kind: "full" },
+    estunno:     { label: "Estunno",     icon: "🌻", enabled: true, kind: "half" },
+    autunno:     { label: "Autunno",     icon: "🍂", enabled: true, kind: "full" },
+    autinverno:  { label: "Autinverno",  icon: "🌧️", enabled: true, kind: "half" },
+    inverno:     { label: "Inverno",     icon: "❄️", enabled: true, kind: "full" },
+    inveravera:  { label: "Inveravera",  icon: "🌱", enabled: true, kind: "half" },
+  };
+  const ORDER = ["primavera","primestate","estate","estunno","autunno","autinverno","inverno","inveravera"];
+
+  function render() {
+    const prefs = Theme.getPreferences();
+    const seasons = prefs.seasons || DEFAULTS;
+    root.innerHTML = ORDER.map(key => {
+      const s = seasons[key] || DEFAULTS[key];
+      const half = s.kind === "half";
+      const disabledRow = !s.enabled ? " disabled" : "";
+      return `<div class="season-edit-row${half ? " is-half" : ""}${disabledRow}">
+        <span class="season-edit-icon">${s.icon || ""}</span>
+        <input type="text" class="form-control season-edit-name" data-key="${key}" value="${escAttr(s.label)}" maxlength="24" />
+        <button type="button" class="season-edit-toggle${s.enabled ? " is-on" : ""}" data-key="${key}" ${half ? "" : "disabled"} aria-label="${half ? "Attiva/disattiva" : "Sempre attiva"}">${s.enabled ? "Attiva" : "OFF"}</button>
+      </div>`;
+    }).join("");
+  }
+
+  function escAttr(s) {
+    return String(s || "").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  }
+
+  // Salvataggio: edit nome (input change)
+  root.addEventListener("change", (e) => {
+    const inp = e.target.closest(".season-edit-name");
+    if (!inp) return;
+    const key = inp.dataset.key;
+    const newLabel = inp.value.trim() || DEFAULTS[key].label;
+    const prefs = Theme.getPreferences();
+    const seasons = { ...(prefs.seasons || DEFAULTS) };
+    seasons[key] = { ...(seasons[key] || DEFAULTS[key]), label: newLabel };
+    Theme.set("seasons", seasons);
+  });
+
+  // Toggle on/off (solo mezze stagioni)
+  root.addEventListener("click", (e) => {
+    const btn = e.target.closest(".season-edit-toggle");
+    if (!btn || btn.disabled) return;
+    const key = btn.dataset.key;
+    const prefs = Theme.getPreferences();
+    const seasons = { ...(prefs.seasons || DEFAULTS) };
+    const cur = seasons[key] || DEFAULTS[key];
+    seasons[key] = { ...cur, enabled: !cur.enabled };
+    Theme.set("seasons", seasons);
+    render();
+    toast(seasons[key].enabled ? `${seasons[key].label} attiva` : `${seasons[key].label} disattivata`, "success");
+  });
+
+  btnReset.addEventListener("click", () => {
+    Theme.set("seasons", JSON.parse(JSON.stringify(DEFAULTS)));
+    render();
+    toast("Stagioni ripristinate al default", "success");
+  });
+
+  render();
+  Theme.subscribe(render);
+}
 
 // =============================================================================
 // TAB: BARRA INFERIORE (personalizzazione 4 slot)

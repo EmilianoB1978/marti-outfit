@@ -245,20 +245,54 @@ async function handleScrape(req, cors) {
     return errorResponse("Solo http/https", 400, cors);
   }
 
-  // Fetch HTML con UA realistico per evitare blocchi anti-bot
-  const html = await fetch(parsed.href, {
-    headers: {
+  // Provo fetch con due profili browser. Se uno fallisce, fallback all'altro.
+  const profiles = [
+    {
+      // Desktop Mac Chrome - meno bloccato dei mobile UA su molti shop
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Language": "it-IT,it;q=0.9,en;q=0.5",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1",
+      "Upgrade-Insecure-Requests": "1",
+    },
+    {
+      // Mobile iOS Safari (originale)
       "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "Accept-Language": "it-IT,it;q=0.9,en;q=0.5",
-      "Accept-Encoding": "gzip, deflate, br",
     },
-    redirect: "follow",
-    cf: { cacheTtl: 300 },  // cache 5min lato Cloudflare
-  }).then(r => r.ok ? r.text() : null).catch(() => null);
+  ];
+
+  let html = null;
+  for (const headers of profiles) {
+    try {
+      const r = await fetch(parsed.href, {
+        headers, redirect: "follow",
+        cf: { cacheTtl: 300 },
+      });
+      if (r.ok) {
+        const txt = await r.text();
+        // Heuristic: pagina valida se >2KB e non contiene "Access Denied"
+        if (txt.length > 2000 && !/Access Denied|Akamai|distil_r_captcha/i.test(txt.slice(0, 5000))) {
+          html = txt;
+          break;
+        }
+      }
+    } catch { /* prova prossimo profilo */ }
+  }
 
   if (!html) {
-    return errorResponse("Impossibile leggere la pagina (blocco anti-bot o offline)", 502, cors);
+    // Ritorno comunque 200 con dati vuoti + flag, cosi' il client puo' aprire
+    // il modal "Nuovo capo" col link gia' compilato e l'utente edita a mano.
+    return jsonResponse({
+      title: null, description: null, image_url: null,
+      price: null, currency: null, brand: null,
+      color: null, material: null, source_url: parsed.href,
+      _blocked: true,
+    }, 200, cors);
   }
 
   const data = extractProductData(html, parsed.href);

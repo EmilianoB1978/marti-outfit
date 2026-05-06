@@ -2029,7 +2029,17 @@ async function confirmImport() {
     if (photoBlob) {
       await applyImportedPhoto(photoBlob);
     }
-    toast(photoBlob ? "✓ Importato (rivedi e salva)" : "✓ Dati importati. Foto non disponibile, aggiungila manualmente", "success");
+
+    // Toast contestuale in base a quanto siamo riusciti a estrarre
+    if (raw._blocked || !fields._hasMetadata) {
+      toast("⚠ Sito anti-bot. Ho dedotto info dall'URL. Foto e prezzo da inserire a mano.", "default");
+      // Apro il link in nuova tab cosi' l'utente vede il prodotto e puo' copiare info
+      try { window.open(fields.link_url, "_blank", "noopener"); } catch {}
+    } else if (photoBlob) {
+      toast("✓ Importato (rivedi e salva)", "success");
+    } else {
+      toast("✓ Dati importati. Foto non disponibile, aggiungila manualmente", "success");
+    }
   } catch (err) {
     console.error("Import fallito:", err);
     status.textContent = `Errore: ${err.message}. Apri il link e compila a mano.`;

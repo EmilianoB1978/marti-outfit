@@ -125,13 +125,38 @@ const KEYWORD_MAP = {
 };
 
 /**
+ * Estrae testo "leggibile" dalla path di un URL prodotto.
+ * Es: "https://www.zara.com/it/it/pantaloni-ampi-a-righe-p01165118.html"
+ *  -> "pantaloni ampi a righe"
+ */
+export function textFromUrl(url) {
+  try {
+    const u = new URL(url);
+    const last = u.pathname.split("/").filter(Boolean).pop() || "";
+    return last
+      .replace(/\.(html?|aspx?|php|jsp)$/i, "")
+      .replace(/[-_]/g, " ")
+      .replace(/\b[a-z]?\d{3,}\b/gi, "")  // rimuove ID prodotto tipo "p01165118", "csm21u0b4"
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Mappa i metadati grezzi del worker ai campi del modal capo.
+ * Se title/description vuoti, usa testo derivato dall'URL come fallback.
  * @param {object} raw - oggetto da scrapeProduct
  * @returns {object} { category, subcategory, color_primary, color_secondary,
- *   material, pattern, price, link_url, notes, _suggestedTitle }
+ *   material, pattern, price, link_url, notes, _suggestedTitle, _imageUrl,
+ *   _blocked }
  */
 export function mapRawToFields(raw) {
-  const text = `${raw.title || ""} ${raw.description || ""}`.toLowerCase();
+  // Combino title + description + path URL come testo da analizzare
+  const urlText = textFromUrl(raw.source_url || "");
+  const text = `${raw.title || ""} ${raw.description || ""} ${urlText}`.toLowerCase();
   const out = {
     category: null,
     subcategory: null,
@@ -141,9 +166,11 @@ export function mapRawToFields(raw) {
     pattern: null,
     price: typeof raw.price === "number" && !isNaN(raw.price) ? raw.price : null,
     link_url: raw.source_url,
-    notes: buildNotesFromRaw(raw),
+    notes: buildNotesFromRaw(raw, urlText),
     _suggestedTitle: raw.title || null,
     _imageUrl: raw.image_url || null,
+    _blocked: !!raw._blocked,
+    _hasMetadata: !!(raw.title || raw.description || raw.image_url),
   };
 
   // Categoria
@@ -194,12 +221,21 @@ function matchColor(text) {
   return null;
 }
 
-function buildNotesFromRaw(raw) {
+function buildNotesFromRaw(raw, urlText) {
   const parts = [];
   if (raw.brand) parts.push(`Brand: ${raw.brand}`);
-  if (raw.title) parts.push(raw.title);
+  if (raw.title) {
+    parts.push(raw.title);
+  } else if (urlText) {
+    // Title vuoto: uso il testo derivato dall'URL come placeholder
+    parts.push(capitalize(urlText));
+  }
   if (raw.description && raw.description.length > 0 && raw.description !== raw.title) {
     parts.push(raw.description.slice(0, 200));
   }
   return parts.join(" · ") || null;
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }

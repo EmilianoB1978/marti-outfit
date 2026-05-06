@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v67-mood-board';
+const CACHE_VERSION = 'v68-dress-code';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -68,6 +68,7 @@ const SHELL_FILES = [
   './js/trip-detail.js',
   './js/trip-wrapped.js',
   './js/trip-mood-board.js',
+  './js/trips-dresscode.js',
   './css/trips.css',
   './trips.html',
   './trip-detail.html',
@@ -112,7 +113,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🎬 Mood board del viaggio! Una griglia 3×3 con i tuoi outfit pianificati, pronta da condividere su Stories prima di partire.";
+const WHATS_NEW = "🕌 Dress code paese: nei viaggi a UAE, Bali, Vaticano, Marocco, Iran (e altri 12) ti ricordo le regole locali. Niente brutte sorprese all'ingresso.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

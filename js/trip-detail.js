@@ -9,6 +9,7 @@ import { generateTripOutfits, regenerateDay } from "./trips-generator.js";
 import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume, estimateItemsWeightGrams } from "./trips-data.js";
 import { computeWrappedStats, buildWrappedImageBlob } from "./trip-wrapped.js";
 import { buildMoodBoardBlob } from "./trip-mood-board.js";
+import { getDressCode, STRICTNESS_LABELS } from "./trips-dresscode.js";
 
 Theme.init();
 
@@ -125,6 +126,7 @@ async function load() {
   loading.classList.add("hidden");
   content.classList.remove("hidden");
   renderHeader();
+  renderDressCodeSection();
   renderLuggageSection();
   renderOutfitsSection();
   updateFreezeButton();
@@ -579,6 +581,37 @@ async function onShareWrapped() {
 // =============================================================================
 // MOOD BOARD — pre/durante viaggio: griglia 3x3 con foto degli outfit
 // =============================================================================
+// =============================================================================
+// DRESS CODE — banner regole per la destinazione (dataset statico)
+// =============================================================================
+function renderDressCodeSection() {
+  const box = document.getElementById("td-dresscode");
+  if (!box) return;
+  const code = state.trip.destination?.country_code;
+  const data = getDressCode(code);
+  if (!data) { box.classList.add("hidden"); return; }
+
+  const meta = STRICTNESS_LABELS[data.strictness] || STRICTNESS_LABELS.medium;
+  document.getElementById("td-dresscode-emoji").textContent = meta.emoji;
+  document.getElementById("td-dresscode-strictness").textContent = meta.label;
+  document.getElementById("td-dresscode-strictness").style.color = meta.color;
+  document.getElementById("td-dresscode-title").textContent = `Dress code · ${data.title}`;
+
+  const ul = document.getElementById("td-dresscode-rules");
+  ul.innerHTML = data.rules.map(r => `<li>${escapeHtml(r)}</li>`).join("");
+
+  // Toggle expand
+  const toggle = document.getElementById("td-dresscode-toggle");
+  toggle.onclick = () => {
+    const open = !ul.classList.contains("hidden");
+    ul.classList.toggle("hidden", open);
+    toggle.textContent = open ? "▼" : "▲";
+    toggle.setAttribute("aria-label", open ? "Espandi regole" : "Comprimi regole");
+  };
+
+  box.classList.remove("hidden");
+}
+
 async function onCreateMoodBoard() {
   const btn = document.getElementById("btn-mood-board");
   const outfits = state.trip.outfits_by_day || {};

@@ -912,6 +912,68 @@ a.trip-card:active { transform: scale(0.99); }
   margin-top: 4px;
 }
 
+/* Banner dress code paese */
+.td-dresscode {
+  margin-bottom: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+.td-dresscode.hidden { display: none; }
+.td-dresscode-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  cursor: pointer;
+}
+.td-dresscode-emoji { font-size: 32px; line-height: 1; flex: 0 0 auto; }
+.td-dresscode-meta { flex: 1; min-width: 0; }
+.td-dresscode-strictness {
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.td-dresscode-title {
+  font-weight: var(--font-weight-bold);
+  font-size: 15px;
+  color: var(--color-text);
+  margin-top: 2px;
+}
+.td-dresscode-toggle {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.td-dresscode-rules {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-3);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+.td-dresscode-rules.hidden { display: none; }
+.td-dresscode-rules li {
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--color-border);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+.td-dresscode-rules li:last-child { border-bottom: none; }
+.td-dresscode-rules li::before {
+  content: "→ ";
+  color: var(--color-primary);
+  font-weight: bold;
+  margin-right: 4px;
+}
+
 /* Banner conflitti capi tra viaggi sovrapposti */
 .td-conflicts {
   margin-top: var(--space-3);

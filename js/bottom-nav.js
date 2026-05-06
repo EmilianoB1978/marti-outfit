@@ -82,6 +82,6 @@ export function renderBottomNav(onSection, onFab) {
   });
 
   // Bind FAB
-  const fab = nav.querySelector("#btn-add-item");
-  if (fab) fab.addEventListener("click", onFab);
+  const fabEl = nav.querySelector("#btn-add-item");
+  if (fabEl) fabEl.addEventListener("click", onFab);
 }

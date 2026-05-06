@@ -19,7 +19,7 @@ import { showOnboarding } from "./onboarding.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
-Theme.init();
+try { Theme.init(); } catch (err) { console.error("Theme.init failed:", err); }
 
 // Stato in memoria (non serve store/redux per uso single-user)
 const state = {

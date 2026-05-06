@@ -10,6 +10,7 @@ import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume, estim
 import { computeWrappedStats, buildWrappedImageBlob } from "./trip-wrapped.js";
 import { buildMoodBoardBlob } from "./trip-mood-board.js";
 import { getDressCode, STRICTNESS_LABELS } from "./trips-dresscode.js";
+import { fetchTripWeather, weatherEmoji } from "./trips-weather.js";
 
 Theme.init();
 
@@ -127,6 +128,7 @@ async function load() {
   content.classList.remove("hidden");
   renderHeader();
   renderThermalProfile();
+  renderWeatherSection();
   renderDressCodeSection();
   renderLuggageSection();
   renderOutfitsSection();
@@ -582,6 +584,85 @@ async function onShareWrapped() {
 // =============================================================================
 // MOOD BOARD — pre/durante viaggio: griglia 3x3 con foto degli outfit
 // =============================================================================
+// =============================================================================
+// WEATHER — forecast (16gg) o storico (medie 3 anni stesso mese)
+// =============================================================================
+async function renderWeatherSection() {
+  const box = document.getElementById("td-weather");
+  if (!box) return;
+  if (!state.trip.destination?.lat) { box.classList.add("hidden"); return; }
+
+  // Mostra loading state
+  box.classList.remove("hidden");
+  document.getElementById("td-weather-emoji").textContent = "⏳";
+  document.getElementById("td-weather-temps").textContent = "Carico meteo...";
+  document.getElementById("td-weather-extra").innerHTML = "";
+  document.getElementById("td-weather-source").textContent = "";
+
+  let data;
+  try {
+    data = await fetchTripWeather(state.trip);
+  } catch (e) {
+    console.warn("Meteo fail:", e);
+    box.classList.add("hidden");
+    return;
+  }
+  if (!data) { box.classList.add("hidden"); return; }
+
+  // Salva snapshot per anti-conflitto futuri (Pezzo 4 last-minute)
+  state.weatherData = data;
+
+  if (data.source === "forecast" && data.daily?.length) {
+    renderForecastBanner(data.daily);
+  } else if (data.source === "historical" && data.historical) {
+    renderHistoricalBanner(data.historical);
+  } else {
+    box.classList.add("hidden");
+  }
+}
+
+function renderForecastBanner(daily) {
+  // Aggrega min/max + worst code
+  const tmins = daily.map(d => d.tmin).filter(v => v != null);
+  const tmaxs = daily.map(d => d.tmax).filter(v => v != null);
+  const tmin = tmins.length ? Math.min(...tmins) : null;
+  const tmax = tmaxs.length ? Math.max(...tmaxs) : null;
+  const worstCode = daily.reduce((acc, d) => Math.max(acc, d.weather_code || 0), 0);
+  const totalRain = daily.reduce((acc, d) => acc + (d.precipitation || 0), 0);
+  const rainDays = daily.filter(d => (d.precipitation || 0) >= 1).length;
+  const maxUV = Math.max(...daily.map(d => d.uv_max || 0));
+
+  document.getElementById("td-weather-emoji").textContent = weatherEmoji(worstCode);
+  document.getElementById("td-weather-eyebrow").textContent = "Previsioni del viaggio";
+  document.getElementById("td-weather-temps").innerHTML =
+    `<strong>${tmin}° – ${tmax}°C</strong> medie giornaliere`;
+
+  const extras = [];
+  if (rainDays > 0)     extras.push(`🌧 ${rainDays} ${rainDays === 1 ? "giorno" : "giorni"} pioggia`);
+  if (totalRain > 5)    extras.push(`💧 ~${Math.round(totalRain)}mm tot`);
+  if (maxUV >= 7)       extras.push(`☀️ UV ${Math.round(maxUV)} (alto)`);
+  document.getElementById("td-weather-extra").innerHTML =
+    extras.map(e => `<span class="td-weather-tag">${e}</span>`).join("");
+
+  document.getElementById("td-weather-source").textContent = "Previsioni live aggiornate";
+}
+
+function renderHistoricalBanner(h) {
+  document.getElementById("td-weather-emoji").textContent = "📊";
+  document.getElementById("td-weather-eyebrow").textContent = "Stagione storica (media 3 anni)";
+  document.getElementById("td-weather-temps").innerHTML =
+    `<strong>${h.tmin_avg}° – ${h.tmax_avg}°C</strong> di solito`;
+  const extras = [];
+  if (h.rain_days_per_month > 0)
+    extras.push(`🌧 ${h.rain_days_per_month}gg pioggia/mese`);
+  if (h.uv_avg >= 6)
+    extras.push(`☀️ UV ~${h.uv_avg}`);
+  document.getElementById("td-weather-extra").innerHTML =
+    extras.map(e => `<span class="td-weather-tag">${e}</span>`).join("");
+  document.getElementById("td-weather-source").textContent =
+    "Il viaggio è troppo lontano per le previsioni precise — queste sono le medie storiche del mese.";
+}
+
 // =============================================================================
 // PROFILO TERMICO — offset °C personale per generazione outfit
 // =============================================================================

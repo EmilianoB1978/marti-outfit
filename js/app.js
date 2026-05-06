@@ -903,10 +903,28 @@ function populateTaxonomyOptions() {
   populateSelect("field-color",     Taxonomies.listSimpleValues("colors"));
   populateSelect("field-color-secondary", Taxonomies.listSimpleValues("colors"));
   populateSelect("field-occasion",  Taxonomies.listSimpleValues("occasions"));
-  populateMultiSelect("field-season", Taxonomies.listSimpleValues("seasons"));
+  // Stagione: chip toggleabili (no select multiple, troppo brutto su iOS).
+  // Le opzioni sono fisse nel DOM; popolo solo se la taxonomy ha valori
+  // custom diversi dai 4 default.
 
   // SELECT cascade: sub-categoria filtrata per categoria scelta
   refreshSubcategorySelect();
+}
+
+// Helper per il multi-chip stagione
+function getSelectedSeasons() {
+  const root = document.getElementById("field-season");
+  if (!root) return [];
+  return Array.from(root.querySelectorAll(".season-chip.is-active"))
+    .map(c => c.dataset.season);
+}
+function setSelectedSeasons(arr) {
+  const root = document.getElementById("field-season");
+  if (!root) return;
+  const set = new Set((arr || []).map(s => String(s).toLowerCase()));
+  root.querySelectorAll(".season-chip").forEach(chip => {
+    chip.classList.toggle("is-active", set.has(chip.dataset.season));
+  });
 }
 
 // =============================================================================
@@ -1261,7 +1279,7 @@ function openAddItem() {
    "field-notes", "field-price", "field-link"].forEach(id => {
     document.getElementById(id).value = "";
   });
-  Array.from(document.getElementById("field-season").options).forEach(o => o.selected = false);
+  setSelectedSeasons([]);
 
   // Cascade: reset filtraggio sub-categoria a "tutte" (categoria vuota)
   refreshSubcategorySelect();
@@ -1314,10 +1332,7 @@ function openEditItem(id) {
   // Link status (banner con stato scadenza)
   renderLinkStatus(item);
 
-  const seasons = Array.isArray(item.season) ? item.season : [];
-  Array.from(document.getElementById("field-season").options).forEach(o => {
-    o.selected = seasons.includes(o.value);
-  });
+  setSelectedSeasons(Array.isArray(item.season) ? item.season : []);
 
   // Wear stats sezione (visibile in modifica, nascosta in nuovo)
   renderWearStats(item);
@@ -1446,9 +1461,8 @@ async function analyzePendingPhoto() {
 
     // Stagioni (multi-select)
     if (Array.isArray(tags.season)) {
-      Array.from(document.getElementById("field-season").options).forEach(o => {
-        if (tags.season.includes(o.value)) o.selected = true;
-      });
+      // Unisce le stagioni gia' attive con quelle dedotte dall'AI
+      setSelectedSeasons([...new Set([...getSelectedSeasons(), ...tags.season])]);
     }
 
     // Salvo la descrizione AI come "note di contesto" (utile al motore outfit)
@@ -1502,7 +1516,7 @@ async function saveItem() {
     material: document.getElementById("field-material").value || null,
     style: document.getElementById("field-style").value || null,
     formality,
-    season: Array.from(document.getElementById("field-season").selectedOptions).map(o => o.value),
+    season: getSelectedSeasons(),
     occasion: document.getElementById("field-occasion").value.trim() || null,
     notes: document.getElementById("field-notes").value.trim() || null,
     price: (price !== null && !isNaN(price)) ? price : null,
@@ -1994,6 +2008,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // Incolla foto da clipboard (con auto-analisi AI)
   const btnPastePhoto = document.getElementById("btn-paste-photo");
   if (btnPastePhoto) btnPastePhoto.addEventListener("click", pastePhotoFromClipboard);
+
+  // Chip stagione: toggle is-active al click
+  const seasonRoot = document.getElementById("field-season");
+  if (seasonRoot) {
+    seasonRoot.addEventListener("click", (e) => {
+      const chip = e.target.closest(".season-chip");
+      if (!chip) return;
+      chip.classList.toggle("is-active");
+    });
+  }
 
   // Foto inputs
   document.getElementById("input-photo-camera").addEventListener("change", e => {

@@ -235,6 +235,87 @@
           <li>Per giorni <strong>futuri</strong>: l'outfit viene marcato come <strong>pianificato</strong> (• dorato), il wear count viene aggiornato solo se confermi a posteriori</li>
         </ol>
         <p class="manual-tip">💡 Combinato con il meteo, puoi <strong>preparare gli outfit della settimana</strong> guardando le previsioni e l'agenda.</p>
+        <p class="manual-tip">✈️ <strong>Banner "Prossimo viaggio"</strong>: in cima al calendario appare automaticamente la card del viaggio più imminente con countdown live (-5 giorni / Domani / Oggi! / "giorno 3/5" se sei in viaggio). Tap per aprirlo.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Viaggi ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>✈️ Viaggi (valigia smart outfit-by-outfit)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Marty gestisce i viaggi in modo completo: pianifica destinazione, date, occasioni → l'app compone outfit per ogni giorno dal tuo guardaroba reale, calcola peso/volume valigia, ti avvisa di meteo e dress code locali. Apri da: <strong>Calendario → "Pianifica un viaggio"</strong> oppure metti l'icona <strong>✈️ Viaggi</strong> nella barra (Aspetto → Barra).</p>
+
+        <p><strong>1. Crea un viaggio (wizard 3 step)</strong></p>
+        <ol class="manual-list">
+          <li><strong>📍 Dove vai?</strong> — Cerca la città. Marty usa Open-Meteo Geocoding (gratis): digiti "Tok" → 7 risultati con bandiera + paese + popolazione</li>
+          <li><strong>📅 Quando parti?</strong> — Date arrivo/ritorno + nome opzionale del viaggio. Validazione automatica</li>
+          <li><strong>🎯 Cosa farai?</strong> — Multi-select tra 10 occasioni: 💼 Business · 👟 Casual · 🍷 Cena · 💒 Cerimonia · 🏖️ Mare · ⛰️ Montagna · 🏃 Sport · 🏙️ Città · 🎒 Avventura · 🧖 Relax</li>
+        </ol>
+
+        <p><strong>2. Genera gli outfit del viaggio</strong></p>
+        <ul class="manual-list">
+          <li>Tap <strong>✨ Genera outfit del viaggio</strong> sulla pagina detail</li>
+          <li>Marty pesca dal tuo guardaroba reale considerando: stagione del viaggio (8 stagioni), occasione del giorno (round-robin), formality, materiale</li>
+          <li>Anti-ripetizione: ogni capo ha peso = 1/(1+volte usato), così la rotazione è naturale</li>
+          <li>Per business/cerimonia: 50% chance di un completo intero. Per casual/cena: 30% chance di un vestito unico. Sempre top+bottom+scarpe altrimenti, ± capospalla, ± accessorio</li>
+          <li>Bottone <strong>🔄</strong> su ogni giorno per ricomporre solo quel giorno (mantenendo gli altri). Bottone <strong>🔀 Rigenera tutti</strong> per ricomposizione completa</li>
+        </ul>
+
+        <p><strong>3. 🧳 Valigia visiva (5 tipi bagaglio)</strong></p>
+        <ul class="manual-list">
+          <li><strong>🧳 Trolley cabina</strong> — 40L · max 10kg · 55×40×20 cm (Ryanair-friendly)</li>
+          <li><strong>🛄 Trolley grande</strong> — 75L · max 23kg · 75×50×30 cm</li>
+          <li><strong>👜 Borsone weekend</strong> — 45L · max 8kg · morbido</li>
+          <li><strong>🎒 Zaino</strong> — 20L · max 5kg</li>
+          <li><strong>👛 Borsa giornaliera</strong> — 8L · max 2kg</li>
+        </ul>
+        <p>Tap su un tipo → si seleziona istantaneamente. La valigia mostra: emoji bagaglio scelto, contatore "12 capi · 28L / 40L · 6.4 / 10 kg", barra di capacità che diventa <strong>verde / gialla / rossa</strong> sopra rispettivamente 80% e 95% di pienezza, lista thumb dei capi.</p>
+        <p class="manual-tip">✨ <strong>Animazione magica</strong>: quando generi outfit, la valigia "trema" leggermente e ogni capo "cade dall'alto" con bounce stagger 50ms — effetto cascata cinematografica.</p>
+
+        <p><strong>4. ⚖️ Peso 5 livelli (anche fuori dai viaggi)</strong></p>
+        <p>Nella scheda capo c'è il selettore peso a 5 chip: 🪶 Leggerissimo (100g) · 🌬️ Leggero (250g) · ⚖️ Medio (450g) · 🧱 Pesante (800g) · 🏋️ Pesantissimo (1500g). I grammi di default sono basati su pesi reali tipici di un capo piegato. <strong>Personalizzabili</strong> in <em>Aspetto → ⚖️ Pesi</em>: rinomini i livelli e regoli i grammi (es. se i tuoi maglioni pesano in media 700g e non 800g).</p>
+
+        <p><strong>5. 🌡️ Profilo termico personale</strong></p>
+        <p>Per ogni viaggio scegli tra 5 chip: <strong>🥶 −3° · ❄️ −2° · 🙂 Normale · 🌤 +2° · 🔥 +3°</strong>. Marty userà il valore per shiftare le soglie del meteo: se sei freddolosa (−3°), 18°C verrà trattato come 15° → cardigan in più automatico. Se sopporti il caldo (+3°), 25° vale come 28° → capi più freschi.</p>
+
+        <p><strong>6. 🌦️ Meteo destinazione</strong></p>
+        <ul class="manual-list">
+          <li><strong>Forecast live</strong> (Open-Meteo, gratis) per viaggi entro 16 giorni: temp min/max + giorni pioggia + indice UV</li>
+          <li><strong>Medie storiche</strong> (Open-Meteo Archive, dati dal 1940) per viaggi più lontani: aggrega gli ultimi 3 anni stesso mese in destinazione</li>
+          <li>Banner gradient azzurro-oro nel detail con emoji meteo dominante</li>
+        </ul>
+
+        <p><strong>7. ⚠️ Compatibilità capo-clima</strong></p>
+        <p>Marty conosce il range "comfort" di ogni capo (basato su materiale, peso, sottocategoria). Se hai messo nella valigia capi che NON vanno bene col meteo del giorno, te lo dice: thumb con bordino arancio + badge <strong>🥶</strong> (capo troppo leggero) o <strong>🥵</strong> (troppo pesante) + warning sotto la day-card "⚠️ N capi non ideali per il meteo". Esempi: jeans neri pesanti a Marrakech 35°C → 🥵; canotta a Praga 8°C → 🥶.</p>
+
+        <p><strong>8. 🔔 Alert cambio meteo last-minute</strong></p>
+        <p>Quando riapri il viaggio dopo qualche giorno, Marty confronta il meteo fresh con lo snapshot precedente. Se ci sono cambiamenti significativi (≥3°C delta o ≥2 giorni pioggia in più/meno), banner giallo in cima: <em>"Le previsioni sono cambiate rispetto al check del 4 mag → Temperature scese di 4°, considera giacca antipioggia"</em>.</p>
+
+        <p><strong>9. 🗺 Multi-tappa</strong></p>
+        <p>Sezione "Tappe del viaggio" con bottone <strong>+</strong>: aggiungi destinazioni multiple con date diverse. Es. "Roma 22-24 + Praga 25-26 + Vienna 27-28 giugno". Ogni tappa ha la sua bandiera, durata, destinazione. Marty considera il meteo della <strong>tappa attiva</strong> oggi.</p>
+
+        <p><strong>10. 🕌 Dress code paese (17 paesi mappati)</strong></p>
+        <p>Banner espandibile automatico nel detail per le destinazioni con regole culturali sensibili: 🇦🇪 UAE (spalle/ginocchia coperte), 🇸🇦 Arabia Saudita, 🇮🇷 Iran, 🇻🇦 Vaticano (San Pietro: spalle/ginocchia OBBLIGATORIO), 🇪🇬 Egitto, 🇲🇦 Marocco, 🇹🇷 Turchia, 🇹🇭 Thailandia, 🇮🇩 Indonesia (Bali templi: sarong), 🇮🇳 India, 🇮🇹 Italia (chiese), 🇬🇷 Grecia (monasteri), 🇪🇸 Spagna, 🇲🇽 Messico, 🇺🇸 USA. Tap per espandere e leggere le regole.</p>
+
+        <p><strong>11. ⚠️ Anti-conflitto capi cross-trip</strong></p>
+        <p>Stai pianificando un viaggio sovrapposto a un altro? Il vestito rosso è già "prenotato" al matrimonio del 14 giugno? Marty lo esclude automaticamente dalla generazione e mostra un banner giallo: <em>"⚠️ 3 capi riservati ad altri viaggi → Matrimonio Sara (3) [link]"</em>. I viaggi <em>frozen</em> (in pausa) o <em>done</em> (completati) liberano i loro capi.</p>
+
+        <p><strong>12. 🎬 Mood Board (pre-viaggio, condivisibile)</strong></p>
+        <p>Bottone <strong>🎬 Crea mood board</strong> nel detail. Genera un'immagine 1080×1350 (formato Instagram portrait) con griglia 3×3 dei tuoi outfit pianificati: foto reali dei capi disposti come tessere + bandiera destinazione + nome viaggio + date. Tap → share sheet iOS native (Stories, WhatsApp, AirDrop, Salva nelle foto).</p>
+
+        <p><strong>13. ✨ Trip Wrapped (post-viaggio)</strong></p>
+        <p>Quando il viaggio diventa <em>done</em> (date passate), automaticamente appare nel detail una sezione cinematografica nero/oro con: <strong>3 numeri big</strong> (giorni · capi · outfit), <strong>👑 capo MVP</strong> (il più indossato + thumb foto), <strong>🎨 palette colori</strong> top 5 dei capi packed, <strong>🎯 distribuzione occasioni</strong> con barre Apple-Health, <strong>📈 indice riuso</strong> (quanto hai sfruttato il guardaroba). Bottone <strong>📸 Condividi il Wrapped</strong> per generare immagine 1080×1080 PNG con tutte le stats + share native.</p>
+
+        <p><strong>14. 🔁 Duplica · ❄️ Freeze · 🗑 Elimina</strong></p>
+        <ul class="manual-list">
+          <li><strong>🔁 Duplica viaggio</strong>: crea un nuovo viaggio con destinazione/occasioni copiate, date vuote da impostare. Pratico per viaggi ricorrenti</li>
+          <li><strong>❄️ Metti in pausa / ▶ Riattiva</strong>: toggle stato <em>frozen</em>. I capi del viaggio frozen non sono più "prenotati" lato anti-conflitto (utile per viaggi rinviati)</li>
+          <li><strong>🗑 Elimina viaggio</strong>: rimozione definitiva dopo conferma</li>
+        </ul>
+
+        <p class="manual-tip">⚙️ <strong>Niente AI in Viaggi</strong>: tutto è algoritmico (PRNG seeded mulberry32 per la generazione, regole deterministiche per compatibilità clima, dataset statici per dress code). Costo zero per chiamata. La valigia "smart" è davvero smart, non un mago.</p>
       </div>
     </div>
 

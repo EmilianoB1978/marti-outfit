@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v74-multi-tappa';
+const CACHE_VERSION = 'v75-manual-update';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -116,7 +116,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🗺 Viaggi multi-tappa! Roma 3gg + Praga 2gg + Vienna 2gg in un solo viaggio. Ogni tappa con la sua destinazione, date e clima.";
+const WHATS_NEW = "📖 Manuale aggiornato con tutte le novità Viaggi: 14 sotto-sezioni con esempi e dettagli su valigia, meteo, dress code, mood board…";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

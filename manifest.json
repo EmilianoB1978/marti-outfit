@@ -1,6 +1,6 @@
 {
-  "name": "My Wardrobe",
-  "short_name": "Wardrobe",
+  "name": "Marty Outfit",
+  "short_name": "Marty",
   "description": "Il tuo guardaroba digitale con consigli outfit AI",
   "start_url": "./index.html",
   "scope": "./",

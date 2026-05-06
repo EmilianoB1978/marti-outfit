@@ -47,6 +47,9 @@ function toast(message, type = "default") {
 // Boot: verifica config + caricamento iniziale
 // =============================================================================
 async function boot() {
+  // Cancello il safety timer (boot e' partito davvero)
+  if (window.__splashSafetyTimer) clearTimeout(window.__splashSafetyTimer);
+
   if (!isConfigured) {
     document.getElementById("splash").classList.add("hidden");
     document.getElementById("setup-screen").classList.remove("hidden");
@@ -1866,9 +1869,17 @@ function capitalize(s) {
 // =============================================================================
 document.addEventListener("DOMContentLoaded", () => {
   // Bottom nav (dinamica, leggi da theme prefs)
-  renderBottomNav(switchPage, openAddItem);
-  // Re-render se cambia la configurazione
-  Theme.subscribe?.(() => renderBottomNav(switchPage, openAddItem));
+  try {
+    renderBottomNav(switchPage, openAddItem);
+    // Re-render se cambia la configurazione
+    if (typeof Theme.subscribe === "function") {
+      Theme.subscribe(() => {
+        try { renderBottomNav(switchPage, openAddItem); } catch (e) { console.error("renderBottomNav fail:", e); }
+      });
+    }
+  } catch (err) {
+    console.error("Bottom nav setup fail (non blocco il boot):", err);
+  }
 
   // Foto inputs
   document.getElementById("input-photo-camera").addEventListener("change", e => {

@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#1a1a1a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="My Wardrobe" />
+  <meta name="apple-mobile-web-app-title" content="Marty Outfit" />
 
-  <title>My Wardrobe</title>
+  <title>Marty Outfit</title>
 
   <!-- Manifest PWA -->
   <link rel="manifest" href="./manifest.json" />
@@ -28,9 +28,23 @@
   <!-- Schermata di caricamento iniziale -->
   <div id="splash" class="splash">
     <div class="splash-logo">👔</div>
-    <div class="splash-title">My Wardrobe</div>
+    <div class="splash-title">Marty Outfit</div>
     <div class="splash-spinner"></div>
   </div>
+
+  <!-- Safety: se il boot non finisce in 8s, nascondo splash comunque
+       cosi' l'utente non resta bloccato su una pagina vuota -->
+  <script>
+    window.__splashSafetyTimer = setTimeout(function() {
+      var s = document.getElementById('splash');
+      var a = document.getElementById('app');
+      if (s && !s.classList.contains('hidden')) {
+        console.warn('[boot] Splash safety timeout: forzo apertura app');
+        s.classList.add('hidden');
+        if (a) a.classList.remove('hidden');
+      }
+    }, 8000);
+  </script>
 
   <!-- Schermata di setup (mostrata se Firebase non e' configurato) -->
   <div id="setup-screen" class="setup-screen hidden">

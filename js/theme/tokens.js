@@ -366,6 +366,17 @@ export const defaultPreferences = {
   },
   // Ordine cronologico (annuale) - usato per renderizzare i chip in verticale
   seasonsOrder: ["primavera", "primestate", "estate", "estunno", "autunno", "autinverno", "inverno", "inveravera"],
+  // 5 livelli di peso del capo (categorico). I grammi sono modificabili
+  // dall'utente in Aspetto -> Pesi. Default = pesi medi tipici di un capo
+  // di abbigliamento di quella categoria, piegato bene.
+  itemWeights: {
+    leggerissimo:  { label: "Leggerissimo", icon: "🪶", grams: 100 },
+    leggero:       { label: "Leggero",      icon: "🌬️", grams: 250 },
+    medio:         { label: "Medio",         icon: "⚖️", grams: 450 },
+    pesante:       { label: "Pesante",       icon: "🧱", grams: 800 },
+    pesantissimo:  { label: "Pesantissimo",  icon: "🏋️", grams: 1500 },
+  },
+  itemWeightsOrder: ["leggerissimo", "leggero", "medio", "pesante", "pesantissimo"],
   // FAB customization (pulsante centrale nella barra inferiore)
   fab: {
     icon: "🛍️",          // emoji o testo singolo carattere; ignorato se logoUrl

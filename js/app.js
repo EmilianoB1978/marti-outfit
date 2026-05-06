@@ -906,8 +906,45 @@ function populateTaxonomyOptions() {
   // Stagione: chip toggleabili (8 stagioni dinamiche)
   renderSeasonChips();
 
+  // Peso: 5 chip single-select
+  renderWeightChips();
+
   // SELECT cascade: sub-categoria filtrata per categoria scelta
   refreshSubcategorySelect();
+}
+
+// =============================================================================
+// Single-chip peso del capo (5 livelli con grammi modificabili in Settings)
+// =============================================================================
+function renderWeightChips() {
+  const root = document.getElementById("field-weight");
+  if (!root) return;
+  const prefs = Theme.getPreferences();
+  const order = prefs.itemWeightsOrder || ["leggerissimo","leggero","medio","pesante","pesantissimo"];
+  const map = prefs.itemWeights || {};
+  const current = root.dataset.value || "";
+  root.innerHTML = order.map(key => {
+    const w = map[key];
+    if (!w) return "";
+    const active = current === key ? " is-active" : "";
+    return `<button type="button" class="weight-chip${active}" data-key="${key}" aria-label="${escapeHtml(w.label)}">
+      <span class="weight-chip-icon">${w.icon || ""}</span>
+      <span class="weight-chip-label">${escapeHtml(w.label || key)}</span>
+      <span class="weight-chip-grams">${Number(w.grams) || 0}g</span>
+    </button>`;
+  }).join("");
+}
+function getSelectedWeight() {
+  const root = document.getElementById("field-weight");
+  return root && root.dataset.value ? root.dataset.value : null;
+}
+function setSelectedWeight(key) {
+  const root = document.getElementById("field-weight");
+  if (!root) return;
+  root.dataset.value = key || "";
+  root.querySelectorAll(".weight-chip").forEach(b => {
+    b.classList.toggle("is-active", b.dataset.key === key);
+  });
 }
 
 // =============================================================================
@@ -1309,6 +1346,7 @@ function openAddItem() {
     document.getElementById(id).value = "";
   });
   setSelectedSeasons([]);
+  setSelectedWeight("");
 
   // Cascade: reset filtraggio sub-categoria a "tutte" (categoria vuota)
   refreshSubcategorySelect();
@@ -1362,6 +1400,7 @@ function openEditItem(id) {
   renderLinkStatus(item);
 
   setSelectedSeasons(Array.isArray(item.season) ? item.season : []);
+  setSelectedWeight(item.weight_class || "");
 
   // Wear stats sezione (visibile in modifica, nascosta in nuovo)
   renderWearStats(item);
@@ -1546,6 +1585,7 @@ async function saveItem() {
     style: document.getElementById("field-style").value || null,
     formality,
     season: getSelectedSeasons(),
+    weight_class: getSelectedWeight(),
     occasion: document.getElementById("field-occasion").value.trim() || null,
     notes: document.getElementById("field-notes").value.trim() || null,
     price: (price !== null && !isNaN(price)) ? price : null,
@@ -2029,6 +2069,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Theme.subscribe(() => {
         try { renderBottomNav(switchPage, openAddItem); } catch (e) { console.error("renderBottomNav fail:", e); }
         try { renderSeasonChips(); } catch (e) { console.error("renderSeasonChips fail:", e); }
+        try { renderWeightChips(); } catch (e) { console.error("renderWeightChips fail:", e); }
       });
     }
   } catch (err) {
@@ -2063,6 +2104,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const chip = e.target.closest(".season-chip");
       if (!chip) return;
       chip.classList.toggle("is-active");
+    });
+  }
+
+  // Chip peso: single-select (deselezionabile ritappando)
+  const weightRoot = document.getElementById("field-weight");
+  if (weightRoot) {
+    weightRoot.addEventListener("click", (e) => {
+      const chip = e.target.closest(".weight-chip");
+      if (!chip) return;
+      const key = chip.dataset.key;
+      const current = weightRoot.dataset.value || "";
+      setSelectedWeight(current === key ? "" : key);
     });
   }
 

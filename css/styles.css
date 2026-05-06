@@ -547,6 +547,50 @@ html, body {
   min-height: 56px;
 }
 
+/* =============================================================================
+   Chip peso (5 livelli, single-select, modal capo)
+   ============================================================================= */
+.weight-chips {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.weight-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+  text-align: center;
+  min-height: 72px;
+  transition: border-color var(--animation-speed) var(--animation-easing),
+              background var(--animation-speed) var(--animation-easing);
+}
+.weight-chip:active { transform: scale(0.96); }
+.weight-chip-icon  { font-size: 22px; line-height: 1; }
+.weight-chip-label {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+}
+.weight-chip-grams {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.weight-chip.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+.weight-chip.is-active .weight-chip-grams { color: var(--color-primary); }
+
 .analyze-status {
   font-size: var(--fs-sm);
   color: var(--color-text-muted);

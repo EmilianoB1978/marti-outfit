@@ -552,3 +552,77 @@ body.settings-page {
 .season-edit-toggle.is-on::after {
   transform: translateX(20px);
 }
+
+/* ============================================================================
+   Editor 5 livelli peso (tab Pesi)
+   Stesso pattern di .season-edit-row: card con icona + input nome + input grammi
+   ============================================================================ */
+.weights-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.weight-edit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-card);
+  min-height: 64px;
+}
+.weight-edit-icon {
+  font-size: 28px;
+  width: 40px;
+  text-align: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+.weight-edit-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+}
+.weight-edit-name:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+.weight-edit-grams-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0 10px 0 0;
+}
+.weight-edit-grams-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+.weight-edit-grams {
+  width: 80px;
+  padding: 10px 8px;
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  font-weight: var(--font-weight-bold);
+  text-align: right;
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+}
+.weight-edit-grams:focus { outline: none; }
+.weight-edit-unit {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+}

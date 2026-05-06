@@ -27,6 +27,7 @@ const ITEM_DEFAULTS = {
   pattern:        null,
   material:       null,
   formality:      null,  // 1-5
+  weight_class:   null,  // leggerissimo|leggero|medio|pesante|pesantissimo
   cutout_url:     null,  // gia' usato da editor visuale (Fase 4)
   cutout_path:    null,
   // Link prodotto + alert scadenza
@@ -105,6 +106,7 @@ export async function createItem(data) {
     pattern:        data.pattern  || null,
     material:       data.material || null,
     formality:      data.formality ?? null,
+    weight_class:   data.weight_class || null,
     // Link prodotto
     link_url:       data.link_url || null,
     link_added_at:  data.link_url ? new Date().toISOString() : null,

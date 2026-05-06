@@ -611,7 +611,72 @@ document.addEventListener("DOMContentLoaded", () => {
   initFAB();
   initAppIcon();
   initSeasons();
+  initWeights();
 });
+
+// =============================================================================
+// 5 livelli peso del capo: editor nome (label) + grammi
+// =============================================================================
+function initWeights() {
+  const root = document.getElementById("weights-editor");
+  const btnReset = document.getElementById("btn-reset-weights");
+  if (!root) return;
+
+  const DEFAULTS = {
+    leggerissimo:  { label: "Leggerissimo", icon: "🪶", grams: 100 },
+    leggero:       { label: "Leggero",      icon: "🌬️", grams: 250 },
+    medio:         { label: "Medio",         icon: "⚖️", grams: 450 },
+    pesante:       { label: "Pesante",       icon: "🧱", grams: 800 },
+    pesantissimo:  { label: "Pesantissimo",  icon: "🏋️", grams: 1500 },
+  };
+  const ORDER = ["leggerissimo","leggero","medio","pesante","pesantissimo"];
+
+  function escAttr(s) { return String(s || "").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+
+  function render() {
+    const prefs = Theme.getPreferences();
+    const map = prefs.itemWeights || DEFAULTS;
+    root.innerHTML = ORDER.map(key => {
+      const w = map[key] || DEFAULTS[key];
+      return `<div class="weight-edit-row">
+        <span class="weight-edit-icon">${w.icon || ""}</span>
+        <input type="text" class="form-control weight-edit-name" data-key="${key}" value="${escAttr(w.label)}" maxlength="24" />
+        <div class="weight-edit-grams-wrap">
+          <input type="number" class="form-control weight-edit-grams" data-key="${key}" value="${Number(w.grams) || 0}" min="0" max="9999" step="10" inputmode="numeric" />
+          <span class="weight-edit-unit">g</span>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // Salva on change (input testo o numerico)
+  root.addEventListener("change", (e) => {
+    const isName = e.target.classList.contains("weight-edit-name");
+    const isGrams = e.target.classList.contains("weight-edit-grams");
+    if (!isName && !isGrams) return;
+    const key = e.target.dataset.key;
+    const prefs = Theme.getPreferences();
+    const map = { ...(prefs.itemWeights || DEFAULTS) };
+    const cur = map[key] || DEFAULTS[key];
+    if (isName) {
+      map[key] = { ...cur, label: e.target.value.trim() || DEFAULTS[key].label };
+    } else {
+      const g = Math.max(0, Math.min(9999, Number(e.target.value) || 0));
+      map[key] = { ...cur, grams: g };
+      e.target.value = g;
+    }
+    Theme.set("itemWeights", map);
+  });
+
+  btnReset.addEventListener("click", () => {
+    Theme.set("itemWeights", JSON.parse(JSON.stringify(DEFAULTS)));
+    render();
+    toast("Pesi ripristinati al default", "success");
+  });
+
+  render();
+  Theme.subscribe(render);
+}
 
 // =============================================================================
 // 8 stagioni: editor nomi/icone + toggle on/off mezze stagioni

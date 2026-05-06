@@ -63,8 +63,8 @@ function render() {
       <div class="dormant-info">
         <div class="dormant-title">${escapeHtml(it.subcategory || it.category || 'Capo')}</div>
         <div class="dormant-sub">${escapeHtml([
-          it.color_primary || it.color,
-          it.material,
+          (Array.isArray(it.color_primary) ? it.color_primary.join(", ") : (it.color_primary || it.color)),
+          (Array.isArray(it.material) ? it.material.join(", ") : it.material),
         ].filter(Boolean).join(' · '))}</div>
         <div class="dormant-status">${escapeHtml(Dormant.describeWear(it))}</div>
       </div>

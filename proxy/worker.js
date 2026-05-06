@@ -23,15 +23,15 @@ const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO 
 {
   "category": "top|bottom|scarpe|accessori|capospalla|completo",
   "subcategory": "tipo specifico in italiano (es. 't-shirt', 'jeans slim', 'sneakers', 'blazer', 'maglione girocollo', 'gonna a tubo')",
-  "color_primary": "colore principale in italiano (es. 'blu navy', 'bianco panna', 'beige sabbia')",
-  "color_secondary": "secondo colore se presente, altrimenti null",
-  "color": "alias di color_primary (per compatibilita')",
-  "pattern": "tinta unita|righe|quadri|floreale|denim|grafico|animalier|altro",
-  "material": "cotone|denim|lana|pelle|lino|sintetico|cashmere|seta|maglia|altro",
+  "color_primary": "array di colori principali in italiano (es. ['blu navy'] o ['bianco', 'rosso']). Sempre array.",
+  "color_secondary": "array di colori secondari (se presenti). Sempre array, anche vuoto: [].",
+  "color": "alias del primo colore principale (compat) oppure stringa vuota.",
+  "pattern": "array di pattern (es. ['tinta unita'] o ['righe', 'floreale']). Valori ammessi: tinta unita|righe|quadri|floreale|denim|grafico|animalier|pois|tartan|altro. Sempre array.",
+  "material": "array di materiali (es. ['cotone'] o ['lana', 'cashmere']). Valori ammessi: cotone|denim|lana|pelle|lino|sintetico|cashmere|seta|maglia|velluto|jersey|altro. Sempre array.",
   "style": "casual|elegante|sportivo|formale|streetwear",
   "formality": numero 1-5 (1=molto casual home/sport, 3=neutro, 5=molto formale gala/cerimonia),
   "season": array di stagioni adatte. Valori ammessi (in ordine cronologico annuale, includi tutte quelle che si applicano): "primavera", "primestate" (transizione primavera-estate), "estate", "estunno" (fine estate), "autunno", "autinverno" (autunno freddo), "inverno", "inveravera" (fine inverno).
-  "occasion": "occasioni d'uso suggerite, separate da virgola (es. 'lavoro, aperitivo')",
+  "occasion": "array di occasioni d'uso (es. ['lavoro'] o ['lavoro', 'aperitivo', 'cena']). Sempre array.",
   "description": "breve descrizione visiva del capo in italiano, max 80 caratteri (es. 'maglietta cotone bianco taglio classico')"
 }
 

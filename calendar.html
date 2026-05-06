@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="./css/styles.css" />
   <link rel="stylesheet" href="./css/settings.css" />
   <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/trips.css" />
 </head>
 <body class="settings-page">
 
@@ -27,29 +28,24 @@
 
   <main class="settings-main">
 
-    <!-- Mese corrente + nav -->
     <div class="cal-month-nav">
       <button class="btn-icon" id="btn-prev-month" aria-label="Mese precedente">‹</button>
       <div class="cal-month-name" id="cal-month-name">—</div>
       <button class="btn-icon" id="btn-next-month" aria-label="Mese successivo">›</button>
     </div>
 
-    <!-- Meteo (se attivato) -->
     <div id="weather-banner" class="weather-banner hidden"></div>
 
-    <!-- Griglia giorni della settimana -->
     <div class="cal-weekdays">
       <div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div>
     </div>
 
-    <!-- Griglia giorni del mese -->
     <div id="cal-grid" class="cal-grid"></div>
 
     <p class="settings-hint" style="margin-top: var(--space-5);">
       Tap su un giorno per assegnare un outfit. Il pallino dorato indica i giorni con outfit pianificato; verde i giorni che hai indossato.
     </p>
 
-    <!-- CTA Viaggi -->
     <a href="./trips.html" class="trips-cta">
       <span class="trips-cta-icon">✈️</span>
       <span class="trips-cta-content">
@@ -61,7 +57,6 @@
 
   </main>
 
-  <!-- Modal: assegnazione outfit a una data -->
   <div id="modal-assign" class="modal hidden">
     <div class="modal-content">
       <header class="modal-header">
@@ -70,12 +65,9 @@
         <button class="btn-text" id="btn-save-assign">Salva</button>
       </header>
       <div class="modal-body">
-
         <div id="assign-current" class="assign-current hidden"></div>
-
         <h3 class="settings-section-title" style="margin-top:0">Scegli un outfit</h3>
         <div id="assign-outfit-list" class="ranked-list"></div>
-
         <button id="btn-remove-assign" class="btn btn--danger btn--block hidden" style="margin-top:var(--space-4)">
           🗑️ Rimuovi pianificazione
         </button>

@@ -48,12 +48,13 @@ export function exportToCSV(items) {
     ["Categoria", "Sotto-categoria", "Colore", "Materiale", "Stile",
      "Prezzo €", "Foto URL", "Note"]
   ];
+  const j = (v) => Array.isArray(v) ? v.join(", ") : (v || "");
   for (const it of items) {
     rows.push([
       it.category || "",
       it.subcategory || "",
-      it.color_primary || it.color || "",
-      it.material || "",
+      j(it.color_primary || it.color),
+      j(it.material),
       it.style || "",
       it.price != null ? it.price.toFixed(2) : "",
       it.photo_url || "",

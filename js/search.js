@@ -37,6 +37,10 @@ function normalize(s) {
 
 /** Verifica se il "haystack" contiene il "needle" (case+accent insensitive). */
 function matches(haystack, needle) {
+  // haystack puo' essere string o array (campi multi-select dei capi)
+  if (Array.isArray(haystack)) {
+    return haystack.some(v => normalize(v).includes(needle));
+  }
   return normalize(haystack).includes(needle);
 }
 

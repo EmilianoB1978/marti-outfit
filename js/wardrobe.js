@@ -40,6 +40,20 @@ function ensureDefaults(item) {
   for (const [k, v] of Object.entries(ITEM_DEFAULTS)) {
     if (item[k] === undefined) item[k] = v;
   }
+  // Lazy migration: i campi multi-select ora sono array. I capi storici
+  // li avevano come stringa singola: li converto in array a runtime
+  // (NON scrivo su DB, lo fara' il save quando l'utente modifica).
+  for (const k of ["color_primary", "color_secondary", "pattern", "material", "occasion"]) {
+    const v = item[k];
+    if (v === null || v === undefined || v === "") {
+      item[k] = [];
+    } else if (typeof v === "string") {
+      // Stringa con eventuali virgole/pipe (es. "lavoro, aperitivo")
+      item[k] = v.split(/[,|]/).map(s => s.trim()).filter(Boolean);
+    } else if (!Array.isArray(v)) {
+      item[k] = [];
+    }
+  }
   return item;
 }
 

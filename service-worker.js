@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v65-trip-wrapped';
+const CACHE_VERSION = 'v66-multi-tag';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -111,7 +111,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✨ Trip Wrapped! Al rientro dal viaggio scopri il capo MVP, palette del viaggio, distribuzione occasioni e condividi tutto con un tap.";
+const WHATS_NEW = "🎨 Multi-tag sui capi: ora colori, pattern, materiali e occasioni accettano più valori (cotone+lino, righe+floreale, lavoro+cena…). Una camicia non vive di una sola etichetta!";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

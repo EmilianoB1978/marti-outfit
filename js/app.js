@@ -896,13 +896,15 @@ function populateTaxonomyOptions() {
     value: c.value, label: `${c.icon || '🏷️'} ${c.label}`
   })));
 
-  // SELECT semplici (string-only) — sempre alfabetici (Taxonomies li ordina gia')
-  populateSelect("field-pattern",   Taxonomies.listSimpleValues("patterns"));
-  populateSelect("field-material",  Taxonomies.listSimpleValues("materials"));
+  // SELECT single-value (lo stile resta singolo)
   populateSelect("field-style",     Taxonomies.listSimpleValues("styles"));
-  populateSelect("field-color",     Taxonomies.listSimpleValues("colors"));
-  populateSelect("field-color-secondary", Taxonomies.listSimpleValues("colors"));
-  populateSelect("field-occasion",  Taxonomies.listSimpleValues("occasions"));
+
+  // MULTI-CHIP: un capo puo' avere piu' colori / pattern / materiali / occasioni
+  renderMultiChips("field-color");
+  renderMultiChips("field-color-secondary");
+  renderMultiChips("field-pattern");
+  renderMultiChips("field-material");
+  renderMultiChips("field-occasion");
   // Stagione: chip toggleabili (8 stagioni dinamiche)
   renderSeasonChips();
 
@@ -911,6 +913,78 @@ function populateTaxonomyOptions() {
 
   // SELECT cascade: sub-categoria filtrata per categoria scelta
   refreshSubcategorySelect();
+}
+
+// =============================================================================
+// Multi-chip generico (colors / patterns / materials / occasions)
+// =============================================================================
+// Render: legge la taxonomy indicata in data-tax, popola chip toggleabili.
+// Selezione multi-select. Ultima chip = "+ Aggiungi" che apre prompt.
+// =============================================================================
+function renderMultiChips(rootId) {
+  const root = document.getElementById(rootId);
+  if (!root) return;
+  const tax = root.dataset.tax;
+  const values = Taxonomies.listSimpleValues(tax);
+  const selected = new Set(getSelectedMulti(rootId));
+
+  const chips = values.map(v =>
+    `<button type="button" class="multi-chip${selected.has(v) ? " is-active" : ""}" data-val="${escapeHtml(v)}">
+      ${escapeHtml(capitalize(v))}
+    </button>`
+  ).join("");
+  root.innerHTML = chips +
+    `<button type="button" class="multi-chip multi-chip-add" data-action="add-new">+ Aggiungi</button>`;
+}
+
+// Helper: normalizza un valore in array (string -> [string], null -> [])
+function toArray(v) {
+  if (Array.isArray(v)) return v.filter(Boolean);
+  if (v === null || v === undefined || v === "") return [];
+  // Stringhe legacy con virgole o pipe (es. "lavoro, aperitivo")
+  return String(v).split(/[,|]/).map(s => s.trim()).filter(Boolean);
+}
+
+function getSelectedMulti(rootId) {
+  const root = document.getElementById(rootId);
+  if (!root) return [];
+  return Array.from(root.querySelectorAll(".multi-chip.is-active"))
+    .map(c => c.dataset.val)
+    .filter(Boolean);
+}
+
+function setSelectedMulti(rootId, arr) {
+  const root = document.getElementById(rootId);
+  if (!root) return;
+  const set = new Set((arr || []).map(s => String(s)));
+  root.querySelectorAll(".multi-chip").forEach(c => {
+    if (!c.dataset.val) return;
+    c.classList.toggle("is-active", set.has(c.dataset.val));
+  });
+}
+
+async function onMultiChipClick(rootId, e) {
+  const root = document.getElementById(rootId);
+  const btn = e.target.closest(".multi-chip");
+  if (!btn) return;
+  if (btn.dataset.action === "add-new") {
+    const tax = root.dataset.tax;
+    const newVal = prompt(`Nuovo valore per ${taxonomyLabel(tax)}:`);
+    if (!newVal || !newVal.trim()) return;
+    const trimmed = newVal.trim();
+    try {
+      await Taxonomies.addValue(tax, trimmed);
+      renderMultiChips(rootId);
+      // Auto-attiva il nuovo valore
+      const current = getSelectedMulti(rootId);
+      setSelectedMulti(rootId, [...current, trimmed]);
+      toast(`Aggiunto "${trimmed}"`, "success");
+    } catch (err) {
+      toast("Errore aggiunta", "error");
+    }
+    return;
+  }
+  if (btn.dataset.val) btn.classList.toggle("is-active");
 }
 
 // =============================================================================
@@ -1339,12 +1413,15 @@ function openAddItem() {
   document.getElementById("btn-analyze").classList.add("hidden");
   document.getElementById("analyze-status").textContent = "";
 
-  // Reset form (tutti i campi)
-  ["field-category", "field-subcategory", "field-color", "field-color-secondary",
-   "field-pattern", "field-material", "field-style", "field-occasion",
+  // Reset form: select single-value e textarea/input
+  ["field-category", "field-subcategory", "field-style",
    "field-notes", "field-price", "field-link"].forEach(id => {
-    document.getElementById(id).value = "";
+    const el = document.getElementById(id);
+    if (el) el.value = "";
   });
+  // Reset multi-chips (5 campi)
+  ["field-color", "field-color-secondary", "field-pattern", "field-material", "field-occasion"]
+    .forEach(id => setSelectedMulti(id, []));
   setSelectedSeasons([]);
   setSelectedWeight("");
 
@@ -1380,12 +1457,13 @@ function openEditItem(id) {
   setSelectValueOrAdd("field-category", item.category || "");
   refreshSubcategorySelect();
   setSelectValueOrAdd("field-subcategory", item.subcategory || "");
-  setSelectValueOrAdd("field-color", item.color_primary || item.color || "");
-  setSelectValueOrAdd("field-color-secondary", item.color_secondary || "");
-  setSelectValueOrAdd("field-pattern", item.pattern || "");
-  setSelectValueOrAdd("field-material", item.material || "");
   setSelectValueOrAdd("field-style", item.style || "");
-  setSelectValueOrAdd("field-occasion", item.occasion || "");
+  // Multi-chips: gestisce sia formato nuovo (array) che legacy (stringa)
+  setSelectedMulti("field-color",            toArray(item.color_primary || item.color));
+  setSelectedMulti("field-color-secondary",  toArray(item.color_secondary));
+  setSelectedMulti("field-pattern",          toArray(item.pattern));
+  setSelectedMulti("field-material",         toArray(item.material));
+  setSelectedMulti("field-occasion",         toArray(item.occasion));
   document.getElementById("field-notes").value = item.notes || "";
   document.getElementById("field-price").value = item.price !== null && item.price !== undefined ? formatNumberIT(item.price) : "";
   document.getElementById("field-link").value = item.link_url || "";
@@ -1493,13 +1571,18 @@ async function analyzePendingPhoto() {
         await Taxonomies.addValue(taxonomy, value);
       }
     };
+    const autoAddMulti = async (taxonomy, values) => {
+      const arr = toArray(values);
+      for (const v of arr) await autoAddIfMissing(taxonomy, v);
+    };
     await Promise.all([
-      autoAddIfMissing("patterns", tags.pattern),
-      autoAddIfMissing("materials", tags.material),
       autoAddIfMissing("styles", tags.style),
       autoAddIfMissing("subcategories", tags.subcategory),
-      autoAddIfMissing("colors", tags.color_primary || tags.color),
-      autoAddIfMissing("colors", tags.color_secondary),
+      autoAddMulti("patterns",  tags.pattern),
+      autoAddMulti("materials", tags.material),
+      autoAddMulti("colors",    tags.color_primary || tags.color),
+      autoAddMulti("colors",    tags.color_secondary),
+      autoAddMulti("occasions", tags.occasion),
     ]);
     populateTaxonomyOptions();
 
@@ -1513,12 +1596,22 @@ async function analyzePendingPhoto() {
     // Campi base
     setIfEmpty("field-category", tags.category);
     setIfEmpty("field-subcategory", tags.subcategory);
-    setIfEmpty("field-color", tags.color_primary || tags.color);
-    setIfEmpty("field-color-secondary", tags.color_secondary);
-    setIfEmpty("field-pattern", tags.pattern);
-    setIfEmpty("field-material", tags.material);
     setIfEmpty("field-style", tags.style);
-    setIfEmpty("field-occasion", tags.occasion);
+
+    // Multi-chips: unisce i valori AI con quelli gia' attivi (se presenti).
+    // Accetta sia string che array dall'AI.
+    const mergeMulti = (rootId, aiValue) => {
+      const arr = toArray(aiValue);
+      if (arr.length === 0) return;
+      const existing = getSelectedMulti(rootId);
+      // Auto-add alla taxonomy + selezione
+      setSelectedMulti(rootId, [...new Set([...existing, ...arr])]);
+    };
+    mergeMulti("field-color",            tags.color_primary || tags.color);
+    mergeMulti("field-color-secondary",  tags.color_secondary);
+    mergeMulti("field-pattern",          tags.pattern);
+    mergeMulti("field-material",         tags.material);
+    mergeMulti("field-occasion",         tags.occasion);
 
     // Formality (slider): l'AI ritorna numero 1-5
     if (tags.formality && +document.getElementById("field-formality").value === 0) {
@@ -1555,7 +1648,12 @@ async function saveItem() {
   const price = parseNumberIT(priceRaw);  // gestisce formato italiano "1.234,50"
   const formalityRaw = +document.getElementById("field-formality").value;
   const formality = formalityRaw >= 1 && formalityRaw <= 5 ? formalityRaw : null;
-  const colorPrimary = document.getElementById("field-color").value.trim() || null;
+  // Multi-select: array di stringhe (vuoto = nessun valore selezionato)
+  const colorsPrimary   = getSelectedMulti("field-color");
+  const colorsSecondary = getSelectedMulti("field-color-secondary");
+  const patterns        = getSelectedMulti("field-pattern");
+  const materials       = getSelectedMulti("field-material");
+  const occasions       = getSelectedMulti("field-occasion");
 
   const newLink = document.getElementById("field-link").value.trim() || null;
 
@@ -1577,32 +1675,28 @@ async function saveItem() {
   const data = {
     category: document.getElementById("field-category").value || null,
     subcategory: document.getElementById("field-subcategory").value.trim() || null,
-    color: colorPrimary,                       // alias per retrocompat
-    color_primary: colorPrimary,
-    color_secondary: document.getElementById("field-color-secondary").value.trim() || null,
-    pattern: document.getElementById("field-pattern").value || null,
-    material: document.getElementById("field-material").value || null,
+    // Multi-select: salvo come array. 'color' = primo colore principale per
+    // retrocompat con vecchi renderer che si aspettano string.
+    color:           colorsPrimary[0] || null,
+    color_primary:   colorsPrimary,
+    color_secondary: colorsSecondary,
+    pattern:         patterns,
+    material:        materials,
+    occasion:        occasions,
     style: document.getElementById("field-style").value || null,
     formality,
     season: getSelectedSeasons(),
     weight_class: getSelectedWeight(),
-    occasion: document.getElementById("field-occasion").value.trim() || null,
     notes: document.getElementById("field-notes").value.trim() || null,
     price: (price !== null && !isNaN(price)) ? price : null,
     link_url: newLink,
     link_added_at: linkAddedAt,
   };
 
-  // Filter via __add_new__ se rimasto per qualche motivo
-  if (data.category === "__add_new__")        data.category = null;
-  if (data.subcategory === "__add_new__")     data.subcategory = null;
-  if (data.color === "__add_new__")           data.color = null;
-  if (data.color_primary === "__add_new__")   data.color_primary = null;
-  if (data.color_secondary === "__add_new__") data.color_secondary = null;
-  if (data.pattern === "__add_new__")         data.pattern = null;
-  if (data.material === "__add_new__")        data.material = null;
-  if (data.style === "__add_new__")           data.style = null;
-  if (data.occasion === "__add_new__")        data.occasion = null;
+  // Filter via __add_new__ sui campi single-select rimasti
+  if (data.category === "__add_new__")    data.category = null;
+  if (data.subcategory === "__add_new__") data.subcategory = null;
+  if (data.style === "__add_new__")       data.style = null;
 
   // Auto-save dei valori NUOVI scritti nei campi free-text dentro le tassonomie
   // (silenzioso, niente prompt: l'utente l'ha gia' digitato).
@@ -1614,14 +1708,14 @@ async function saveItem() {
     }
   };
   try {
-    await Promise.all([
-      autoAdd("subcategories", data.subcategory),
-      autoAdd("colors",        data.color_primary),
-      autoAdd("colors",        data.color_secondary),
-      // Le occasioni sono spesso multi-valore separate da virgole: salvo ognuna
-      ...((data.occasion || "").split(",").map(o => autoAdd("occasions", o.trim()))),
-    ]);
-    // Refresh datalist per riflettere eventuali aggiunte
+    const tasks = [autoAdd("subcategories", data.subcategory)];
+    // I 5 campi multi-select ora sono array: aggiungo ognuno alla taxonomy
+    (data.color_primary   || []).forEach(c => tasks.push(autoAdd("colors", c)));
+    (data.color_secondary || []).forEach(c => tasks.push(autoAdd("colors", c)));
+    (data.pattern         || []).forEach(p => tasks.push(autoAdd("patterns", p)));
+    (data.material        || []).forEach(m => tasks.push(autoAdd("materials", m)));
+    (data.occasion        || []).forEach(o => tasks.push(autoAdd("occasions", o)));
+    await Promise.all(tasks);
     populateTaxonomyOptions();
   } catch (err) {
     console.warn("Auto-add taxonomy failed (non bloccante):", err);
@@ -2119,6 +2213,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Multi-chips: 5 campi in multi-select (colore principale/secondario,
+  // pattern, materiali, occasioni). Stesso handler condiviso.
+  ["field-color", "field-color-secondary", "field-pattern", "field-material", "field-occasion"]
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("click", (e) => onMultiChipClick(id, e));
+    });
+
   // Foto inputs
   document.getElementById("input-photo-camera").addEventListener("change", e => {
     handlePhotoSelected(e.target.files[0]);
@@ -2208,18 +2310,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Listener "+ Aggiungi nuovo..." sui select del modal capo
+  // (solo i campi rimasti single-select)
   const taxLinks = [
-    ["field-category",         "categories"],
-    ["field-pattern",          "patterns"],
-    ["field-material",         "materials"],
-    ["field-style",            "styles"],
-    ["field-subcategory",      "subcategories"],
-    ["field-color",            "colors"],
-    ["field-color-secondary",  "colors"],
-    ["field-occasion",         "occasions"],
+    ["field-category",     "categories"],
+    ["field-style",        "styles"],
+    ["field-subcategory",  "subcategories"],
   ];
   taxLinks.forEach(([selectId, taxonomy]) => {
     const sel = document.getElementById(selectId);
+    if (!sel) return;
     sel.addEventListener("change", () => {
       if (sel.value === "__add_new__") {
         handleSelectAddNew(selectId, taxonomy);

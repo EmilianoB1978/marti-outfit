@@ -335,21 +335,24 @@ function addFromItems(items) {
     styles: new Set(),
     occasions: new Set(),
   };
-  for (const it of items) {
-    if (it.subcategory)     found.subcategories.add(it.subcategory.trim());
-    if (it.color)           found.colors.add(it.color.trim());
-    if (it.color_primary)   found.colors.add(it.color_primary.trim());
-    if (it.color_secondary) found.colors.add(it.color_secondary.trim());
-    if (it.pattern)         found.patterns.add(it.pattern.trim());
-    if (it.material)        found.materials.add(it.material.trim());
-    if (it.style)           found.styles.add(it.style.trim());
-    if (it.occasion) {
-      // L'occasione e' un campo libero che puo' contenere virgole
-      it.occasion.split(",").forEach(o => {
-        const t = o.trim();
-        if (t) found.occasions.add(t);
-      });
+  // Helper: aggiunge tutti i valori di v (string|array|null) al Set
+  const addAll = (set, v) => {
+    if (!v) return;
+    const arr = Array.isArray(v) ? v : String(v).split(/[,|]/);
+    for (const x of arr) {
+      const t = String(x || "").trim();
+      if (t) set.add(t);
     }
+  };
+  for (const it of items) {
+    if (it.subcategory) found.subcategories.add(String(it.subcategory).trim());
+    if (it.style)       found.styles.add(String(it.style).trim());
+    addAll(found.colors,    it.color);
+    addAll(found.colors,    it.color_primary);
+    addAll(found.colors,    it.color_secondary);
+    addAll(found.patterns,  it.pattern);
+    addAll(found.materials, it.material);
+    addAll(found.occasions, it.occasion);
   }
   for (const [tax, set] of Object.entries(found)) {
     set.forEach(v => {

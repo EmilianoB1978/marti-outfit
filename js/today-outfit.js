@@ -67,7 +67,8 @@ function itemWeight(item, season, weather) {
 
   // Meteo (se configurato e c'e' pioggia, penalizza materiali "leggeri")
   if (weather && weather.daily?.precipitation > 1) {
-    if (item.material === "lino" || item.material === "seta") weight *= 0.4;
+    const mats = Array.isArray(item.material) ? item.material : (item.material ? [item.material] : []);
+    if (mats.includes("lino") || mats.includes("seta")) weight *= 0.4;
     if (item.subcategory === "sandali") weight *= 0.1;
     if (item.subcategory === "ballerine") weight *= 0.5;
   }

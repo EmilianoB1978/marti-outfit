@@ -722,14 +722,62 @@
   <script type="module" src="./js/outfit.js"></script>
   <script type="module" src="./js/app.js"></script>
 
-  <!-- Service Worker per PWA -->
+  <!-- Service Worker per PWA con auto-update -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-          .then(() => console.log('[SW] Service Worker registrato'))
-          .catch(err => console.error('[SW] Errore registrazione:', err));
+      window.addEventListener('load', async () => {
+        try {
+          const reg = await navigator.serviceWorker.register('./service-worker.js');
+          console.log('[SW] registrato');
+
+          // Quando arriva un aggiornamento del SW, mostra banner + auto-reload
+          // dopo l'attivazione del nuovo SW.
+          reg.addEventListener('updatefound', () => {
+            const newSW = reg.installing;
+            if (!newSW) return;
+            newSW.addEventListener('statechange', () => {
+              if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                // Nuova versione installata e c'e' un SW gia' attivo -> e' un update.
+                showUpdateBanner(newSW);
+              }
+            });
+          });
+
+          // Quando il nuovo SW prende il controllo, ricarica la pagina.
+          let reloading = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (reloading) return;
+            reloading = true;
+            location.reload();
+          });
+
+          // Check periodico per nuove versioni: ogni 30 minuti +
+          // a ogni ritorno foreground dell'app.
+          setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+              reg.update().catch(() => {});
+            }
+          });
+        } catch (err) {
+          console.error('[SW] errore registrazione:', err);
+        }
       });
+    }
+
+    // Banner aggiornamento disponibile (auto-applica dopo 4s, oppure tap manuale)
+    function showUpdateBanner(newSW) {
+      if (document.getElementById('__update_banner__')) return;
+      const b = document.createElement('div');
+      b.id = '__update_banner__';
+      b.style.cssText = 'position:fixed;bottom:env(safe-area-inset-bottom);left:0;right:0;background:#1a1a1a;color:#d4af37;padding:14px 20px;z-index:99997;display:flex;align-items:center;justify-content:space-between;gap:12px;font:14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 -4px 16px rgba(0,0,0,0.2);';
+      b.innerHTML =
+        '<span>✨ Nuova versione disponibile</span>' +
+        '<button id="__update_btn__" style="background:#d4af37;color:#1a1a1a;border:none;padding:8px 16px;border-radius:18px;font-weight:700;font-size:13px;cursor:pointer;">Aggiorna</button>';
+      document.body.appendChild(b);
+      document.getElementById('__update_btn__').onclick = () => newSW.postMessage('SKIP_WAITING');
+      // Auto-apply dopo 4s se l'utente non interagisce
+      setTimeout(() => newSW.postMessage('SKIP_WAITING'), 4000);
     }
   </script>
 </body>

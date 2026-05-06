@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v48-photo-cards-uniform';
+const CACHE_VERSION = 'v49-auto-update';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -99,6 +99,11 @@ self.addEventListener('install', (event) => {
       .then(() => self.skipWaiting())
       .catch(err => console.error('[SW] install error:', err))
   );
+});
+
+// Listener: postMessage('SKIP_WAITING') -> attiva subito il nuovo SW
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // Activate: pulizia vecchie cache + claim immediato dei client aperti

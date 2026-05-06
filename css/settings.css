@@ -444,3 +444,111 @@ body.settings-page {
   cursor: pointer;
 }
 .app-header-settings:active { background: var(--color-surface-alt); }
+
+/* ============================================================================
+   Editor 8 stagioni (tab Stagioni)
+   Pattern allineato a .font-list / .grid-cols-preview: card surface con
+   border 2px, border-radius card, padding generoso. Stato attivo = primary.
+   ============================================================================ */
+.seasons-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.season-edit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-card);
+  min-height: 64px;
+}
+.season-edit-row.is-half {
+  background: var(--color-surface-alt);
+  border-style: dashed;
+}
+.season-edit-row.disabled .season-edit-name,
+.season-edit-row.disabled .season-edit-icon {
+  opacity: 0.4;
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text-muted);
+}
+.season-edit-icon {
+  font-size: 28px;
+  width: 40px;
+  text-align: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+.season-edit-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+}
+.season-edit-name:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Per le 4 stagioni reali: badge informativo, niente toggle */
+.season-edit-lock {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: 14px;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* Per le 4 mezze stagioni: toggle iOS-style on/off */
+.season-edit-toggle {
+  flex: 0 0 auto;
+  position: relative;
+  width: 50px;
+  height: 30px;
+  padding: 0;
+  border-radius: 15px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--animation-speed) var(--animation-easing),
+              border-color var(--animation-speed) var(--animation-easing);
+}
+.season-edit-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+.season-edit-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform var(--animation-speed) var(--animation-easing);
+}
+.season-edit-toggle.is-on {
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+.season-edit-toggle.is-on::after {
+  transform: translateX(20px);
+}

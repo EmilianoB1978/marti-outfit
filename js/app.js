@@ -15,7 +15,6 @@ import * as ShareOutfit from "./share-outfit.js";
 import * as DormantMod from "./dormant.js";
 import * as TodayOutfit from "./today-outfit.js";
 import { renderBottomNav, NAV_DESTINATIONS } from "./bottom-nav.js";
-import { showOnboarding } from "./onboarding.js";
 import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
@@ -85,8 +84,6 @@ async function boot() {
     toast("Errore caricamento dati", "error");
   }
 
-  // Onboarding al primo avvio (dopo che l'app e' visibile)
-  setTimeout(() => showOnboarding(false), 600);
 }
 
 // =============================================================================
@@ -2157,12 +2154,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   menuDrawer.addEventListener("click", (e) => {
     if (e.target === menuDrawer) menuDrawer.classList.add("hidden");
-  });
-
-  // Re-mostra il tour onboarding (dal menu)
-  document.getElementById("btn-replay-tour").addEventListener("click", () => {
-    menuDrawer.classList.add("hidden");
-    showOnboarding(true);
   });
 
   // (Personalizza barra ora dentro Aspetto -> tab Barra)

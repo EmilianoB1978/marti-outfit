@@ -39,14 +39,22 @@
       <div class="accordion-body" hidden>
         <p>Per aggiungere un capo al tuo guardaroba:</p>
         <ol class="manual-list">
-          <li>Tap sul pulsante <strong>+</strong> dorato in basso al centro</li>
-          <li>Scegli <strong>📸 Scatta foto</strong> per la fotocamera o <strong>🖼️ Galleria</strong> per le foto già fatte</li>
-          <li>L'app ridimensiona automaticamente la foto a max 1024 pixel per risparmiare spazio</li>
-          <li>Compila i tag (categoria, colore, stile, stagione, occasione) oppure usa l'AI</li>
+          <li>Tap sul pulsante grande dorato in basso al centro della barra</li>
+          <li>Scegli da dove prendere la foto:
+            <ul class="manual-list">
+              <li><strong>📸 Scatta foto</strong> — apre la fotocamera</li>
+              <li><strong>🖼️ Galleria</strong> — sceglie da rullino</li>
+              <li><strong>📋 Incolla foto</strong> — usa un'immagine appena copiata (es. da Safari)</li>
+            </ul>
+          </li>
+          <li>L'app ridimensiona automaticamente a max 1024 pixel per risparmiare spazio</li>
+          <li>Compila i tag (categoria, colore, stile, stagione, occasione) oppure tap <strong>🤖 Analizza con AI</strong> e l'app li deduce dalla foto</li>
           <li>Aggiungi un <strong>prezzo</strong> opzionale (formato italiano: <code>49,90</code> o <code>1.299,00</code>) per le statistiche cost-per-wear</li>
           <li>Tap <strong>Salva</strong></li>
         </ol>
-        <p class="manual-tip">💡 <strong>Tip</strong>: foto su sfondo uniforme (parete bianca, tavolo) funzionano meglio sia per l'AI sia per la rimozione sfondo dell'editor visuale.</p>
+
+        <p class="manual-tip">💡 <strong>Importare da Zara, H&amp;M, Zalando, ecc.</strong>: apri il sito in Safari, fai <em>tap lungo</em> sulla foto del capo, scegli <em>Copia</em>. Torna in Marty, tap <strong>📋 Incolla foto</strong> e l'AI parte automaticamente compilando tutti i campi. Funziona su qualsiasi sito.</p>
+        <p class="manual-tip">💡 <strong>Tip foto</strong>: sfondo uniforme (parete bianca, tavolo) funziona meglio sia per l'AI sia per la rimozione sfondo dell'editor visuale.</p>
         <p class="manual-tip">⚠️ Se l'iPhone salva foto in formato HEIC, Safari le converte automaticamente. Se hai problemi: <em>Impostazioni iPhone → Fotocamera → Formati → Più compatibile</em>.</p>
       </div>
     </div>
@@ -566,7 +574,7 @@ jeans: https://...
           <li>Conferma → l'app cancella i file in cache locale, scarica la versione più recente dal server, e si ricarica</li>
         </ol>
 
-        <p class="manual-tip">💡 <strong>Cosa NON viene toccato</strong>: i tuoi capi e outfit (sono su Firebase, non in cache locale), le tue personalizzazioni di tema/font/colori (in localStorage, preservato), il tuo onboarding flag.</p>
+        <p class="manual-tip">💡 <strong>Cosa NON viene toccato</strong>: i tuoi capi e outfit (sono su Firebase, non in cache locale) e le tue personalizzazioni di tema/font/colori (in localStorage, preservato).</p>
 
         <p class="manual-tip">⚠️ <strong>Cosa viene rimosso</strong>: i file della shell PWA (HTML/JS/CSS/font cached) — vengono ri-scaricati al riavvio. Anche il modello ML dell'editor visuale (~30 MB) — sarà ri-scaricato la prima volta che apri l'editor (richiede internet).</p>
       </div>

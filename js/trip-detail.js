@@ -6,7 +6,7 @@ import * as Theme from "./theme/manager.js";
 import { listItems } from "./wardrobe.js";
 import { getTrip, updateTrip, deleteTrip, formatTripDates } from "./trips-data.js";
 import { generateTripOutfits, regenerateDay } from "./trips-generator.js";
-import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume } from "./trips-data.js";
+import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume, estimateItemsWeightGrams } from "./trips-data.js";
 
 Theme.init();
 
@@ -160,13 +160,24 @@ function updateLuggageDisplay(opts = {}) {
   const luggage = getLuggage(luggageKey);
   const items = getPackedItems();
   const volume = estimateItemsVolume(items);
-  const pct = Math.min(100, Math.round((volume / luggage.capacity_l) * 100));
+  const volPct = Math.min(100, Math.round((volume / luggage.capacity_l) * 100));
+
+  // Peso totale stimato dai weight_class dei capi.
+  // Usa i grammi personalizzati dell'utente in Aspetto -> Pesi se modificati.
+  const weightsMap = (Theme.getPreferences() || {}).itemWeights;
+  const grams = estimateItemsWeightGrams(items, weightsMap);
+  const kg = Math.round(grams / 100) / 10;   // 1 decimale
+  const weightPct = Math.min(100, Math.round((kg / luggage.max_kg) * 100));
 
   document.getElementById("luggage-icon").textContent = luggage.icon;
   document.getElementById("luggage-counter").textContent =
-    `${items.length} ${items.length === 1 ? "capo" : "capi"} · ~${volume}L / ${luggage.capacity_l}L`;
+    `${items.length} ${items.length === 1 ? "capo" : "capi"} · ~${volume}L / ${luggage.capacity_l}L · ~${kg} / ${luggage.max_kg} kg`;
   document.getElementById("luggage-dims").textContent = `${luggage.dims} · max ${luggage.max_kg} kg`;
 
+  // La barra ora rappresenta il PIÙ PIENO dei due (volume o peso): cosi'
+  // se sfori il peso prima del volume (es. tanti capi pesanti in zaino),
+  // la barra te lo dice.
+  const pct = Math.max(volPct, weightPct);
   const fill = document.getElementById("luggage-bar-fill");
   fill.style.width = pct + "%";
   fill.classList.remove("is-warning", "is-danger");

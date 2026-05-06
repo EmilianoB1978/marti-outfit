@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v62-peso-capo';
+const CACHE_VERSION = 'v63-valigia-kg';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -110,7 +110,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "⚖️ Aggiungi il peso ai tuoi capi: 5 livelli (leggerissimo → pesantissimo). Personalizza i grammi in 🎨 Aspetto → ⚖️ Pesi.";
+const WHATS_NEW = "⚖️ La valigia conosce anche il peso! Stima totale in kg in tempo reale, alert quando sfori il bagaglio cabina.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

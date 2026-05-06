@@ -62,6 +62,37 @@ export function estimateItemsVolume(items) {
   return Math.round(total * 10) / 10;
 }
 
+/**
+ * Somma il peso (in grammi) dei capi usando il loro weight_class.
+ * Se il capo non ha weight_class settato, usa il default per categoria
+ * (medio = pantaloni/felpa, leggero = top, pesante = scarpe/capospalla).
+ * @param {array} items
+ * @param {object} [weightsMap] - prefs.itemWeights (label/icon/grams)
+ */
+export function estimateItemsWeightGrams(items, weightsMap) {
+  // Default fallback grammi se non c'e' override
+  const DEFAULT_GRAMS = {
+    leggerissimo: 100, leggero: 250, medio: 450, pesante: 800, pesantissimo: 1500,
+  };
+  // Categoria -> weight_class di default se item.weight_class e' null
+  const CAT_TO_CLASS = {
+    top: "leggero", bottom: "medio", scarpe: "pesante", accessori: "leggerissimo",
+    capospalla: "pesante", vestito: "leggero", completo: "pesante",
+  };
+  const grams = (key) => {
+    if (weightsMap && weightsMap[key] && Number.isFinite(weightsMap[key].grams)) {
+      return weightsMap[key].grams;
+    }
+    return DEFAULT_GRAMS[key] || 450;
+  };
+  let total = 0;
+  for (const it of items) {
+    const wc = it.weight_class || CAT_TO_CLASS[String(it.category || "").toLowerCase()] || "medio";
+    total += grams(wc);
+  }
+  return total;
+}
+
 export const OCCASION_OPTIONS = [
   { key: "business",   icon: "💼", label: "Business" },
   { key: "casual",     icon: "👟", label: "Casual" },

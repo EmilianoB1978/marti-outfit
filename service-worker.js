@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v56-viaggi-scaffold';
+const CACHE_VERSION = 'v57-banner-novita';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -104,9 +104,19 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Listener: postMessage('SKIP_WAITING') -> attiva subito il nuovo SW
+// Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
+// banner di update). Tieni stringato e accattivante, NON tecnico.
+const WHATS_NEW = "✈️ Sezione Viaggi: pianifica la valigia outfit-per-outfit dal tuo guardaroba reale.";
+
+// Listener postMessage:
+//  - 'SKIP_WAITING' -> attiva subito il nuovo SW
+//  - 'GET_WHATS_NEW' -> ritorna WHATS_NEW al client (via MessageChannel)
 self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  } else if (event.data === 'GET_WHATS_NEW' && event.ports && event.ports[0]) {
+    event.ports[0].postMessage({ version: CACHE_VERSION, whatsNew: WHATS_NEW });
+  }
 });
 
 // Activate: pulizia vecchie cache + claim immediato dei client aperti

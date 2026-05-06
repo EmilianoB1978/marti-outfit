@@ -1,5 +1,5 @@
 /* =============================================================================
-   Viaggi — pagina trips.html + CTA in calendar.html
+   Viaggi — pagina trips.html + CTA in calendar.html + wizard creazione
    ============================================================================= */
 
 /* CTA Pianifica un viaggio (mostrato in fondo a /calendar.html) */
@@ -23,16 +23,12 @@
 .trips-cta-sub { font-size: 13px; opacity: 0.9; line-height: 1.3; }
 .trips-cta-arrow { font-size: 24px; opacity: 0.8; flex: 0 0 auto; }
 
-/* Empty state pagina /trips.html */
-.trips-empty {
-  text-align: center;
-  padding: var(--space-4) 0;
-}
-.trips-empty-illustration {
-  font-size: 64px;
-  margin-bottom: var(--space-3);
-  letter-spacing: -8px;
-}
+/* =============================================================================
+   Empty state
+   ============================================================================= */
+.trips-empty { text-align: center; padding: var(--space-4) 0; }
+.trips-empty.hidden { display: none; }
+.trips-empty-illustration { font-size: 64px; margin-bottom: var(--space-3); letter-spacing: -8px; }
 .trips-empty h2 {
   font-family: var(--font-family-heading);
   font-size: 24px;
@@ -47,7 +43,6 @@
   max-width: 360px;
 }
 
-/* Showcase feature card (anteprima visiva di cosa arriva) */
 .trips-features {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -55,35 +50,287 @@
   margin-top: var(--space-5);
 }
 .trip-feat-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
-  padding: var(--space-3);
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 4px; padding: var(--space-3);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  min-height: 110px;
-  justify-content: center;
+  min-height: 110px; justify-content: center;
 }
 .trip-feat-icon  { font-size: 28px; line-height: 1; }
-.trip-feat-title {
-  font-weight: var(--font-weight-bold);
-  font-size: 13px;
-  color: var(--color-text);
-  margin-top: 2px;
+.trip-feat-title { font-weight: var(--font-weight-bold); font-size: 13px; color: var(--color-text); margin-top: 2px; }
+.trip-feat-sub   { font-size: 11px; color: var(--color-text-muted); line-height: 1.3; }
+
+/* =============================================================================
+   Loading + lista viaggi
+   ============================================================================= */
+.trips-loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 80px 0;
 }
-.trip-feat-sub   {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  line-height: 1.3;
+.trips-loading.hidden { display: none; }
+.trips-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-/* Lista viaggi (futura) */
 .trips-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
 .trips-list.hidden { display: none; }
+
+.trip-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.trip-card-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+}
+.trip-card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: var(--font-weight-bold);
+  font-size: 16px;
+  color: var(--color-text);
+  min-width: 0;
+}
+.trip-card-flag { font-size: 22px; flex: 0 0 auto; line-height: 1; }
+.trip-card-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+.trip-card-tags {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.trip-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--color-surface-alt);
+  border-radius: 10px;
+  color: var(--color-text);
+}
+.trip-card-actions {
+  display: flex; justify-content: flex-end; gap: 6px;
+  margin-top: 4px;
+}
+
+/* Badge stato */
+.trip-badge {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.trip-badge--gold    { background: var(--color-primary); color: var(--color-text-inverse); }
+.trip-badge--success { background: var(--color-success); color: white; }
+.trip-badge--muted   { background: var(--color-surface-alt); color: var(--color-text-muted); }
+
+/* =============================================================================
+   Wizard creazione viaggio (modal full-screen-like)
+   ============================================================================= */
+.modal-content--wizard {
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  height: 100vh;
+}
+.wizard-header {
+  flex: 0 0 auto;
+}
+
+.wiz-progress {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 0 4px;
+  flex: 0 0 auto;
+}
+.wiz-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition: all 0.3s var(--animation-easing);
+}
+.wiz-dot.is-active {
+  background: var(--color-primary);
+  width: 24px;
+  border-radius: 4px;
+}
+.wiz-dot.is-done { background: var(--color-primary); opacity: 0.4; }
+
+.wiz-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wiz-step { display: none; animation: wizFadeIn 0.25s ease-out; }
+.wiz-step.is-active { display: block; }
+@keyframes wizFadeIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.wiz-step-title {
+  font-family: var(--font-family-heading);
+  font-size: 22px;
+  margin: 0 0 6px;
+  color: var(--color-text);
+}
+.wiz-step-hint {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0 0 var(--space-4);
+}
+
+.wiz-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 16px;            /* 16px evita zoom iOS al focus */
+  font-family: var(--font-family-base);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text);
+}
+.wiz-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Step 1: ricerca destinazione */
+.wiz-dest-results {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wiz-dest-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+  transition: border-color var(--animation-speed) var(--animation-easing);
+}
+.wiz-dest-item:active { transform: scale(0.98); }
+.wiz-dest-flag { font-size: 28px; line-height: 1; flex: 0 0 auto; }
+.wiz-dest-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wiz-dest-name { font-weight: var(--font-weight-bold); font-size: 15px; }
+.wiz-dest-sub  { font-size: 12px; color: var(--color-text-muted); }
+.wiz-search-loading,
+.wiz-search-empty {
+  padding: 16px; text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.wiz-dest-selected {
+  margin-top: var(--space-3);
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  border-radius: var(--radius-card);
+  color: var(--color-text-inverse);
+}
+.wiz-dest-selected.hidden { display: none; }
+.wiz-dest-selected .wiz-dest-name,
+.wiz-dest-selected .wiz-dest-sub { color: var(--color-text-inverse); opacity: 0.95; }
+.wiz-dest-check {
+  font-size: 22px;
+  font-weight: bold;
+  flex: 0 0 auto;
+}
+
+/* Step 2: date */
+.wiz-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.wiz-date-field,
+.wiz-name-field {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.wiz-date-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.wiz-name-field { margin-top: var(--space-2); }
+.wiz-days-info {
+  text-align: center;
+  padding: 12px;
+  background: var(--color-surface-alt);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+  font-size: 15px;
+  margin-bottom: var(--space-2);
+  min-height: 22px;
+}
+.wiz-days-info.is-error { background: var(--color-error); color: white; }
+
+/* Step 3: occasioni */
+.wiz-occasion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+}
+.wiz-occ-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 12px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-card);
+  font-family: var(--font-family-base);
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  min-height: 60px;
+  transition: border-color var(--animation-speed) var(--animation-easing),
+              background var(--animation-speed) var(--animation-easing);
+}
+.wiz-occ-chip:active { transform: scale(0.97); }
+.wiz-occ-icon { font-size: 22px; line-height: 1; flex: 0 0 auto; }
+.wiz-occ-label { flex: 1; }
+.wiz-occ-chip.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Footer wizard */
+.wiz-footer {
+  flex: 0 0 auto;
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}

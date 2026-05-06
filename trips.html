@@ -26,8 +26,13 @@
 
   <main class="settings-main">
 
-    <!-- Stato: nessun viaggio (empty state) -->
-    <section id="trips-empty" class="trips-empty">
+    <!-- Stato: caricamento -->
+    <div id="trips-loading" class="trips-loading">
+      <div class="trips-spinner"></div>
+    </div>
+
+    <!-- Stato: nessun viaggio -->
+    <section id="trips-empty" class="trips-empty hidden">
       <div class="trips-empty-illustration">🌍✈️</div>
       <h2>Pronta a partire?</h2>
       <p>
@@ -39,63 +44,91 @@
         ✈️ Crea il primo viaggio
       </button>
 
-      <!-- Showcase delle feature in arrivo -->
       <div class="trips-features">
-        <div class="trip-feat-card">
-          <span class="trip-feat-icon">🧳</span>
-          <span class="trip-feat-title">Valigia visiva</span>
-          <span class="trip-feat-sub">Vedi i tuoi capi reali "cadere" dentro il trolley</span>
-        </div>
-        <div class="trip-feat-card">
-          <span class="trip-feat-icon">🌦️</span>
-          <span class="trip-feat-title">Meteo storico</span>
-          <span class="trip-feat-sub">Medie 3 anni stesso mese · alert UV / pioggia</span>
-        </div>
-        <div class="trip-feat-card">
-          <span class="trip-feat-icon">🧺</span>
-          <span class="trip-feat-title">Lavanderia-aware</span>
-          <span class="trip-feat-sub">14 giorni con 7 capi? L'app calcola il ciclo</span>
-        </div>
-        <div class="trip-feat-card">
-          <span class="trip-feat-icon">⚖️</span>
-          <span class="trip-feat-title">Bagaglio cabina</span>
-          <span class="trip-feat-sub">Barra peso/volume Ryanair-aware in tempo reale</span>
-        </div>
-        <div class="trip-feat-card">
-          <span class="trip-feat-icon">🕌</span>
-          <span class="trip-feat-title">Dress code paese</span>
-          <span class="trip-feat-sub">Spalle coperte UAE, sarong tempio Bali, ecc.</span>
-        </div>
-        <div class="trip-feat-card">
-          <span class="trip-feat-icon">📅</span>
-          <span class="trip-feat-title">Anti-conflitto</span>
-          <span class="trip-feat-sub">Il vestito rosso è già al matrimonio del 14? Lo sa</span>
-        </div>
-        <div class="trip-feat-card">
-          <span class="trip-feat-icon">🎬</span>
-          <span class="trip-feat-title">Mood board condivisibile</span>
-          <span class="trip-feat-sub">9 outfit del viaggio in una immagine social-ready</span>
-        </div>
-        <div class="trip-feat-card">
-          <span class="trip-feat-icon">📊</span>
-          <span class="trip-feat-title">Trip Wrapped</span>
-          <span class="trip-feat-sub">Al rientro: capi indossati, MVP, accuracy %</span>
-        </div>
+        <div class="trip-feat-card"><span class="trip-feat-icon">🧳</span><span class="trip-feat-title">Valigia visiva</span><span class="trip-feat-sub">Vedi i tuoi capi reali "cadere" dentro il trolley</span></div>
+        <div class="trip-feat-card"><span class="trip-feat-icon">🌦️</span><span class="trip-feat-title">Meteo storico</span><span class="trip-feat-sub">Medie 3 anni stesso mese · alert UV / pioggia</span></div>
+        <div class="trip-feat-card"><span class="trip-feat-icon">🧺</span><span class="trip-feat-title">Lavanderia-aware</span><span class="trip-feat-sub">14 giorni con 7 capi? L'app calcola il ciclo</span></div>
+        <div class="trip-feat-card"><span class="trip-feat-icon">⚖️</span><span class="trip-feat-title">Bagaglio cabina</span><span class="trip-feat-sub">Barra peso/volume Ryanair-aware in tempo reale</span></div>
+        <div class="trip-feat-card"><span class="trip-feat-icon">🕌</span><span class="trip-feat-title">Dress code paese</span><span class="trip-feat-sub">Spalle coperte UAE, sarong tempio Bali</span></div>
+        <div class="trip-feat-card"><span class="trip-feat-icon">📅</span><span class="trip-feat-title">Anti-conflitto</span><span class="trip-feat-sub">Il vestito al matrimonio del 14? Lo sa</span></div>
+        <div class="trip-feat-card"><span class="trip-feat-icon">🎬</span><span class="trip-feat-title">Mood board</span><span class="trip-feat-sub">9 outfit del viaggio in una immagine social</span></div>
+        <div class="trip-feat-card"><span class="trip-feat-icon">📊</span><span class="trip-feat-title">Trip Wrapped</span><span class="trip-feat-sub">Al rientro: capi MVP, accuracy %</span></div>
       </div>
-
-      <p class="settings-hint" style="margin-top: var(--space-5); text-align:center;">
-        🚧 La feature è in costruzione. Crea pure il primo viaggio: la
-        struttura base esiste, le funzioni piene arriveranno nei prossimi
-        update.
-      </p>
     </section>
 
-    <!-- Lista viaggi (se ce ne sono) -->
+    <!-- Stato: lista viaggi -->
     <section id="trips-list" class="trips-list hidden">
-      <!-- popolata da js/trips.js -->
+      <!-- popolata dinamicamente -->
     </section>
 
   </main>
+
+  <!-- ====================================================================
+       MODAL: Wizard creazione viaggio (3 step)
+       ==================================================================== -->
+  <div id="modal-trip-wizard" class="modal hidden">
+    <div class="modal-content modal-content--wizard">
+      <header class="modal-header wizard-header">
+        <button class="btn-icon" id="btn-wiz-cancel" aria-label="Annulla">✕</button>
+        <h2 id="wiz-title">Nuovo viaggio</h2>
+        <button class="btn-text" id="btn-wiz-back" hidden>‹ Indietro</button>
+      </header>
+
+      <!-- Progress 3 dots -->
+      <div class="wiz-progress">
+        <span class="wiz-dot is-active" data-step="1"></span>
+        <span class="wiz-dot" data-step="2"></span>
+        <span class="wiz-dot" data-step="3"></span>
+      </div>
+
+      <div class="modal-body wiz-body">
+
+        <!-- STEP 1: Destinazione -->
+        <section class="wiz-step is-active" data-step="1">
+          <h3 class="wiz-step-title">📍 Dove vai?</h3>
+          <p class="wiz-step-hint">Cerca la città di destinazione. La useremo per il meteo e il dress code locale.</p>
+          <input type="text" id="wiz-destination-search" placeholder="es. Roma, Tokyo, Bali..." autocomplete="off" inputmode="search" class="wiz-input" />
+          <div id="wiz-destination-results" class="wiz-dest-results"></div>
+          <div id="wiz-destination-selected" class="wiz-dest-selected hidden"></div>
+        </section>
+
+        <!-- STEP 2: Date -->
+        <section class="wiz-step" data-step="2">
+          <h3 class="wiz-step-title">📅 Quando parti?</h3>
+          <p class="wiz-step-hint">Seleziona partenza e ritorno. La durata determina la valigia.</p>
+          <div class="wiz-date-row">
+            <label class="wiz-date-field">
+              <span class="wiz-date-label">Partenza</span>
+              <input type="date" id="wiz-start-date" class="wiz-input" />
+            </label>
+            <label class="wiz-date-field">
+              <span class="wiz-date-label">Ritorno</span>
+              <input type="date" id="wiz-end-date" class="wiz-input" />
+            </label>
+          </div>
+          <div id="wiz-days-info" class="wiz-days-info"></div>
+          <label class="wiz-name-field">
+            <span class="wiz-date-label">Nome del viaggio (opzionale)</span>
+            <input type="text" id="wiz-trip-name" placeholder="es. Roma giugno, Cina con Lucia..." class="wiz-input" maxlength="60" />
+          </label>
+        </section>
+
+        <!-- STEP 3: Occasioni -->
+        <section class="wiz-step" data-step="3">
+          <h3 class="wiz-step-title">🎯 Cosa farai?</h3>
+          <p class="wiz-step-hint">Tap su una o più occasioni. Marty userà queste per scegliere gli outfit.</p>
+          <div class="wiz-occasion-grid" id="wiz-occasion-grid">
+            <!-- popolato da js -->
+          </div>
+        </section>
+
+      </div>
+
+      <footer class="wiz-footer">
+        <button class="btn btn--gold btn--block" id="btn-wiz-next" disabled>Avanti →</button>
+      </footer>
+    </div>
+  </div>
 
   <div id="toast" class="toast hidden"></div>
 

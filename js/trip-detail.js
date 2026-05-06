@@ -8,6 +8,7 @@ import { getTrip, updateTrip, deleteTrip, duplicateTrip, toggleTripFreeze, getRe
 import { generateTripOutfits, regenerateDay } from "./trips-generator.js";
 import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume, estimateItemsWeightGrams } from "./trips-data.js";
 import { computeWrappedStats, buildWrappedImageBlob } from "./trip-wrapped.js";
+import { buildMoodBoardBlob } from "./trip-mood-board.js";
 
 Theme.init();
 
@@ -575,6 +576,49 @@ async function onShareWrapped() {
   }
 }
 
+// =============================================================================
+// MOOD BOARD — pre/durante viaggio: griglia 3x3 con foto degli outfit
+// =============================================================================
+async function onCreateMoodBoard() {
+  const btn = document.getElementById("btn-mood-board");
+  const outfits = state.trip.outfits_by_day || {};
+  if (Object.keys(outfits).length === 0) {
+    toast("Genera prima gli outfit del viaggio", "default");
+    return;
+  }
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = "🎬 Creazione mood board...";
+  try {
+    const blob = await buildMoodBoardBlob(state.trip, state.items);
+    if (!blob) throw new Error("Impossibile generare immagine");
+    const file = new File([blob], `mood-board-${state.trip.id}.png`, { type: "image/png" });
+    const shareData = {
+      title: state.trip.name || "Mood board viaggio",
+      text: `✈️ Il mio mood per ${state.trip.destination?.name || "il prossimo viaggio"}`,
+      files: [file],
+    };
+    if (navigator.canShare && navigator.canShare(shareData)) {
+      await navigator.share(shareData);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `mood-board-${state.trip.id}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      toast("Mood board scaricato", "success");
+    }
+  } catch (err) {
+    if (err.name !== "AbortError") {
+      console.error(err);
+      toast("Errore: " + err.message, "error");
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 
 async function onDuplicate() {
@@ -607,5 +651,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-freeze-trip").addEventListener("click", onToggleFreeze);
   document.getElementById("btn-delete-trip").addEventListener("click", onDelete);
   document.getElementById("btn-share-wrapped").addEventListener("click", onShareWrapped);
+  document.getElementById("btn-mood-board").addEventListener("click", onCreateMoodBoard);
   load();
 });

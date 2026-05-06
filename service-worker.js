@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v66-multi-tag';
+const CACHE_VERSION = 'v67-mood-board';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -67,6 +67,7 @@ const SHELL_FILES = [
   './js/trips-generator.js',
   './js/trip-detail.js',
   './js/trip-wrapped.js',
+  './js/trip-mood-board.js',
   './css/trips.css',
   './trips.html',
   './trip-detail.html',
@@ -111,7 +112,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🎨 Multi-tag sui capi: ora colori, pattern, materiali e occasioni accettano più valori (cotone+lino, righe+floreale, lavoro+cena…). Una camicia non vive di una sola etichetta!";
+const WHATS_NEW = "🎬 Mood board del viaggio! Una griglia 3×3 con i tuoi outfit pianificati, pronta da condividere su Stories prima di partire.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

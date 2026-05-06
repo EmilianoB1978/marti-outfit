@@ -629,8 +629,12 @@ async function renderWeatherSection() {
   }
   if (!data) { box.classList.add("hidden"); return; }
 
-  // Salva snapshot per anti-conflitto futuri (Pezzo 4 last-minute)
   state.weatherData = data;
+
+  // Snapshot persistito: la prima volta che ottengo il meteo, lo salvo
+  // sul trip cosi' al prossimo accesso posso fare il diff (last-minute).
+  // Lo aggiorno solo se non c'e' o se source/destination sono cambiati.
+  detectAndShowWeatherChange(data);
 
   if (data.source === "forecast" && data.daily?.length) {
     renderForecastBanner(data.daily);
@@ -645,6 +649,129 @@ async function renderWeatherSection() {
   if (state.trip.outfits_by_day && Object.keys(state.trip.outfits_by_day).length) {
     renderDays(state.trip.outfits_by_day);
   }
+}
+
+/**
+ * Confronta lo snapshot meteo precedente con quello fresh.
+ * Se ci sono cambiamenti significativi, mostra un alert "🌧 cambia meteo".
+ * Salva sempre lo snapshot nuovo.
+ */
+async function detectAndShowWeatherChange(newData) {
+  const old = state.trip.weather_snapshot;
+  const summary = summarizeWeather(newData);
+  if (!summary) return;
+  const newSnapshot = { ...summary, fetched_at: new Date().toISOString() };
+
+  // Se non c'era prima -> salvo e basta (no alert al primo accesso)
+  if (!old || !old.summary) {
+    try {
+      await updateTrip(state.trip.id, {
+        weather_snapshot: { summary, fetched_at: newSnapshot.fetched_at },
+      });
+      state.trip.weather_snapshot = { summary, fetched_at: newSnapshot.fetched_at };
+    } catch (e) { /* silenzioso */ }
+    return;
+  }
+
+  // Diff vs snapshot precedente
+  const diffs = computeWeatherDiff(old.summary, summary);
+  if (diffs.length > 0) {
+    showWeatherChangeAlert(diffs, old.fetched_at);
+  }
+
+  // Salvo sempre il nuovo (anche se niente diff: mantiene storia recente)
+  try {
+    await updateTrip(state.trip.id, {
+      weather_snapshot: { summary, fetched_at: newSnapshot.fetched_at },
+    });
+    state.trip.weather_snapshot = { summary, fetched_at: newSnapshot.fetched_at };
+  } catch (e) { /* silenzioso */ }
+}
+
+function summarizeWeather(data) {
+  if (!data) return null;
+  if (data.source === "forecast" && data.daily?.length) {
+    const tmins = data.daily.map(d => d.tmin).filter(v => v != null);
+    const tmaxs = data.daily.map(d => d.tmax).filter(v => v != null);
+    const rainDays = data.daily.filter(d => (d.precipitation || 0) >= 1).length;
+    return {
+      kind: "forecast",
+      tmin: tmins.length ? Math.min(...tmins) : null,
+      tmax: tmaxs.length ? Math.max(...tmaxs) : null,
+      rain_days: rainDays,
+    };
+  }
+  if (data.source === "historical" && data.historical) {
+    return {
+      kind: "historical",
+      tmin: data.historical.tmin_avg,
+      tmax: data.historical.tmax_avg,
+      rain_days: data.historical.rain_days_per_month,
+    };
+  }
+  return null;
+}
+
+function computeWeatherDiff(oldSum, newSum) {
+  if (!oldSum || !newSum) return [];
+  if (oldSum.kind !== newSum.kind) return [];   // historical->forecast: niente diff
+  const diffs = [];
+
+  const dTmin = (newSum.tmin || 0) - (oldSum.tmin || 0);
+  const dTmax = (newSum.tmax || 0) - (oldSum.tmax || 0);
+  if (Math.abs(dTmin) >= 3 || Math.abs(dTmax) >= 3) {
+    const dir = dTmax < 0 || dTmin < 0 ? "freddo" : "caldo";
+    diffs.push({
+      type: "temp",
+      message: `Temperature scese di ~${Math.round(Math.abs(dTmin))}°` +
+               ` (era ${Math.round(oldSum.tmin)}°–${Math.round(oldSum.tmax)}°,` +
+               ` ora ${Math.round(newSum.tmin)}°–${Math.round(newSum.tmax)}°). Più ${dir} del previsto.`,
+      severity: "high",
+    });
+  }
+  const dRain = (newSum.rain_days || 0) - (oldSum.rain_days || 0);
+  if (dRain >= 2) {
+    diffs.push({
+      type: "rain",
+      message: `${dRain} giorni di pioggia in più del previsto. Considera giacca antipioggia.`,
+      severity: "medium",
+    });
+  } else if (dRain <= -2) {
+    diffs.push({
+      type: "rain",
+      message: `${Math.abs(dRain)} giorni di pioggia in meno: previsioni migliorate!`,
+      severity: "low",
+    });
+  }
+  return diffs;
+}
+
+function showWeatherChangeAlert(diffs, oldFetchedAt) {
+  const box = document.getElementById("td-weather");
+  if (!box) return;
+  // Aggiungo banner sopra al meteo se non gia' presente
+  let alertEl = document.getElementById("td-weather-alert");
+  if (!alertEl) {
+    alertEl = document.createElement("div");
+    alertEl.id = "td-weather-alert";
+    alertEl.className = "td-weather-alert";
+    box.parentNode.insertBefore(alertEl, box);
+  }
+  const oldDate = oldFetchedAt ? new Date(oldFetchedAt).toLocaleDateString("it-IT", { day: "numeric", month: "short" }) : "qualche giorno fa";
+  const list = diffs.map(d => `<li>${escapeHtml(d.message)}</li>`).join("");
+  alertEl.innerHTML = `
+    <div class="td-weather-alert-head">
+      <span class="td-weather-alert-icon">🔔</span>
+      <div>
+        <div class="td-weather-alert-title">Le previsioni sono cambiate</div>
+        <div class="td-weather-alert-sub">rispetto al check del ${escapeHtml(oldDate)}</div>
+      </div>
+      <button class="td-weather-alert-close" id="td-weather-alert-close" aria-label="Chiudi">✕</button>
+    </div>
+    <ul class="td-weather-alert-list">${list}</ul>
+  `;
+  alertEl.classList.remove("hidden");
+  document.getElementById("td-weather-alert-close").onclick = () => alertEl.remove();
 }
 
 function renderForecastBanner(daily) {

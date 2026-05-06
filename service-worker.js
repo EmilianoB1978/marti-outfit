@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v72-weather-compat';
+const CACHE_VERSION = 'v73-weather-changes';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -116,7 +116,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🌡️ Compatibilità capo-clima: Marty ti avvisa se hai messo jeans pesanti a Marrakech 35°C o canotta a Praga 8°C. Niente sorprese in valigia.";
+const WHATS_NEW = "🔔 Le previsioni cambiano? Marty se ne accorge. Riapri il viaggio e ti dice 'temperature scese di 4°, prendi una felpa'.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

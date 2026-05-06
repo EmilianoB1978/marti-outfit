@@ -153,6 +153,77 @@ export async function deleteTrip(id) {
   await deleteDoc(doc(db, COLLECTION, id));
 }
 
+/**
+ * Duplica un viaggio: stessa destinazione/occasioni/luggage, ma date vuote
+ * e outfit non generati. L'utente apre il nuovo viaggio e imposta le date.
+ */
+export async function duplicateTrip(id) {
+  const orig = await getTrip(id);
+  if (!orig) throw new Error("Viaggio non trovato");
+  const payload = {
+    name:               (orig.name || "Viaggio") + " (copia)",
+    destination:        orig.destination || null,
+    start_date:         "",
+    end_date:           "",
+    days:               0,
+    occasions:          [...(orig.occasions || [])],
+    luggage_type:       orig.luggage_type || "cabina",
+    status:             "planning",
+    thermal_offset:     orig.thermal_offset || 0,
+    outfits_by_day:     {},
+    occasions_by_day:   {},
+    packed_items:       [],
+    notes:              orig.notes || "",
+    duplicated_from:    id,
+    created_at:         serverTimestamp(),
+    updated_at:         serverTimestamp(),
+  };
+  const ref = await addDoc(collection(db, COLLECTION), payload);
+  return { id: ref.id, ...payload };
+}
+
+/**
+ * Toggle freeze: planning <-> frozen.
+ * Quando frozen, i capi del viaggio NON sono "prenotati" lato anti-conflitto.
+ */
+export async function toggleTripFreeze(id) {
+  const t = await getTrip(id);
+  if (!t) throw new Error("Viaggio non trovato");
+  const newStatus = t.status === "frozen" ? "planning" : "frozen";
+  await updateTrip(id, { status: newStatus });
+  return newStatus;
+}
+
+/**
+ * Ritorna Set di item_id "prenotati" da altri viaggi le cui date si
+ * sovrappongono al range [startISO, endISO]. Esclude:
+ *  - il viaggio currentTripId (e' quello che sto generando)
+ *  - viaggi con status='frozen' (in pausa, capi liberati)
+ *  - viaggi con status='done' (gia' tornata, capi liberi)
+ */
+export async function getReservedItemIds(currentTripId, startISO, endISO) {
+  if (!startISO || !endISO) return { reserved: new Set(), conflicts: [] };
+  const all = await listTrips();
+  const reserved = new Set();
+  const conflicts = [];   // [{tripId, tripName, itemIds:[...]}]
+  for (const t of all) {
+    if (t.id === currentTripId) continue;
+    if (t.status === "frozen" || t.status === "done") continue;
+    if (!t.start_date || !t.end_date) continue;
+    // Overlap: max(starts) <= min(ends)
+    const overlap = t.start_date <= endISO && t.end_date >= startISO;
+    if (!overlap) continue;
+    const itemsInTrip = new Set();
+    for (const arr of Object.values(t.outfits_by_day || {})) {
+      for (const id of arr) { reserved.add(id); itemsInTrip.add(id); }
+    }
+    if (itemsInTrip.size > 0) {
+      conflicts.push({ tripId: t.id, tripName: t.name || "Viaggio", itemIds: Array.from(itemsInTrip) });
+    }
+  }
+  return { reserved, conflicts };
+}
+
 // =============================================================================
 // Helpers
 // =============================================================================

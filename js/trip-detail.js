@@ -4,7 +4,7 @@
 
 import * as Theme from "./theme/manager.js";
 import { listItems } from "./wardrobe.js";
-import { getTrip, updateTrip, deleteTrip, formatTripDates } from "./trips-data.js";
+import { getTrip, updateTrip, deleteTrip, duplicateTrip, toggleTripFreeze, getReservedItemIds, formatTripDates } from "./trips-data.js";
 import { generateTripOutfits, regenerateDay } from "./trips-generator.js";
 import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume, estimateItemsWeightGrams } from "./trips-data.js";
 
@@ -125,6 +125,14 @@ async function load() {
   renderHeader();
   renderLuggageSection();
   renderOutfitsSection();
+  updateFreezeButton();
+
+  // Mostra il banner conflitti gia' al load se ci sono altri viaggi sovrapposti
+  // con capi in comune (anche se non si rigenerano subito).
+  try {
+    const { conflicts, reserved } = await getReservedItemIds(state.trip.id, state.trip.start_date, state.trip.end_date);
+    renderConflictBanner(conflicts, reserved.size);
+  } catch (e) { /* silenzioso */ }
 }
 
 // =============================================================================
@@ -325,7 +333,11 @@ async function onGenerate() {
   btn.disabled = true;
   btn.textContent = "✨ Generazione in corso...";
   try {
-    const { outfits, occasionByDay } = generateTripOutfits(state.trip, state.items);
+    // Anti-conflitto: trova capi gia' "prenotati" da altri viaggi sovrapposti
+    const { reserved, conflicts } = await getReservedItemIds(
+      state.trip.id, state.trip.start_date, state.trip.end_date
+    );
+    const { outfits, occasionByDay } = generateTripOutfits(state.trip, state.items, { excludeIds: reserved });
     await updateTrip(state.trip.id, {
       outfits_by_day:    outfits,
       occasions_by_day:  occasionByDay,
@@ -334,7 +346,12 @@ async function onGenerate() {
     state.trip.occasions_by_day = occasionByDay;
     renderOutfitsSection();
     updateLuggageDisplay({ animate: true });
-    toast("✨ Outfit generati!", "success");
+    renderConflictBanner(conflicts, reserved.size);
+    if (conflicts.length > 0) {
+      toast(`✨ Outfit generati · ${reserved.size} capi esclusi (in altro viaggio)`, "default");
+    } else {
+      toast("✨ Outfit generati!", "success");
+    }
   } catch (err) {
     console.error(err);
     toast("Errore generazione: " + err.message, "error");
@@ -348,7 +365,8 @@ async function onShuffleAll() {
   const btn = document.getElementById("btn-shuffle-all");
   btn.disabled = true;
   try {
-    const { outfits, occasionByDay } = generateTripOutfits(state.trip, state.items, { seed: Date.now() + Math.random() * 1000 });
+    const { reserved, conflicts } = await getReservedItemIds(state.trip.id, state.trip.start_date, state.trip.end_date);
+    const { outfits, occasionByDay } = generateTripOutfits(state.trip, state.items, { seed: Date.now() + Math.random() * 1000, excludeIds: reserved });
     await updateTrip(state.trip.id, {
       outfits_by_day:    outfits,
       occasions_by_day:  occasionByDay,
@@ -357,6 +375,7 @@ async function onShuffleAll() {
     state.trip.occasions_by_day = occasionByDay;
     renderDays(outfits);
     updateLuggageDisplay({ animate: true });
+    renderConflictBanner(conflicts, reserved.size);
     toast("🔀 Outfit rigenerati", "success");
   } catch (err) {
     toast("Errore: " + err.message, "error");
@@ -367,7 +386,8 @@ async function onShuffleAll() {
 
 async function onShuffleDay(iso) {
   try {
-    const newIds = regenerateDay(state.trip, state.items, iso, state.trip.outfits_by_day, { seed: Date.now() + Math.random() * 1000 });
+    const { reserved } = await getReservedItemIds(state.trip.id, state.trip.start_date, state.trip.end_date);
+    const newIds = regenerateDay(state.trip, state.items, iso, state.trip.outfits_by_day, { seed: Date.now() + Math.random() * 1000, excludeIds: reserved });
     const newOutfits = { ...(state.trip.outfits_by_day || {}), [iso]: newIds };
     await updateTrip(state.trip.id, { outfits_by_day: newOutfits });
     state.trip.outfits_by_day = newOutfits;
@@ -376,6 +396,62 @@ async function onShuffleDay(iso) {
     toast("🔄 Outfit del giorno aggiornato", "success");
   } catch (err) {
     toast("Errore: " + err.message, "error");
+  }
+}
+
+// =============================================================================
+// CONFLITTO CAPI tra viaggi sovrapposti — banner informativo
+// =============================================================================
+function renderConflictBanner(conflicts, reservedCount) {
+  const box = document.getElementById("td-conflicts");
+  if (!box) return;
+  if (!conflicts || conflicts.length === 0 || reservedCount === 0) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+  const tripsList = conflicts.map(c =>
+    `<a class="td-conflict-trip" href="./trip-detail.html?id=${escapeHtml(c.tripId)}">📍 ${escapeHtml(c.tripName)} (${c.itemIds.length})</a>`
+  ).join("");
+  box.innerHTML = `
+    <div class="td-conflict-icon">⚠️</div>
+    <div class="td-conflict-body">
+      <div class="td-conflict-title">${reservedCount} ${reservedCount === 1 ? "capo riservato" : "capi riservati"} ad altri viaggi</div>
+      <div class="td-conflict-sub">Marty li ha esclusi dalla generazione per non sovrapporre con:</div>
+      <div class="td-conflict-trips">${tripsList}</div>
+    </div>
+  `;
+  box.classList.remove("hidden");
+}
+
+// =============================================================================
+// FREEZE / DUPLICATE
+// =============================================================================
+async function onToggleFreeze() {
+  try {
+    const newStatus = await toggleTripFreeze(state.trip.id);
+    state.trip.status = newStatus;
+    renderHeader();
+    updateFreezeButton();
+    toast(newStatus === "frozen" ? "❄️ Viaggio messo in pausa" : "▶ Viaggio riattivato", "success");
+  } catch (err) {
+    toast("Errore: " + err.message, "error");
+  }
+}
+
+function updateFreezeButton() {
+  const btn = document.getElementById("btn-freeze-trip");
+  if (!btn) return;
+  btn.textContent = state.trip.status === "frozen" ? "▶ Riattiva viaggio" : "❄️ Metti in pausa";
+}
+
+async function onDuplicate() {
+  if (!confirm(`Duplicare "${state.trip.name || "questo viaggio"}"?\nSarà creato un nuovo viaggio con destinazione e occasioni copiate. Le date e gli outfit saranno da impostare/rigenerare.`)) return;
+  try {
+    const copy = await duplicateTrip(state.trip.id);
+    location.replace(`./trip-detail.html?id=${copy.id}`);
+  } catch (err) {
+    toast("Errore duplicazione: " + err.message, "error");
   }
 }
 
@@ -395,6 +471,8 @@ async function onDelete() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-generate").addEventListener("click", onGenerate);
   document.getElementById("btn-shuffle-all").addEventListener("click", onShuffleAll);
+  document.getElementById("btn-duplicate-trip").addEventListener("click", onDuplicate);
+  document.getElementById("btn-freeze-trip").addEventListener("click", onToggleFreeze);
   document.getElementById("btn-delete-trip").addEventListener("click", onDelete);
   load();
 });

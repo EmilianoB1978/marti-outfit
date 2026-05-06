@@ -666,3 +666,44 @@ a.trip-card:active { transform: scale(0.99); }
   border-top: 1px solid var(--color-border);
 }
 .td-actions.hidden { display: none; }
+
+/* Banner conflitti capi tra viaggi sovrapposti */
+.td-conflicts {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: #fff8e5;
+  border: 1px solid #f5d472;
+  border-radius: var(--radius-card);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  color: #5e4a10;
+}
+.td-conflicts.hidden { display: none; }
+.td-conflict-icon { font-size: 22px; line-height: 1; flex: 0 0 auto; }
+.td-conflict-body { flex: 1; min-width: 0; }
+.td-conflict-title {
+  font-weight: var(--font-weight-bold);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.td-conflict-sub {
+  font-size: 12px;
+  color: #7a6420;
+  margin-bottom: 6px;
+}
+.td-conflict-trips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.td-conflict-trip {
+  display: inline-block;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: white;
+  border: 1px solid #e9ce6c;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #5e4a10;
+  font-weight: var(--font-weight-bold);
+}
+.td-conflict-trip:active { background: #f5d472; }

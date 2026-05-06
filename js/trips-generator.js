@@ -42,19 +42,22 @@ const KIND_KEYS = {
 /**
  * @param {object} trip - { start_date, end_date, occasions, ... }
  * @param {array}  items - lista capi del guardaroba
- * @param {object} opts  - { seed?: number }
+ * @param {object} opts  - { seed?: number, excludeIds?: Set<string> }
+ *   excludeIds: capi gia' "prenotati" da altri viaggi sovrapposti
  * @returns {object} { "YYYY-MM-DD": [itemId, ...], ... }
  */
 export function generateTripOutfits(trip, items, opts = {}) {
   const seed = opts.seed || Date.now();
   const rng = mulberry32(seed);
+  const excludeIds = opts.excludeIds || new Set();
 
   const tripSeasons = inferSeasons(trip.start_date);
   const occasions = (trip.occasions && trip.occasions.length) ? trip.occasions : ["casual"];
 
-  // 1. Filtra capi che hanno foto e stagione compatibile
+  // 1. Filtra capi che hanno foto, stagione compatibile e NON sono prenotati
   const candidates = items.filter(it => {
     if (!it.photo_url) return false;
+    if (excludeIds.has(it.id)) return false;
     // Se il capo ha stagioni dichiarate, almeno una deve matchare
     if (Array.isArray(it.season) && it.season.length > 0) {
       return it.season.some(s => tripSeasons.includes(String(s).toLowerCase()));
@@ -260,9 +263,11 @@ function mulberry32(seed) {
 export function regenerateDay(trip, items, dayISO, currentOutfits, opts = {}) {
   const seed = opts.seed || Date.now();
   const rng = mulberry32(seed);
+  const excludeIds = opts.excludeIds || new Set();
   const tripSeasons = inferSeasons(trip.start_date);
   const candidates = items.filter(it => {
     if (!it.photo_url) return false;
+    if (excludeIds.has(it.id)) return false;
     if (Array.isArray(it.season) && it.season.length > 0) {
       return it.season.some(s => tripSeasons.includes(String(s).toLowerCase()));
     }

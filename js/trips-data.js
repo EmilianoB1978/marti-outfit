@@ -33,6 +33,36 @@ const COLLECTION = "trips";
 // }
 // =============================================================================
 
+// =============================================================================
+// Tipi bagaglio (capacita' litri / peso kg per warning low-cost)
+// =============================================================================
+export const LUGGAGE_TYPES = [
+  { key: "cabina",  icon: "🧳",  label: "Trolley cabina",   capacity_l: 40, max_kg: 10, dims: "55×40×20 cm" },
+  { key: "stiva",   icon: "🛄",  label: "Trolley grande",   capacity_l: 75, max_kg: 23, dims: "75×50×30 cm" },
+  { key: "weekender", icon: "👜", label: "Borsone weekend", capacity_l: 45, max_kg: 8,  dims: "morbido" },
+  { key: "zaino",   icon: "🎒",  label: "Zaino",            capacity_l: 20, max_kg: 5,  dims: "—" },
+  { key: "borsa",   icon: "👛",  label: "Borsa giornaliera", capacity_l: 8,  max_kg: 2,  dims: "—" },
+];
+
+export function getLuggage(key) {
+  return LUGGAGE_TYPES.find(l => l.key === key) || LUGGAGE_TYPES[0];
+}
+
+// Volumi indicativi per categoria capo (litri quando piegato bene)
+export const ITEM_VOLUME_L = {
+  top: 1.0, bottom: 2.0, scarpe: 4.0, capospalla: 5.0,
+  accessori: 0.5, vestito: 2.5, completo: 4.0,
+};
+
+export function estimateItemsVolume(items) {
+  let total = 0;
+  for (const it of items) {
+    const cat = String(it.category || "").toLowerCase();
+    total += ITEM_VOLUME_L[cat] || 1.0;
+  }
+  return Math.round(total * 10) / 10;
+}
+
 export const OCCASION_OPTIONS = [
   { key: "business",   icon: "💼", label: "Business" },
   { key: "casual",     icon: "👟", label: "Casual" },
@@ -71,6 +101,7 @@ export async function createTrip(data) {
     end_date:           data.end_date,
     days,
     occasions:          Array.isArray(data.occasions) ? data.occasions : [],
+    luggage_type:       data.luggage_type || "cabina",
     status:             "planning",
     laundry_available:  !!data.laundry_available,
     thermal_offset:     Number(data.thermal_offset) || 0,

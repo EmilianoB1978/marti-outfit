@@ -358,6 +358,166 @@ a.trip-card:active { transform: scale(0.99); }
    Trip Detail page
    ============================================================================= */
 
+/* Sezione titolo */
+.td-section-title {
+  font-family: var(--font-family-heading);
+  font-size: 16px;
+  margin: var(--space-3) 0 var(--space-2);
+  color: var(--color-text);
+}
+
+/* ============= LUGGAGE ============= */
+.td-luggage {
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Picker tipo bagaglio: chip orizzontali scrollabili */
+.luggage-picker {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: var(--space-3);
+  -webkit-overflow-scrolling: touch;
+}
+.luggage-chip {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+  min-width: 78px;
+  transition: border-color var(--animation-speed) var(--animation-easing),
+              background var(--animation-speed) var(--animation-easing);
+}
+.luggage-chip:active { transform: scale(0.96); }
+.luggage-chip-icon  { font-size: 26px; line-height: 1; }
+.luggage-chip-label { font-size: 11px; font-weight: var(--font-weight-bold); }
+.luggage-chip.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+
+/* Stage centrale: icona valigia + counter + barra */
+.luggage-stage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-3);
+  transition: transform 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+.luggage-icon {
+  font-size: 56px;
+  line-height: 1;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+.luggage-info { flex: 1; min-width: 0; }
+.luggage-counter {
+  font-weight: var(--font-weight-bold);
+  font-size: 15px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+.luggage-bar {
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.luggage-bar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success) 0%, #5fa869 100%);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              background var(--animation-speed) var(--animation-easing);
+}
+.luggage-bar-fill.is-warning {
+  background: linear-gradient(90deg, var(--color-warning) 0%, #e89a3a 100%);
+}
+.luggage-bar-fill.is-danger {
+  background: linear-gradient(90deg, var(--color-error) 0%, #c0392b 100%);
+}
+.luggage-dims {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* Shake animation al refresh */
+@keyframes luggageShake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  15%      { transform: translateX(-3px) rotate(-1deg); }
+  30%      { transform: translateX(3px) rotate(1deg); }
+  45%      { transform: translateX(-2px) rotate(-0.5deg); }
+  60%      { transform: translateX(2px) rotate(0.5deg); }
+  75%      { transform: translateX(-1px) rotate(0); }
+}
+.luggage-stage.is-shake { animation: luggageShake 0.6s ease-out; }
+
+/* Lista capi nella valigia */
+.luggage-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 6px;
+}
+.luggage-thumb {
+  aspect-ratio: 1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.luggage-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Animazione "drop": il capo cade dall'alto e atterra */
+@keyframes luggageDrop {
+  0% {
+    transform: translateY(-180px) rotate(-15deg) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(8px) rotate(2deg) scale(1.05);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(-3px) rotate(-1deg) scale(1);
+  }
+  100% {
+    transform: translateY(0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+.luggage-thumb.is-dropping {
+  animation: luggageDrop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.luggage-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: var(--space-3);
+}
+
+
 /* Hero card del viaggio */
 .td-hero {
   display: flex;

@@ -6,7 +6,7 @@ import * as Theme from "./theme/manager.js";
 import { listItems } from "./wardrobe.js";
 import { getTrip, updateTrip, deleteTrip, formatTripDates } from "./trips-data.js";
 import { generateTripOutfits, regenerateDay } from "./trips-generator.js";
-import { OCCASION_OPTIONS } from "./trips-data.js";
+import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume } from "./trips-data.js";
 
 Theme.init();
 
@@ -123,7 +123,94 @@ async function load() {
   loading.classList.add("hidden");
   content.classList.remove("hidden");
   renderHeader();
+  renderLuggageSection();
   renderOutfitsSection();
+}
+
+// =============================================================================
+// LUGGAGE
+// =============================================================================
+function renderLuggageSection() {
+  const picker = document.getElementById("luggage-picker");
+  const luggageKey = state.trip.luggage_type || "cabina";
+
+  // Picker chip
+  picker.innerHTML = LUGGAGE_TYPES.map(l =>
+    `<button type="button" class="luggage-chip${l.key === luggageKey ? " is-active" : ""}" data-key="${l.key}" aria-label="${escapeHtml(l.label)}">
+      <span class="luggage-chip-icon">${l.icon}</span>
+      <span class="luggage-chip-label">${escapeHtml(l.label)}</span>
+    </button>`
+  ).join("");
+  picker.querySelectorAll(".luggage-chip").forEach(b => {
+    b.addEventListener("click", () => onLuggageChange(b.dataset.key));
+  });
+
+  updateLuggageDisplay({ animate: false });
+}
+
+function getPackedItems() {
+  const outfits = state.trip.outfits_by_day || {};
+  const ids = new Set();
+  for (const arr of Object.values(outfits)) for (const id of arr) ids.add(id);
+  return Array.from(ids).map(id => state.itemsById.get(id)).filter(Boolean);
+}
+
+function updateLuggageDisplay(opts = {}) {
+  const luggageKey = state.trip.luggage_type || "cabina";
+  const luggage = getLuggage(luggageKey);
+  const items = getPackedItems();
+  const volume = estimateItemsVolume(items);
+  const pct = Math.min(100, Math.round((volume / luggage.capacity_l) * 100));
+
+  document.getElementById("luggage-icon").textContent = luggage.icon;
+  document.getElementById("luggage-counter").textContent =
+    `${items.length} ${items.length === 1 ? "capo" : "capi"} · ~${volume}L / ${luggage.capacity_l}L`;
+  document.getElementById("luggage-dims").textContent = `${luggage.dims} · max ${luggage.max_kg} kg`;
+
+  const fill = document.getElementById("luggage-bar-fill");
+  fill.style.width = pct + "%";
+  fill.classList.remove("is-warning", "is-danger");
+  if (pct >= 95) fill.classList.add("is-danger");
+  else if (pct >= 80) fill.classList.add("is-warning");
+
+  // Lista capi (thumb)
+  const list = document.getElementById("luggage-items");
+  if (items.length === 0) {
+    list.innerHTML = `<div class="luggage-empty">Genera gli outfit per vedere i capi nella valigia</div>`;
+  } else {
+    list.innerHTML = items.map((it, i) => {
+      const delay = opts.animate ? `style="animation-delay:${i * 50}ms"` : "";
+      const cls = "luggage-thumb" + (opts.animate ? " is-dropping" : "");
+      const photo = it.photo_url
+        ? `<img src="${it.photo_url}" alt="" loading="lazy" />`
+        : `<span>${categoryEmoji(it.category)}</span>`;
+      return `<div class="${cls}" ${delay}>${photo}</div>`;
+    }).join("");
+  }
+
+  // Animazione "scuoti la valigia" alla generazione
+  if (opts.animate) {
+    const stage = document.getElementById("luggage-stage");
+    stage.classList.remove("is-shake");
+    void stage.offsetWidth; // reflow
+    stage.classList.add("is-shake");
+  }
+}
+
+async function onLuggageChange(key) {
+  if (key === state.trip.luggage_type) return;
+  state.trip.luggage_type = key;
+  // Aggiorna UI subito
+  document.querySelectorAll(".luggage-chip").forEach(b => {
+    b.classList.toggle("is-active", b.dataset.key === key);
+  });
+  updateLuggageDisplay({ animate: false });
+  // Salva su DB
+  try {
+    await updateTrip(state.trip.id, { luggage_type: key });
+  } catch (err) {
+    toast("Errore salvataggio bagaglio", "error");
+  }
 }
 
 function showError() {
@@ -235,6 +322,7 @@ async function onGenerate() {
     state.trip.outfits_by_day = outfits;
     state.trip.occasions_by_day = occasionByDay;
     renderOutfitsSection();
+    updateLuggageDisplay({ animate: true });
     toast("✨ Outfit generati!", "success");
   } catch (err) {
     console.error(err);
@@ -257,6 +345,7 @@ async function onShuffleAll() {
     state.trip.outfits_by_day = outfits;
     state.trip.occasions_by_day = occasionByDay;
     renderDays(outfits);
+    updateLuggageDisplay({ animate: true });
     toast("🔀 Outfit rigenerati", "success");
   } catch (err) {
     toast("Errore: " + err.message, "error");
@@ -272,6 +361,7 @@ async function onShuffleDay(iso) {
     await updateTrip(state.trip.id, { outfits_by_day: newOutfits });
     state.trip.outfits_by_day = newOutfits;
     renderDays(newOutfits);
+    updateLuggageDisplay({ animate: false });
     toast("🔄 Outfit del giorno aggiornato", "success");
   } catch (err) {
     toast("Errore: " + err.message, "error");

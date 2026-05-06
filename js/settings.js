@@ -617,11 +617,18 @@ document.addEventListener("DOMContentLoaded", () => {
 // =============================================================================
 function initBar() {
   const allDestinations = Object.entries(NAV_DESTINATIONS);
+  const DEFAULT_NAV = ["wardrobe", "calendar", "add_item", "capsules", "outfits"];
 
   function populate() {
     const prefs = Theme.getPreferences();
-    const current = prefs.bottomNav || ["wardrobe", "calendar", "capsules", "outfits"];
-    for (let i = 0; i < 4; i++) {
+    // Migrazione: vecchio formato 4 slot -> 5 slot inserendo add_item al centro
+    let current = prefs.bottomNav || DEFAULT_NAV;
+    if (current.length === 4) {
+      current = [current[0], current[1], "add_item", current[2], current[3]];
+    }
+    while (current.length < 5) current.push("wardrobe");
+
+    for (let i = 0; i < 5; i++) {
       const sel = document.getElementById(`nav-slot-${i}`);
       if (!sel) continue;
       sel.innerHTML = allDestinations.map(([key, d]) =>
@@ -633,7 +640,7 @@ function initBar() {
 
   document.getElementById("btn-save-bar").addEventListener("click", () => {
     const slots = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       slots.push(document.getElementById(`nav-slot-${i}`).value);
     }
     Theme.set("bottomNav", slots);
@@ -641,7 +648,7 @@ function initBar() {
   });
 
   document.getElementById("btn-reset-bar").addEventListener("click", () => {
-    Theme.set("bottomNav", ["wardrobe", "calendar", "capsules", "outfits"]);
+    Theme.set("bottomNav", DEFAULT_NAV.slice());
     populate();
     toast("Default ripristinato", "success");
   });

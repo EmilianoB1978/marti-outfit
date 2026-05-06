@@ -268,20 +268,23 @@
         <span>📱 Personalizza la barra inferiore</span>
       </button>
       <div class="accordion-body" hidden>
-        <p>La barra di navigazione in basso ha <strong>5 slot</strong>: 2 a sinistra del pulsante <strong>+</strong>, 2 a destra. I 4 slot ai lati del + sono <strong>completamente personalizzabili</strong>.</p>
+        <p>La barra di navigazione in basso ha <strong>5 slot completamente personalizzabili</strong>, incluso quello centrale (visivamente ingrandito stile FAB).</p>
 
         <p><strong>Configurazione di default</strong>:</p>
-        <p style="text-align:center; font-size: var(--fs-base);">👕 Guardaroba · 📅 Calendario · ➕ · 🎒 Capsule · ✨ Outfit</p>
+        <p style="text-align:center; font-size: var(--fs-base);">👕 Guardaroba · 📅 Calendario · 🛍️ Aggiungi · 🎒 Capsule · ✨ Outfit</p>
 
         <p><strong>Come personalizzarla</strong>:</p>
         <ol class="manual-list">
-          <li>Menu <strong>⋯</strong> → <strong>⚙️ Personalizza barra</strong></li>
-          <li>Per ogni slot (1° sinistra esterna · 2° sinistra interna · 3° destra interna · 4° destra esterna) scegli dal dropdown la destinazione</li>
-          <li>Tap <strong>Salva</strong> → la barra si aggiorna immediatamente</li>
+          <li><strong>🎨 Aspetto → ⚙️ Barra</strong></li>
+          <li>Per ognuno dei 5 slot scegli la destinazione dal dropdown</li>
+          <li>Tap <strong>Salva configurazione barra</strong> → la barra si aggiorna immediatamente</li>
         </ol>
 
-        <p><strong>11 destinazioni disponibili</strong>:</p>
+        <p class="manual-tip">⭐ <strong>Lo slot 3° (centrale) è sempre ingrandito</strong> e ha un cerchio dorato a 70px che sporge sopra la barra. Di default contiene "🛍️ Aggiungi" che apre il form Nuovo capo, ma puoi metterci qualunque destinazione: ad esempio "✨ Outfit" se preferisci avere lì la sezione outfit, o "🤳 Live" per la fotocamera live. Quello che metti al centro lì appare ingrandito e diventa il "muscle memory" dell'app.</p>
+
+        <p><strong>12 destinazioni disponibili</strong>:</p>
         <ul class="manual-list">
+          <li><strong>🛍️ Aggiungi</strong> — apre il form "Nuovo capo" (Scatta/Galleria/Incolla foto + AI)</li>
           <li><strong>👕 Guardaroba</strong> — la sezione capi (interna all'app)</li>
           <li><strong>✨ Outfit</strong> — la sezione outfit (interna all'app)</li>
           <li><strong>📅 Calendario</strong> — pianificazione outfit per giorni</li>
@@ -297,18 +300,19 @@
 
         <p><strong>Esempi di configurazione</strong>:</p>
         <ul class="manual-list">
-          <li><strong>Power user</strong>: Guardaroba · Statistiche · + · Live · Palette</li>
-          <li><strong>Pianificatrice</strong>: Calendario · Capi a riposo · + · Capsule · Outfit</li>
-          <li><strong>Stylist mode</strong>: Outfit · Palette · + · Capsule · Live</li>
+          <li><strong>Power user</strong>: Guardaroba · Statistiche · 🛍️ Aggiungi · Live · Palette</li>
+          <li><strong>Pianificatrice</strong>: Calendario · A riposo · 🛍️ Aggiungi · Capsule · Outfit</li>
+          <li><strong>Stylist (no aggiungi al centro)</strong>: Guardaroba · Outfit · ✨ Outfit (al centro) · Palette · Live</li>
+          <li><strong>Minimalista</strong>: Guardaroba · Outfit · 🛍️ Aggiungi · Calendario · Aspetto</li>
         </ul>
 
         <p class="manual-tip">💡 <strong>Le destinazioni che non metti in barra</strong> sono comunque accessibili dal menu <strong>⋯</strong>. Niente è mai nascosto, solo organizzato diversamente.</p>
 
-        <p class="manual-tip">⚙️ <strong>Pulsante centrale sempre fisso (ma personalizzabile)</strong>: il pulsante grande al centro è il "muscle memory" dell'app, la sua posizione non si tocca. In <strong>🎨 Aspetto → 📱 Layout → 🟡 Pulsante centrale (FAB)</strong> puoi: <strong>scegliere l'icona</strong> tra 8 emoji (🛍️ default, 👗, ✨, 📷, ➕, 🪄, 💎, 🌸), cambiare colore sfondo e icona, oppure caricare un <strong>logo personale</strong> che sostituisce l'icona (ritagliato a cerchio). Il pulsante è 70px di diametro per essere ben raggiungibile.</p>
+        <p class="manual-tip">⚙️ <strong>Aspetto del pulsante centrale</strong>: in <strong>🎨 Aspetto → 📱 Layout → 🟡 Pulsante centrale (FAB)</strong> puoi: cambiare colore sfondo, colore icona, oppure caricare un <strong>logo personale</strong> che sostituisce l'icona (ritagliato a cerchio). Il colore/logo si applica solo quando al centro c'è "🛍️ Aggiungi"; se metti un'altra destinazione, lo slot centrale eredita lo stile della destinazione (icona originale, sfondo neutro).</p>
 
         <p class="manual-tip">📲 <strong>Icona App (PWA)</strong>: in <strong>🎨 Aspetto → 📱 Layout → 📲 Icona App</strong> puoi scegliere tra 4 varianti dell'icona "M di Martina" che apparirà sulla home dello smartphone: <em>Classico</em> (oro su nero), <em>Rosa</em> (oro su rosa cipria), <em>Navy</em> (oro su blu notte), <em>Mono</em> (nero su bianco). Se l'app è già installata, per vedere il cambio devi <strong>rimuoverla dalla home e re-aggiungerla</strong> da Safari (limite tecnico iOS).</p>
 
-        <p class="manual-tip">🔄 <strong>Ripristina default</strong>: bottone in fondo al modale per tornare alla configurazione iniziale (Guardaroba/Calendario/FAB/Capsule/Outfit).</p>
+        <p class="manual-tip">🔄 <strong>Ripristina default</strong>: bottone in fondo al pannello per tornare alla configurazione iniziale.</p>
       </div>
     </div>
 

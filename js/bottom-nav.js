@@ -1,14 +1,21 @@
 // =============================================================================
-// Bottom navigation: 4 slot personalizzabili (2 sx + FAB + 2 dx)
+// Bottom navigation: 5 slot completamente personalizzabili
 // =============================================================================
-// L'utente sceglie quali 4 destinazioni mettere in barra dal pannello
-// Settings -> Personalizza barra. Salvate in theme prefs.bottomNav.
+// L'utente sceglie 5 destinazioni dalla lista. Lo slot centrale (idx 2) e'
+// visivamente ingrandito (FAB style 70px), ma la sua funzione la decide
+// l'utente: di default e' "Aggiungi capo", ma puo' essere qualsiasi altra
+// destinazione (es. Outfit, Live, Calendario).
+// Configurazione salvata in theme prefs.bottomNav (array di 5 chiavi).
 // =============================================================================
 
 import * as Theme from "./theme/manager.js";
 
 // Destinazioni disponibili (chiave -> { icon, label, type, page|href })
+// type "fab" = invoca callback onFab (apre modal "Nuovo capo").
+// type "section" = naviga internamente alla pagina.
+// type "link" = href esterno (altra pagina HTML).
 export const NAV_DESTINATIONS = {
+  add_item:    { icon: "🛍️",  label: "Aggiungi",     type: "fab" },
   wardrobe:    { icon: "👕",  label: "Guardaroba",   type: "section", page: "wardrobe" },
   outfits:     { icon: "✨",  label: "Outfit",       type: "section", page: "outfits" },
   calendar:    { icon: "📅",  label: "Calendario",   type: "link",    href: "./calendar.html" },
@@ -22,39 +29,27 @@ export const NAV_DESTINATIONS = {
   palette:     { icon: "🎨",  label: "Palette",      type: "link",    href: "./palette.html" },
 };
 
+export const DEFAULT_BOTTOM_NAV = ["wardrobe", "calendar", "add_item", "capsules", "outfits"];
+
 /**
  * Rende la <nav class="bottom-nav"> in base alla configurazione utente.
+ * Lo slot centrale (idx 2) ha sempre la classe `.fab` per essere ingrandito,
+ * indipendentemente dal tipo di destinazione che ci sta dentro.
+ *
  * @param {function} onSection - callback(pageKey) per tap su section button
- * @param {function} onFab - callback() per tap su +
+ * @param {function} onFab - callback() per tap su slot di tipo "fab"
+ *   (es. add_item, apre modal Nuovo capo)
  */
 export function renderBottomNav(onSection, onFab) {
   const nav = document.querySelector(".bottom-nav");
   if (!nav) return;
 
   const prefs = Theme.getPreferences();
-  const keys = (prefs.bottomNav || ["wardrobe", "calendar", "capsules", "outfits"]).slice(0, 4);
-  while (keys.length < 4) keys.push("wardrobe");
-
-  // 4 slot: [0] [1] FAB [2] [3]
-  const buildBtn = (key, isActive) => {
-    const dest = NAV_DESTINATIONS[key];
-    if (!dest) return "";
-    const cls = "nav-btn" + (isActive ? " active" : "");
-    if (dest.type === "section") {
-      return `<button class="${cls}" data-page="${dest.page}" aria-label="${dest.label}">
-        <span class="nav-icon">${dest.icon}</span>
-        <span class="nav-label">${dest.label}</span>
-      </button>`;
-    } else {
-      return `<a class="${cls}" href="${dest.href}" aria-label="${dest.label}">
-        <span class="nav-icon">${dest.icon}</span>
-        <span class="nav-label">${dest.label}</span>
-      </a>`;
-    }
-  };
-
-  // Default active: wardrobe (se presente in barra)
-  const defaultPage = keys.find(k => NAV_DESTINATIONS[k]?.page === "wardrobe") ? "wardrobe" : null;
+  let raw = prefs.bottomNav || DEFAULT_BOTTOM_NAV;
+  // Migrazione legacy: vecchio formato 4 slot -> inserisce add_item al centro
+  if (raw.length === 4) raw = [raw[0], raw[1], "add_item", raw[2], raw[3]];
+  const keys = raw.slice(0, 5);
+  while (keys.length < 5) keys.push("wardrobe");
 
   // FAB customization: bg color, icon color, logo image
   const fab = prefs.fab || {};
@@ -62,26 +57,68 @@ export function renderBottomNav(onSection, onFab) {
   if (fab.bgColor) fabStyles.push(`--fab-bg: ${fab.bgColor}`);
   if (fab.iconColor) fabStyles.push(`--fab-icon: ${fab.iconColor}`);
   const fabStyle = fabStyles.length ? `style="${fabStyles.join('; ')}"` : "";
-  const fabContent = fab.logoUrl
-    ? `<img class="nav-fab-logo" src="${fab.logoUrl}" alt="" />`
-    : `<span class="nav-icon-fab">${fab.icon || "🛍️"}</span>`;
 
-  nav.innerHTML = `
-    ${buildBtn(keys[0], NAV_DESTINATIONS[keys[0]]?.page === defaultPage)}
-    ${buildBtn(keys[1], NAV_DESTINATIONS[keys[1]]?.page === defaultPage)}
-    <button class="nav-btn fab" id="btn-add-item" ${fabStyle} aria-label="Aggiungi capo">
-      ${fabContent}
-    </button>
-    ${buildBtn(keys[2], NAV_DESTINATIONS[keys[2]]?.page === defaultPage)}
-    ${buildBtn(keys[3], NAV_DESTINATIONS[keys[3]]?.page === defaultPage)}
-  `;
+  // Default active: wardrobe (se presente in barra)
+  const defaultPage = keys.find(k => NAV_DESTINATIONS[k]?.page === "wardrobe") ? "wardrobe" : null;
 
-  // Bind dei click sui section button
-  nav.querySelectorAll(".nav-btn[data-page]").forEach(btn => {
-    btn.addEventListener("click", () => onSection(btn.dataset.page));
+  // Render di un singolo slot. isCenter = slot 2 (centrale) -> classe .fab
+  // grande, contenuto piu' grande, no label sotto.
+  const buildSlot = (key, isCenter) => {
+    const dest = NAV_DESTINATIONS[key];
+    if (!dest) return "";
+
+    if (isCenter) {
+      // Slot centrale: render FAB grande con icona dest (o logo personale).
+      // Per type="fab" applico anche custom bg/icon color da prefs.fab.
+      const customStyle = dest.type === "fab" ? fabStyle : "";
+      const content = (dest.type === "fab" && fab.logoUrl)
+        ? `<img class="nav-fab-logo" src="${fab.logoUrl}" alt="" />`
+        : `<span class="nav-icon-fab">${dest.icon}</span>`;
+      // Tag: button per fab/section, anchor per link
+      if (dest.type === "fab") {
+        return `<button class="nav-btn fab" data-key="${key}" ${customStyle} aria-label="${dest.label}">${content}</button>`;
+      } else if (dest.type === "section") {
+        return `<button class="nav-btn fab" data-key="${key}" data-page="${dest.page}" aria-label="${dest.label}">${content}</button>`;
+      } else {
+        return `<a class="nav-btn fab" data-key="${key}" href="${dest.href}" aria-label="${dest.label}">${content}</a>`;
+      }
+    }
+
+    // Slot laterale: render piccolo con icona + label
+    const isActive = dest.page && dest.page === defaultPage;
+    const cls = "nav-btn" + (isActive ? " active" : "");
+    if (dest.type === "fab") {
+      // Edge case: l'utente ha messo Aggiungi su uno slot laterale. Nessun href,
+      // tap chiama onFab.
+      return `<button class="${cls}" data-key="${key}" aria-label="${dest.label}">
+        <span class="nav-icon">${dest.icon}</span>
+        <span class="nav-label">${dest.label}</span>
+      </button>`;
+    } else if (dest.type === "section") {
+      return `<button class="${cls}" data-key="${key}" data-page="${dest.page}" aria-label="${dest.label}">
+        <span class="nav-icon">${dest.icon}</span>
+        <span class="nav-label">${dest.label}</span>
+      </button>`;
+    } else {
+      return `<a class="${cls}" data-key="${key}" href="${dest.href}" aria-label="${dest.label}">
+        <span class="nav-icon">${dest.icon}</span>
+        <span class="nav-label">${dest.label}</span>
+      </a>`;
+    }
+  };
+
+  nav.innerHTML = keys.map((k, i) => buildSlot(k, i === 2)).join("");
+
+  // Bind click: section -> onSection(page); fab -> onFab(); link -> default browser
+  nav.querySelectorAll(".nav-btn").forEach(btn => {
+    const key = btn.dataset.key;
+    const dest = NAV_DESTINATIONS[key];
+    if (!dest) return;
+    if (dest.type === "fab") {
+      btn.addEventListener("click", (e) => { e.preventDefault(); onFab(); });
+    } else if (dest.type === "section") {
+      btn.addEventListener("click", () => onSection(btn.dataset.page));
+    }
+    // type "link": <a href> -> il browser naviga di default, niente listener
   });
-
-  // Bind FAB
-  const fabEl = nav.querySelector("#btn-add-item");
-  if (fabEl) fabEl.addEventListener("click", onFab);
 }

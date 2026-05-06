@@ -126,6 +126,7 @@ async function load() {
   loading.classList.add("hidden");
   content.classList.remove("hidden");
   renderHeader();
+  renderThermalProfile();
   renderDressCodeSection();
   renderLuggageSection();
   renderOutfitsSection();
@@ -581,6 +582,45 @@ async function onShareWrapped() {
 // =============================================================================
 // MOOD BOARD — pre/durante viaggio: griglia 3x3 con foto degli outfit
 // =============================================================================
+// =============================================================================
+// PROFILO TERMICO — offset °C personale per generazione outfit
+// =============================================================================
+function renderThermalProfile() {
+  const row = document.getElementById("td-thermal-row");
+  const hint = document.getElementById("td-thermal-hint");
+  if (!row) return;
+  const current = Number(state.trip.thermal_offset) || 0;
+
+  row.querySelectorAll(".td-thermal-chip").forEach(b => {
+    const off = Number(b.dataset.offset) || 0;
+    b.classList.toggle("is-active", off === current);
+  });
+  if (hint) hint.textContent = thermalHintText(current);
+
+  row.onclick = async (e) => {
+    const btn = e.target.closest(".td-thermal-chip");
+    if (!btn) return;
+    const newOffset = Number(btn.dataset.offset) || 0;
+    if (newOffset === Number(state.trip.thermal_offset)) return;
+    state.trip.thermal_offset = newOffset;
+    row.querySelectorAll(".td-thermal-chip").forEach(b => {
+      b.classList.toggle("is-active", Number(b.dataset.offset) === newOffset);
+    });
+    if (hint) hint.textContent = thermalHintText(newOffset);
+    try {
+      await updateTrip(state.trip.id, { thermal_offset: newOffset });
+    } catch (err) { toast("Errore salvataggio profilo termico", "error"); }
+  };
+}
+
+function thermalHintText(off) {
+  if (off <= -3) return "🥶 Molto freddolosa: Marty aggiunge sempre uno strato termico in più.";
+  if (off <= -1) return "❄️ Freddolosa: capi un po' più coprenti del normale.";
+  if (off >= 3)  return "🔥 Sopporti molto bene il caldo: capi più leggeri del solito.";
+  if (off >= 1)  return "🌤 Sopporti il caldo: capi più freschi.";
+  return "🙂 Normale: nessun aggiustamento sul meteo.";
+}
+
 // =============================================================================
 // DRESS CODE — banner regole per la destinazione (dataset statico)
 // =============================================================================

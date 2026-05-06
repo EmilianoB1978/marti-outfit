@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v69-calendar-hero';
+const CACHE_VERSION = 'v70-thermal-profile';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -114,7 +114,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✈️ Calendario rinnovato! Banner col countdown del prossimo viaggio + hero sognante per accendere la voglia di partire.";
+const WHATS_NEW = "🌡️ Profilo termico per ogni viaggio: dichiari se sei freddolosa o se sopporti il caldo, Marty aggiusta i capi di conseguenza.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

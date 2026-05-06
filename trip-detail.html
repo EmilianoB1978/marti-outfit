@@ -55,6 +55,21 @@
       <!-- Tags occasioni -->
       <div class="td-occasion-tags" id="td-occasions"></div>
 
+      <!-- Profilo termico personale (offset °C) -->
+      <section class="td-thermal">
+        <h3 class="td-section-title">🌡️ Profilo termico</h3>
+        <div class="td-thermal-row" id="td-thermal-row">
+          <button type="button" class="td-thermal-chip" data-offset="-3" aria-label="Molto freddolosa">🥶<span>−3°</span></button>
+          <button type="button" class="td-thermal-chip" data-offset="-2" aria-label="Freddolosa">❄️<span>−2°</span></button>
+          <button type="button" class="td-thermal-chip" data-offset="0" aria-label="Normale">🙂<span>Normale</span></button>
+          <button type="button" class="td-thermal-chip" data-offset="2" aria-label="Sento caldo">🌤<span>+2°</span></button>
+          <button type="button" class="td-thermal-chip" data-offset="3" aria-label="Sento molto caldo">🔥<span>+3°</span></button>
+        </div>
+        <p class="td-thermal-hint" id="td-thermal-hint">
+          Quanto sopporti il freddo/caldo? Marty userà questo per consigliarti capi più (o meno) coprenti.
+        </p>
+      </section>
+
       <!-- Banner dress code paese -->
       <section id="td-dresscode" class="td-dresscode hidden">
         <div class="td-dresscode-head">

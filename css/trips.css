@@ -1095,6 +1095,49 @@ a.trip-card:active { transform: scale(0.99); }
   margin-top: 4px;
 }
 
+/* Profilo termico (5 chip offset °C) */
+.td-thermal {
+  margin-bottom: var(--space-3);
+}
+.td-thermal-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: var(--space-2);
+}
+.td-thermal-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  min-height: 64px;
+  transition: border-color var(--animation-speed) var(--animation-easing),
+              background var(--animation-speed) var(--animation-easing);
+}
+.td-thermal-chip:active { transform: scale(0.96); }
+.td-thermal-chip > span { font-size: 11px; }
+.td-thermal-chip.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+.td-thermal-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin: 0;
+  padding: 0 4px;
+}
+
 /* Banner dress code paese */
 .td-dresscode {
   margin-bottom: var(--space-3);

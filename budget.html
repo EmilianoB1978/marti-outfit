@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Budget · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/budget.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>💰 Budget</h1>
+    <span></span>
+  </header>
+
+  <main class="settings-main">
+
+    <!-- Selettore mese -->
+    <div class="bg-month-nav">
+      <button class="btn-icon" id="btn-prev-month" aria-label="Mese precedente">‹</button>
+      <div class="bg-month-name" id="bg-month-name">—</div>
+      <button class="btn-icon" id="btn-next-month" aria-label="Mese successivo">›</button>
+    </div>
+
+    <!-- Card riepilogo mese -->
+    <section class="bg-summary" id="bg-summary">
+      <div class="bg-summary-loading">⏳</div>
+    </section>
+
+    <!-- Banner se ci sono dei rollover dal mese precedente -->
+    <div class="bg-rollover-in hidden" id="bg-rollover-in"></div>
+
+    <!-- Banner mese chiuso -->
+    <div class="bg-closed-banner hidden" id="bg-closed-banner"></div>
+
+    <!-- Lista transazioni -->
+    <section class="bg-transactions">
+      <div class="bg-tx-head">
+        <h3 class="settings-section-title" style="margin:0;">Spese del mese</h3>
+        <button class="btn btn--gold btn--sm" id="btn-add-tx">＋ Aggiungi spesa</button>
+      </div>
+      <div id="bg-tx-list" class="bg-tx-list">
+        <!-- popolata -->
+      </div>
+    </section>
+
+    <!-- Bottone chiudi mese -->
+    <button class="btn btn--ghost btn--block hidden" id="btn-close-month" style="margin-top:var(--space-4);">
+      🔒 Chiudi questo mese
+    </button>
+    <button class="btn btn--ghost btn--block hidden" id="btn-reopen-month" style="margin-top:var(--space-4);">
+      🔓 Riapri questo mese
+    </button>
+
+  </main>
+
+  <!-- Modal: nuova / modifica spesa -->
+  <div id="modal-tx" class="modal hidden">
+    <div class="modal-content modal-content--small">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-tx-cancel">✕</button>
+        <h2>Nuova spesa</h2>
+        <button class="btn-text" id="btn-tx-save" disabled>Salva</button>
+      </header>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Cosa hai comprato?</label>
+          <input type="text" id="tx-label" class="wiz-input" placeholder="es. Felpa Zara, Sandali..." maxlength="80" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Importo (€)</label>
+          <input type="text" id="tx-amount" class="wiz-input" placeholder="es. 49,90" inputmode="decimal" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="tx-date" class="wiz-input" />
+        </div>
+        <div class="form-group">
+          <label>Link prodotto <small>(opzionale)</small></label>
+          <input type="url" id="tx-link" class="wiz-input" placeholder="https://..." autocomplete="off" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: chiusura mese -->
+  <div id="modal-close-month" class="modal hidden">
+    <div class="modal-content modal-content--small">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-cm-cancel">✕</button>
+        <h2>Chiudi mese</h2>
+        <span></span>
+      </header>
+      <div class="modal-body">
+        <div id="cm-summary" class="cm-summary"></div>
+        <p id="cm-question" class="cm-question"></p>
+        <div class="cm-actions">
+          <button class="btn btn--gold btn--block" id="btn-cm-rollover">📥 <span id="cm-rollover-label">Rolla al mese successivo</span></button>
+          <button class="btn btn--ghost btn--block" id="btn-cm-reset" style="margin-top:var(--space-2);">🪄 Azzera, ripartiamo da zero</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/budget-page.js"></script>
+</body>
+</html>

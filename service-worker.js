@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v77-manual-ig';
+const CACHE_VERSION = 'v78-budget';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -73,7 +73,11 @@ const SHELL_FILES = [
   './js/trips-weather.js',
   './js/trips-weather-compat.js',
   './js/instagram-share.js',
+  './js/budget-data.js',
+  './js/budget-page.js',
   './css/trips.css',
+  './css/budget.css',
+  './budget.html',
   './trips.html',
   './trip-detail.html',
   './dormant.html',
@@ -117,7 +121,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📖 Manuale aggiornato con la nuova feature Instagram Stories diretto.";
+const WHATS_NEW = "💰 Budget mensile! Imposta il limite mese-per-mese, registra le spese, e a fine mese decidi se rolli avanzo/sforamento o azzeri.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

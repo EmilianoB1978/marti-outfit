@@ -2032,13 +2032,14 @@ async function confirmImport() {
 
     // Toast contestuale in base a quanto siamo riusciti a estrarre
     if (raw._blocked || !fields._hasMetadata) {
-      toast("⚠ Sito anti-bot. Ho dedotto info dall'URL. Foto e prezzo da inserire a mano.", "default");
+      toast("⚠ Sito anti-bot. Apri il link, copia foto (tap lungo → Copia immagine) e tap '📋 Incolla foto'.", "default");
       // Apro il link in nuova tab cosi' l'utente vede il prodotto e puo' copiare info
       try { window.open(fields.link_url, "_blank", "noopener"); } catch {}
     } else if (photoBlob) {
       toast("✓ Importato (rivedi e salva)", "success");
     } else {
-      toast("✓ Dati importati. Foto non disponibile, aggiungila manualmente", "success");
+      toast("✓ Dati importati. Per la foto: copia da link e tap '📋 Incolla foto'.", "default");
+      try { window.open(fields.link_url, "_blank", "noopener"); } catch {}
     }
   } catch (err) {
     console.error("Import fallito:", err);
@@ -2067,6 +2068,30 @@ async function applyImportedPhoto(blob) {
   // Wrap il blob come File-like e riusa il flow esistente (resize + preview)
   const file = blob instanceof File ? blob : new File([blob], "imported.jpg", { type: blob.type || "image/jpeg" });
   await handlePhotoSelected(file);
+}
+
+// Tenta lettura immagine dalla clipboard (utile se l'utente ha fatto "Copia
+// immagine" da Safari/altra app prima di tornare in Marty Outfit).
+async function pastePhotoFromClipboard() {
+  if (!navigator.clipboard || !navigator.clipboard.read) {
+    toast("Lettura clipboard non supportata sul browser", "error");
+    return;
+  }
+  try {
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      const imgType = item.types.find(t => t.startsWith("image/"));
+      if (!imgType) continue;
+      const blob = await item.getType(imgType);
+      await handlePhotoSelected(new File([blob], "pasted.jpg", { type: imgType }));
+      toast("✓ Foto incollata dalla clipboard", "success");
+      return;
+    }
+    toast("Clipboard non contiene un'immagine. Copia un'immagine prima (tap lungo → Copia)", "default");
+  } catch (err) {
+    console.error(err);
+    toast("Impossibile leggere clipboard: " + err.message, "error");
+  }
 }
 
 // Web Share Target: se l'app si apre con ?url=... o ?text=... (condivisione
@@ -2105,6 +2130,10 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     console.error("Bottom nav setup fail (non blocco il boot):", err);
   }
+
+  // Incolla foto da clipboard
+  const btnPastePhoto = document.getElementById("btn-paste-photo");
+  if (btnPastePhoto) btnPastePhoto.addEventListener("click", pastePhotoFromClipboard);
 
   // Import da link: bottone nel modal Nuovo capo + modal dedicato
   const btnImport = document.getElementById("btn-import-link");

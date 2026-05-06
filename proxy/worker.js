@@ -275,8 +275,17 @@ async function handleScrape(req, cors) {
       });
       if (r.ok) {
         const txt = await r.text();
-        // Heuristic: pagina valida se >2KB e non contiene "Access Denied"
-        if (txt.length > 2000 && !/Access Denied|Akamai|distil_r_captcha/i.test(txt.slice(0, 5000))) {
+        // Heuristic: pagina valida se NON e' un anti-bot interstitial e
+        // contiene almeno qualche segnale di prodotto reale.
+        const head = txt.slice(0, 8000).toLowerCase();
+        const isBlocked =
+          /access denied|distil_r_captcha|cf-error-details/i.test(head) ||
+          /bm-verify|interstitial\/ic\.html|akam-logo/i.test(head) ||  // Akamai bot manager
+          /perimeterx|px-captcha/i.test(head) ||
+          /forbidden|blocked|robot|captcha/i.test(head.slice(0, 500));
+        const hasContent =
+          /og:title|og:image|application\/ld\+json|"@type"|<title>[^<]{5,}/i.test(head);
+        if (!isBlocked && hasContent && txt.length > 1500) {
           html = txt;
           break;
         }

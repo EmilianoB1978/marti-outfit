@@ -2020,14 +2020,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showOnboarding(true);
   });
 
-  // Personalizza barra inferiore
-  document.getElementById("btn-customize-nav").addEventListener("click", () => {
-    menuDrawer.classList.add("hidden");
-    openCustomizeNav();
-  });
-  document.getElementById("btn-cancel-nav").addEventListener("click", closeCustomizeNav);
-  document.getElementById("btn-save-nav").addEventListener("click", saveCustomizeNav);
-  document.getElementById("btn-reset-nav").addEventListener("click", resetCustomizeNav);
+  // (Personalizza barra ora dentro Aspetto -> tab Barra)
 
   // Ricerca globale
   document.getElementById("btn-search").addEventListener("click", () => {

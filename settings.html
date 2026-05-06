@@ -35,9 +35,9 @@
     <button class="tab" data-tab="shapes">📐 Forme</button>
     <button class="tab" data-tab="typo">🔤 Font</button>
     <button class="tab" data-tab="layout">📱 Layout</button>
+    <button class="tab" data-tab="bar">⚙️ Barra</button>
     <button class="tab" data-tab="weather">🌤️ Meteo</button>
     <button class="tab" data-tab="links">🔗 Link</button>
-    <button class="tab" data-tab="backup">💾 Backup</button>
   </nav>
 
   <main class="settings-main">
@@ -253,6 +253,45 @@
     </section>
 
     <!-- ==================================================================
+         TAB: BARRA INFERIORE
+         ================================================================== -->
+    <section id="tab-bar" class="settings-tab-panel">
+      <h2 class="settings-section-title" style="margin-top:0">📱 Barra inferiore</h2>
+      <p class="settings-hint">
+        Scegli le 4 destinazioni da mostrare in barra (2 a sinistra del + e 2 a destra).
+        Il pulsante + centrale e' sempre fisso.
+      </p>
+
+      <div class="nav-slot-row">
+        <label class="nav-slot-label">1° (sinistra esterna)</label>
+        <select id="nav-slot-0" class="select"></select>
+      </div>
+      <div class="nav-slot-row">
+        <label class="nav-slot-label">2° (sinistra interna)</label>
+        <select id="nav-slot-1" class="select"></select>
+      </div>
+      <div class="nav-slot-row" style="opacity:0.5; pointer-events:none;">
+        <label class="nav-slot-label">+ centrale</label>
+        <span class="settings-hint" style="margin:0;">Sempre visibile</span>
+      </div>
+      <div class="nav-slot-row">
+        <label class="nav-slot-label">3° (destra interna)</label>
+        <select id="nav-slot-2" class="select"></select>
+      </div>
+      <div class="nav-slot-row">
+        <label class="nav-slot-label">4° (destra esterna)</label>
+        <select id="nav-slot-3" class="select"></select>
+      </div>
+
+      <button class="btn btn--primary btn--block" id="btn-save-bar" style="margin-top: var(--space-4);">
+        Salva configurazione barra
+      </button>
+      <button class="btn btn--ghost btn--block" id="btn-reset-bar" style="margin-top: var(--space-2);">
+        ↺ Ripristina default (Guardaroba · Calendario · + · Capsule · Outfit)
+      </button>
+    </section>
+
+    <!-- ==================================================================
          TAB 6: METEO
          ================================================================== -->
     <section id="tab-weather" class="settings-tab-panel">
@@ -311,104 +350,6 @@
       <p class="settings-hint" style="margin-top: var(--space-4);">
         L'avviso compare quando apri un capo e diventa rosso oltre la scadenza.
         Sui card del guardaroba un'icona 🔗 indica i capi con link, ⚠️ se scaduto.
-      </p>
-    </section>
-
-    <!-- ==================================================================
-         TAB 7: BACKUP
-         ================================================================== -->
-    <section id="tab-backup" class="settings-tab-panel">
-
-      <h2 class="settings-section-title">Esporta e importa</h2>
-      <p class="settings-hint">
-        Salva le tue personalizzazioni in un file JSON, oppure caricalo su un altro dispositivo.
-      </p>
-
-      <button class="btn btn--secondary btn--block" id="btn-export">
-        💾 Esporta tema (.json)
-      </button>
-
-      <label class="btn btn--secondary btn--block" style="margin-top: var(--space-3);">
-        📂 Importa tema...
-        <input type="file" id="input-import" accept="application/json" hidden />
-      </label>
-
-      <h2 class="settings-section-title">Sincronizzazione cloud</h2>
-      <div class="settings-row">
-        <div>
-          <div class="settings-row-title">Sync su account</div>
-          <div class="settings-row-sub">Disponibile dopo l'accesso utente (in arrivo)</div>
-        </div>
-        <label class="switch is-disabled">
-          <input type="checkbox" disabled />
-          <span class="switch-slider"></span>
-        </label>
-      </div>
-
-      <h2 class="settings-section-title">Dati demo</h2>
-      <p class="settings-hint">
-        Carica 30 capi pre-configurati per esplorare le funzioni dell'app
-        (statistiche, outfit AI, calendario, capsule). Le foto sono pubbliche
-        Unsplash, i link prodotto sono fittizi. Puoi rimuoverli con un clic.
-      </p>
-
-      <div id="demo-status" class="settings-row hidden">
-        <div>
-          <div class="settings-row-title">Capi demo presenti</div>
-          <div class="settings-row-sub" id="demo-count">—</div>
-        </div>
-      </div>
-
-      <button class="btn btn--secondary btn--block" id="btn-load-demo">
-        🧪 Carica 30 capi demo
-      </button>
-
-      <button class="btn btn--ghost btn--block hidden" id="btn-remove-demo" style="margin-top: var(--space-2);">
-        🗑️ Rimuovi tutti i demo
-      </button>
-
-      <h2 class="settings-section-title">📊 Storage</h2>
-      <p class="settings-hint">
-        Stima dello spazio occupato dalle foto dei tuoi capi su Firebase.
-        Le foto sono compresse automaticamente in WebP a 800px (~80-100 KB
-        l'una), i cutout dell'editor visuale ~200 KB.
-      </p>
-
-      <div id="storage-stats" class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap: var(--space-2);">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-photo-count">—</div>
-          <div class="stat-label">Foto</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-cutout-count">—</div>
-          <div class="stat-label">Cutout</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-storage-mb">—</div>
-          <div class="stat-label">MB stimati</div>
-        </div>
-      </div>
-
-      <p class="settings-hint" style="margin-top: var(--space-2);">
-        Firebase Storage gratuito: 5 GB. Ai tuoi ritmi ci vorranno anni per riempirlo.
-      </p>
-
-      <h2 class="settings-section-title">Cache PWA</h2>
-      <p class="settings-hint">
-        Se l'app sembra "bloccata" su una vecchia versione (foto sbagliate, modifiche
-        non visibili), pulisci la cache. Le tue personalizzazioni e i capi NON
-        vengono toccati.
-      </p>
-      <button class="btn btn--secondary btn--block" id="btn-clear-cache">
-        🧹 Pulisci cache (forza aggiornamento)
-      </button>
-
-      <h2 class="settings-section-title">Reset</h2>
-      <button class="btn btn--danger btn--block" id="btn-reset">
-        🗑️ Resetta tutte le personalizzazioni
-      </button>
-      <p class="settings-hint">
-        Riporta tutto al tema Light di default. I tuoi capi e outfit non vengono toccati.
       </p>
     </section>
 

@@ -627,13 +627,13 @@
           <span class="menu-link-icon">🏷️</span>
           <span>Categorie e tag</span>
         </a>
-        <button class="menu-link" id="btn-customize-nav" type="button">
-          <span class="menu-link-icon">⚙️</span>
-          <span>Personalizza barra</span>
-        </button>
         <a href="./settings.html" class="menu-link">
           <span class="menu-link-icon">🎨</span>
           <span>Aspetto</span>
+        </a>
+        <a href="./system.html" class="menu-link">
+          <span class="menu-link-icon">⚙️</span>
+          <span>Impostazioni</span>
         </a>
         <a href="./manual.html" class="menu-link">
           <span class="menu-link-icon">📖</span>
@@ -647,46 +647,7 @@
     </div>
   </div>
 
-  <!-- Modale: personalizza barra inferiore -->
-  <div id="modal-customize-nav" class="modal hidden">
-    <div class="modal-content">
-      <header class="modal-header">
-        <button class="btn-icon" id="btn-cancel-nav">✕</button>
-        <h2>Personalizza barra</h2>
-        <button class="btn-text" id="btn-save-nav">Salva</button>
-      </header>
-      <div class="modal-body">
-        <p class="settings-hint" style="margin-top:0">
-          Scegli le 4 destinazioni da mostrare in barra (2 a sinistra del + e 2 a destra).
-        </p>
-
-        <div class="nav-slot-row">
-          <label class="nav-slot-label">1° (sinistra esterna)</label>
-          <select id="nav-slot-0" class="select"></select>
-        </div>
-        <div class="nav-slot-row">
-          <label class="nav-slot-label">2° (sinistra interna)</label>
-          <select id="nav-slot-1" class="select"></select>
-        </div>
-        <div class="nav-slot-row" style="opacity:0.5; pointer-events:none;">
-          <label class="nav-slot-label">+ centrale</label>
-          <span class="settings-hint" style="margin:0;">Sempre visibile</span>
-        </div>
-        <div class="nav-slot-row">
-          <label class="nav-slot-label">3° (destra interna)</label>
-          <select id="nav-slot-2" class="select"></select>
-        </div>
-        <div class="nav-slot-row">
-          <label class="nav-slot-label">4° (destra esterna)</label>
-          <select id="nav-slot-3" class="select"></select>
-        </div>
-
-        <button class="btn btn--ghost btn--block" id="btn-reset-nav" style="margin-top: var(--space-5);">
-          ↺ Ripristina default (Guardaroba · Calendario · + · Capsule · Outfit)
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- (modale 'Personalizza barra' rimosso, ora dentro Aspetto -> tab Barra) -->
 
   <!-- Toast per messaggi -->
   <div id="toast" class="toast hidden"></div>

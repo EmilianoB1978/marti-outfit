@@ -9,8 +9,7 @@
 
 import * as Theme from "./theme/manager.js";
 import * as Weather from "./weather.js";
-import * as DemoLoader from "./demo-loader.js";
-import * as Wardrobe from "./wardrobe.js";
+import { NAV_DESTINATIONS, renderBottomNav } from "./bottom-nav.js";
 
 // Inizializzo il theme manager (legge localStorage, applica al documento)
 Theme.init();
@@ -606,11 +605,49 @@ document.addEventListener("DOMContentLoaded", () => {
   initShapes();
   initTypo();
   initLayout();
+  initBar();
   initWeather();
   initLinks();
   initFAB();
-  initBackup();
 });
+
+// =============================================================================
+// TAB: BARRA INFERIORE (personalizzazione 4 slot)
+// =============================================================================
+function initBar() {
+  const allDestinations = Object.entries(NAV_DESTINATIONS);
+
+  function populate() {
+    const prefs = Theme.getPreferences();
+    const current = prefs.bottomNav || ["wardrobe", "calendar", "capsules", "outfits"];
+    for (let i = 0; i < 4; i++) {
+      const sel = document.getElementById(`nav-slot-${i}`);
+      if (!sel) continue;
+      sel.innerHTML = allDestinations.map(([key, d]) =>
+        `<option value="${key}">${d.icon} ${d.label}</option>`
+      ).join("");
+      sel.value = current[i] || "wardrobe";
+    }
+  }
+
+  document.getElementById("btn-save-bar").addEventListener("click", () => {
+    const slots = [];
+    for (let i = 0; i < 4; i++) {
+      slots.push(document.getElementById(`nav-slot-${i}`).value);
+    }
+    Theme.set("bottomNav", slots);
+    toast("Barra aggiornata", "success");
+  });
+
+  document.getElementById("btn-reset-bar").addEventListener("click", () => {
+    Theme.set("bottomNav", ["wardrobe", "calendar", "capsules", "outfits"]);
+    populate();
+    toast("Default ripristinato", "success");
+  });
+
+  populate();
+  Theme.subscribe(populate);
+}
 
 // =============================================================================
 // FAB customization (Layout tab)

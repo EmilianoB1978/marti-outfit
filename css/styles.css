@@ -215,20 +215,31 @@ html, body {
   text-decoration: none;
 }
 .nav-btn {
-  flex: 1;
+  flex: 1 1 0;
+  width: 0;                   /* forza distribuzione equa col flex 1 */
+  min-width: 0;
   background: none;
   border: none;
   color: var(--color-text-muted);
   display: flex; flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0;
   font-size: 9px;
   line-height: 1.1;
   font-family: var(--font-family-base);
   cursor: pointer;
   padding: 3px 2px;
+  text-align: center;
   text-decoration: none;
   transition: color var(--animation-speed) var(--animation-easing);
+}
+.nav-btn .nav-label {
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .nav-btn.active { color: var(--color-primary); }
 .nav-icon { font-size: 17px; line-height: 1; margin-bottom: 1px; }

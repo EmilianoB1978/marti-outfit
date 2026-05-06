@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Marty Outfit" />
+
+  <title>Impostazioni - Marty Outfit</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>Impostazioni</h1>
+    <span class="settings-header-spacer"></span>
+  </header>
+
+  <main class="settings-main">
+
+    <h2 class="settings-section-title" style="margin-top:0">📊 Storage</h2>
+    <p class="settings-hint">
+      Stima dello spazio occupato dalle foto dei tuoi capi su Firebase. Le foto
+      sono compresse automaticamente in WebP a 800px (~80-100 KB l'una), i cutout
+      dell'editor visuale ~200 KB.
+    </p>
+    <div id="storage-stats" class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap: var(--space-2);">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-photo-count">—</div>
+        <div class="stat-label">Foto</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-cutout-count">—</div>
+        <div class="stat-label">Cutout</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-storage-mb">—</div>
+        <div class="stat-label">MB stimati</div>
+      </div>
+    </div>
+    <p class="settings-hint" style="margin-top: var(--space-2);">
+      Firebase Storage gratuito: 5 GB. Ai tuoi ritmi ci vorranno anni per riempirlo.
+    </p>
+
+    <h2 class="settings-section-title">🧹 Cache PWA</h2>
+    <p class="settings-hint">
+      Se l'app sembra "bloccata" su una vecchia versione (foto sbagliate, modifiche
+      non visibili), pulisci la cache. Le tue personalizzazioni e i capi NON
+      vengono toccati.
+    </p>
+    <button class="btn btn--secondary btn--block" id="btn-clear-cache">
+      🧹 Pulisci cache (forza aggiornamento)
+    </button>
+
+    <h2 class="settings-section-title">📤 Backup tema</h2>
+    <p class="settings-hint">
+      Salva le tue personalizzazioni in un file JSON, oppure caricalo su un altro dispositivo.
+    </p>
+    <button class="btn btn--secondary btn--block" id="btn-export">
+      💾 Esporta tema (.json)
+    </button>
+    <label class="btn btn--secondary btn--block" style="margin-top: var(--space-2);">
+      📂 Importa tema...
+      <input type="file" id="input-import" accept="application/json" hidden />
+    </label>
+
+    <h2 class="settings-section-title">🧪 Dati demo</h2>
+    <p class="settings-hint">
+      Carica 30 capi pre-configurati per esplorare le funzioni dell'app.
+      Le foto sono Unsplash, i link prodotto fittizi.
+    </p>
+    <div id="demo-status" class="settings-row hidden">
+      <div>
+        <div class="settings-row-title">Capi demo presenti</div>
+        <div class="settings-row-sub" id="demo-count">—</div>
+      </div>
+    </div>
+    <button class="btn btn--secondary btn--block" id="btn-load-demo">
+      🧪 Carica 30 capi demo
+    </button>
+    <button class="btn btn--ghost btn--block hidden" id="btn-remove-demo" style="margin-top: var(--space-2);">
+      🗑️ Rimuovi tutti i demo
+    </button>
+
+    <h2 class="settings-section-title">☁️ Sync cloud</h2>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-title">Sync su account</div>
+        <div class="settings-row-sub">Disponibile dopo l'accesso utente (in arrivo)</div>
+      </div>
+      <label class="switch is-disabled">
+        <input type="checkbox" disabled />
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+
+    <h2 class="settings-section-title">🗑️ Reset</h2>
+    <button class="btn btn--danger btn--block" id="btn-reset">
+      Resetta tutte le personalizzazioni
+    </button>
+    <p class="settings-hint">
+      Riporta tutto al tema Light di default. I tuoi capi e outfit non vengono toccati.
+    </p>
+
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/system-page.js"></script>
+</body>
+</html>

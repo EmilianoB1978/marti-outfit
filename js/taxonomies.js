@@ -113,43 +113,49 @@ export const CATEGORY_TO_SUBCATEGORIES = {
 /**
  * Ritorna le sotto-categorie suggerite per una categoria, unendo:
  * 1. La mappa CATEGORY_TO_SUBCATEGORIES (default per la categoria)
- * 2. Le sotto-categorie effettivamente usate dall'utente nei suoi capi
- *    (passate come secondo argomento, in modo che la pagina che chiama
- *    questo helper abbia gia' i valori in memoria — wardrobe.state.items).
+ * 2. Le sotto-categorie nella taxonomy "subcategories" del DB (custom utente)
+ * 3. Le sotto-categorie effettivamente usate nei capi (param opzionale)
  *
- * Se categoria e' vuota / sconosciuta, ritorna l'intera lista delle
- * sotto-categorie note.
+ * Se categoria e' vuota / sconosciuta, ritorna TUTTE le sub note.
+ * Output ordinato alfabeticamente, locale italiano.
  *
  * @param {string} category
- * @param {string[]} [allUserSubcategories] - tutte le sub usate dall'utente
- * @returns {string[]} unione ordinata, deduplicata, lowercased
+ * @param {string[]} [extraUserSubcategories] - sub presenti nei capi (per
+ *   includere valori legacy non ancora nella taxonomy)
+ * @returns {string[]} unione ordinata e deduplicata
  */
-export function getSubcategoriesForCategory(category, allUserSubcategories = []) {
+export function getSubcategoriesForCategory(category, extraUserSubcategories = []) {
   const cat = (category || "").toLowerCase().trim();
   const fromMap = CATEGORY_TO_SUBCATEGORIES[cat] || [];
+  const fromTaxonomy = listSimpleValues("subcategories");  // gia' alfabetico
 
-  // Quando categoria assente -> ritorna tutte le subcategorie note
+  // Quando categoria assente -> ritorna tutte le sub note (alfabetico)
   if (!cat) {
-    const all = listSimpleValues("subcategories");
-    return Array.from(new Set([...all, ...allUserSubcategories])).sort();
+    return Array.from(new Set([...fromTaxonomy, ...extraUserSubcategories]))
+      .sort((a, b) => String(a).localeCompare(String(b), "it", { sensitivity: "base" }));
   }
 
-  // Filtra le subcategorie utente che "appartengono" alla categoria.
-  // Heuristica: se il valore e' presente nella mappa di QUALCHE altra
-  // categoria, NON e' della categoria corrente. Altrimenti lo includiamo
-  // (potrebbe essere una sub libera scritta dall'utente).
+  // Heuristica per filtrare: una sub e' di QUESTA categoria se
+  //  a) e' nella mappa CATEGORY_TO_SUBCATEGORIES[cat], OPPURE
+  //  b) NON e' mappata ad alcuna categoria nota (= valore libero, neutro)
   const allMappedValues = new Set();
   for (const subs of Object.values(CATEGORY_TO_SUBCATEGORIES)) {
     subs.forEach(s => allMappedValues.add(s.toLowerCase()));
   }
-  const userMatching = allUserSubcategories.filter(s => {
-    const lower = (s || "").toLowerCase();
-    if (!lower) return false;
-    if (fromMap.map(x => x.toLowerCase()).includes(lower)) return true;
-    return !allMappedValues.has(lower);  // valore "libero" -> includi
-  });
+  const fromMapLower = new Set(fromMap.map(x => x.toLowerCase()));
 
-  return Array.from(new Set([...fromMap, ...userMatching])).sort();
+  const filterByCat = (s) => {
+    const lower = (s || "").toLowerCase().trim();
+    if (!lower) return false;
+    if (fromMapLower.has(lower)) return true;
+    return !allMappedValues.has(lower);  // libero -> includi
+  };
+
+  const taxonomyMatching = fromTaxonomy.filter(filterByCat);
+  const extraMatching = extraUserSubcategories.filter(filterByCat);
+
+  return Array.from(new Set([...fromMap, ...taxonomyMatching, ...extraMatching]))
+    .sort((a, b) => String(a).localeCompare(String(b), "it", { sensitivity: "base" }));
 }
 
 // =============================================================================
@@ -211,20 +217,30 @@ export function get() {
   return _cache || JSON.parse(JSON.stringify(DEFAULT_TAXONOMIES));
 }
 
-/** Lista valori di una taxonomy (string[] per le semplici, oggetti per categories). */
+/** Lista valori di una taxonomy ORDINATA ALFABETICAMENTE (case-insensitive,
+ *  locale italiano per gestire accenti).
+ *  Per categories ordina per label, per le altre per il valore stesso.
+ */
 export function listValues(taxonomy) {
   const t = get()[taxonomy];
-  return Array.isArray(t) ? [...t] : [];
+  if (!Array.isArray(t)) return [];
+  const arr = [...t];
+  if (STRUCTURED.includes(taxonomy)) {
+    arr.sort((a, b) => String(a.label).localeCompare(String(b.label), "it", { sensitivity: "base" }));
+  } else {
+    arr.sort((a, b) => String(a).localeCompare(String(b), "it", { sensitivity: "base" }));
+  }
+  return arr;
 }
 
-/** Lista solo i value (string) per dropdown/select. */
+/** Lista solo i value (string) per dropdown/select, ordinata alfabeticamente. */
 export function listSimpleValues(taxonomy) {
   const t = listValues(taxonomy);
   if (STRUCTURED.includes(taxonomy)) return t.map(x => x.value);
   return t;
 }
 
-/** Lista label per il display (usata in UI). */
+/** Lista label per il display (usata in UI), ordinata alfabeticamente. */
 export function listLabels(taxonomy) {
   const t = listValues(taxonomy);
   if (STRUCTURED.includes(taxonomy)) return t.map(x => x.label);
@@ -250,10 +266,14 @@ export async function addValue(taxonomy, value) {
       icon: "🏷️",
       builtIn: false,
     });
+    // Mantieni ordine alfabetico per label (case-insensitive, locale IT)
+    _cache[taxonomy].sort((a, b) => String(a.label).localeCompare(String(b.label), "it", { sensitivity: "base" }));
   } else {
     const lower = trimmed.toLowerCase();
     if (_cache[taxonomy].some(v => v.toLowerCase() === lower)) return false;
     _cache[taxonomy].push(trimmed);
+    // Mantieni ordine alfabetico (case-insensitive, locale IT)
+    _cache[taxonomy].sort((a, b) => String(a).localeCompare(String(b), "it", { sensitivity: "base" }));
   }
 
   await persist();

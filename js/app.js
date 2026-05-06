@@ -899,33 +899,52 @@ function populateTaxonomyOptions() {
     value: c.value, label: `${c.icon || '🏷️'} ${c.label}`
   })));
 
-  // SELECT semplici (string-only)
-  populateSelect("field-pattern",  Taxonomies.listSimpleValues("patterns"));
-  populateSelect("field-material", Taxonomies.listSimpleValues("materials"));
-  populateSelect("field-style",    Taxonomies.listSimpleValues("styles"));
+  // SELECT semplici (string-only) — sempre alfabetici (Taxonomies li ordina gia')
+  populateSelect("field-pattern",   Taxonomies.listSimpleValues("patterns"));
+  populateSelect("field-material",  Taxonomies.listSimpleValues("materials"));
+  populateSelect("field-style",     Taxonomies.listSimpleValues("styles"));
+  populateSelect("field-color",     Taxonomies.listSimpleValues("colors"));
+  populateSelect("field-color-secondary", Taxonomies.listSimpleValues("colors"));
+  populateSelect("field-occasion",  Taxonomies.listSimpleValues("occasions"));
   populateMultiSelect("field-season", Taxonomies.listSimpleValues("seasons"));
 
-  // DATALIST per i campi free-text
-  refreshSubcategoryDatalist();  // cascade-aware (filtra per categoria scelta)
-  populateDatalist("dl-colors",        Taxonomies.listSimpleValues("colors"));
-  populateDatalist("dl-occasions",     Taxonomies.listSimpleValues("occasions"));
+  // SELECT cascade: sub-categoria filtrata per categoria scelta
+  refreshSubcategorySelect();
 }
 
 // =============================================================================
-// Refresh dl-subcategories filtrato per la categoria attualmente selezionata.
-// Cascade: cambiando "field-category" il datalist si restringe alle sub
-// pertinenti (con fallback a tutte se categoria vuota o sconosciuta).
-// La sub-categoria resta a scrittura libera — i valori non in lista sono
-// comunque accettati al save.
+// Refresh field-subcategory <select> filtrato per la categoria attualmente
+// selezionata. Cascade: cambiando "field-category" il select si restringe alle
+// sub pertinenti (con fallback a tutte se categoria vuota o sconosciuta).
+// Mantiene la selezione attuale se ancora valida, altrimenti la resetta.
 // =============================================================================
-function refreshSubcategoryDatalist() {
+function refreshSubcategorySelect() {
   const catEl = document.getElementById("field-category");
   const cat = catEl ? catEl.value : "";
   const userSubs = Array.from(new Set(
     state.items.map(it => (it.subcategory || "").trim()).filter(Boolean)
   ));
   const list = Taxonomies.getSubcategoriesForCategory(cat, userSubs);
-  populateDatalist("dl-subcategories", list);
+  populateSelect("field-subcategory", list);
+}
+
+// Setta il value di un <select>; se il value non esiste tra le option,
+// inserisce una nuova option dinamicamente (in modo che valori legacy/custom
+// salvati prima delle taxonomies non vengano persi visualmente).
+function setSelectValueOrAdd(id, value) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  if (!value) { sel.value = ""; return; }
+  const exists = Array.from(sel.options).some(o => o.value === value);
+  if (!exists) {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = capitalize(value);
+    // Inseriscila prima del sentinel "+ Aggiungi nuovo..." (ultimo)
+    const sentinel = sel.querySelector('option[value="__add_new__"]');
+    sel.insertBefore(opt, sentinel || null);
+  }
+  sel.value = value;
 }
 
 function populateSelect(id, values) {
@@ -935,6 +954,13 @@ function populateSelect(id, values) {
 
   // Mantieni l'opzione vuota all'inizio
   const opts = ['<option value="">— Scegli —</option>'];
+
+  // Se il currentValue NON e' tra i values (legacy/custom), lo aggiungo
+  // comunque come option per non perderlo silenziosamente.
+  const valueStrings = values.map(v => typeof v === "string" ? v : v.value);
+  if (currentValue && currentValue !== "__add_new__" && !valueStrings.includes(currentValue)) {
+    opts.push(`<option value="${escapeHtml(currentValue)}">${escapeHtml(capitalize(currentValue))}</option>`);
+  }
 
   for (const v of values) {
     if (typeof v === "string") {
@@ -983,13 +1009,19 @@ async function handleSelectAddNew(selectId, taxonomy) {
   try {
     await Taxonomies.addValue(taxonomy, trimmed);
     populateTaxonomyOptions();
-    // Seleziono il nuovo valore appena aggiunto
+    // Seleziono il nuovo valore appena aggiunto.
+    // Le liste sono ora ordinate alfabeticamente, quindi devo cercare per nome.
     if (taxonomy === "categories") {
-      // Per categories il value e' lowercase normalizzato
       const allCats = Taxonomies.listValues("categories");
-      const justAdded = allCats[allCats.length - 1];
-      sel.value = justAdded.value;
+      const justAdded = allCats.find(c => c.label.toLowerCase() === trimmed.toLowerCase());
+      sel.value = justAdded ? justAdded.value : "";
     } else {
+      sel.value = trimmed;
+    }
+    // Se l'aggiunta e' una sotto-categoria, ripopola anche il select cascade
+    // (potrebbe entrare nella lista filtrata della categoria attuale).
+    if (taxonomy === "subcategories") {
+      refreshSubcategorySelect();
       sel.value = trimmed;
     }
     toast(`Aggiunto "${trimmed}"`, "success");
@@ -1003,6 +1035,9 @@ async function handleSelectAddNew(selectId, taxonomy) {
 function taxonomyLabel(t) {
   return ({
     categories: "categoria",
+    subcategories: "sotto-categoria",
+    colors: "colore",
+    occasions: "occasione",
     patterns: "pattern",
     materials: "materiale",
     styles: "stile",
@@ -1211,6 +1246,9 @@ function openAddItem() {
   });
   Array.from(document.getElementById("field-season").options).forEach(o => o.selected = false);
 
+  // Cascade: reset filtraggio sub-categoria a "tutte" (categoria vuota)
+  refreshSubcategorySelect();
+
   // Reset slider formality (0 = non specificato)
   document.getElementById("field-formality").value = 0;
   document.getElementById("formality-value").textContent = "—";
@@ -1236,14 +1274,16 @@ function openEditItem(id) {
     : '<span class="photo-placeholder">📷</span>';
   document.getElementById("btn-analyze").classList.add("hidden");
 
-  document.getElementById("field-category").value = item.category || "";
-  document.getElementById("field-subcategory").value = item.subcategory || "";
-  document.getElementById("field-color").value = item.color_primary || item.color || "";
-  document.getElementById("field-color-secondary").value = item.color_secondary || "";
-  document.getElementById("field-pattern").value = item.pattern || "";
-  document.getElementById("field-material").value = item.material || "";
-  document.getElementById("field-style").value = item.style || "";
-  document.getElementById("field-occasion").value = item.occasion || "";
+  // Cascade: refresh subcategory in base alla categoria del capo PRIMA di settarla
+  setSelectValueOrAdd("field-category", item.category || "");
+  refreshSubcategorySelect();
+  setSelectValueOrAdd("field-subcategory", item.subcategory || "");
+  setSelectValueOrAdd("field-color", item.color_primary || item.color || "");
+  setSelectValueOrAdd("field-color-secondary", item.color_secondary || "");
+  setSelectValueOrAdd("field-pattern", item.pattern || "");
+  setSelectValueOrAdd("field-material", item.material || "");
+  setSelectValueOrAdd("field-style", item.style || "");
+  setSelectValueOrAdd("field-occasion", item.occasion || "");
   document.getElementById("field-notes").value = item.notes || "";
   document.getElementById("field-price").value = item.price !== null && item.price !== undefined ? formatNumberIT(item.price) : "";
   document.getElementById("field-link").value = item.link_url || "";
@@ -1454,10 +1494,15 @@ async function saveItem() {
   };
 
   // Filter via __add_new__ se rimasto per qualche motivo
-  if (data.category === "__add_new__") data.category = null;
-  if (data.pattern === "__add_new__") data.pattern = null;
-  if (data.material === "__add_new__") data.material = null;
-  if (data.style === "__add_new__") data.style = null;
+  if (data.category === "__add_new__")        data.category = null;
+  if (data.subcategory === "__add_new__")     data.subcategory = null;
+  if (data.color === "__add_new__")           data.color = null;
+  if (data.color_primary === "__add_new__")   data.color_primary = null;
+  if (data.color_secondary === "__add_new__") data.color_secondary = null;
+  if (data.pattern === "__add_new__")         data.pattern = null;
+  if (data.material === "__add_new__")        data.material = null;
+  if (data.style === "__add_new__")           data.style = null;
+  if (data.occasion === "__add_new__")        data.occasion = null;
 
   // Auto-save dei valori NUOVI scritti nei campi free-text dentro le tassonomie
   // (silenzioso, niente prompt: l'utente l'ha gia' digitato).
@@ -1989,10 +2034,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Listener "+ Aggiungi nuovo..." sui select del modal capo
   const taxLinks = [
-    ["field-category", "categories"],
-    ["field-pattern", "patterns"],
-    ["field-material", "materials"],
-    ["field-style", "styles"],
+    ["field-category",         "categories"],
+    ["field-pattern",          "patterns"],
+    ["field-material",         "materials"],
+    ["field-style",            "styles"],
+    ["field-subcategory",      "subcategories"],
+    ["field-color",            "colors"],
+    ["field-color-secondary",  "colors"],
+    ["field-occasion",         "occasions"],
   ];
   taxLinks.forEach(([selectId, taxonomy]) => {
     const sel = document.getElementById(selectId);
@@ -2003,11 +2052,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Cascade: quando cambia categoria, ripopola dl-subcategories filtrato
+  // Cascade: quando cambia categoria, ripopola field-subcategory filtrato.
+  // Conserva la selezione corrente solo se compatibile con la nuova categoria.
   document.getElementById("field-category").addEventListener("change", () => {
-    refreshSubcategoryDatalist();
-    // Se la sub-categoria attuale non e' compatibile con la nuova categoria,
-    // la lascio com'e' (e' a scrittura libera, l'utente puo' tenerla).
+    const subEl = document.getElementById("field-subcategory");
+    const previousSub = subEl.value;
+    refreshSubcategorySelect();
+    // Verifica se previousSub e' tra le option valide della nuova lista
+    const stillValid = Array.from(subEl.options).some(o => o.value === previousSub);
+    subEl.value = stillValid ? previousSub : "";
   });
 
   // Prezzo: sanifica input (solo cifre, punti, virgole) e formatta su blur

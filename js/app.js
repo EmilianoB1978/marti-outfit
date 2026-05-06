@@ -926,6 +926,19 @@ function refreshSubcategorySelect() {
   ));
   const list = Taxonomies.getSubcategoriesForCategory(cat, userSubs);
   populateSelect("field-subcategory", list);
+
+  // Indicatore visivo: cambio label "— Scegli —" per riflettere il filtro attivo
+  // + count opzioni reali (escluse vuoto e sentinel "+ Aggiungi nuovo")
+  const sel = document.getElementById("field-subcategory");
+  if (sel) {
+    const emptyOpt = sel.querySelector('option[value=""]');
+    const realCount = sel.querySelectorAll('option').length - 2; // -1 vuoto, -1 sentinel
+    if (emptyOpt) {
+      emptyOpt.textContent = cat
+        ? `— Scegli (${realCount} per "${cat}") —`
+        : `— Scegli (${realCount} totali) —`;
+    }
+  }
 }
 
 // Setta il value di un <select>; se il value non esiste tra le option,

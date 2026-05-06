@@ -7,6 +7,7 @@ import { listItems } from "./wardrobe.js";
 import { getTrip, updateTrip, deleteTrip, duplicateTrip, toggleTripFreeze, getReservedItemIds, formatTripDates } from "./trips-data.js";
 import { generateTripOutfits, regenerateDay } from "./trips-generator.js";
 import { OCCASION_OPTIONS, LUGGAGE_TYPES, getLuggage, estimateItemsVolume, estimateItemsWeightGrams } from "./trips-data.js";
+import { computeWrappedStats, buildWrappedImageBlob } from "./trip-wrapped.js";
 
 Theme.init();
 
@@ -126,6 +127,7 @@ async function load() {
   renderLuggageSection();
   renderOutfitsSection();
   updateFreezeButton();
+  renderWrappedIfDone();
 
   // Mostra il banner conflitti gia' al load se ci sono altri viaggi sovrapposti
   // con capi in comune (anche se non si rigenerano subito).
@@ -445,6 +447,136 @@ function updateFreezeButton() {
   btn.textContent = state.trip.status === "frozen" ? "▶ Riattiva viaggio" : "❄️ Metti in pausa";
 }
 
+// =============================================================================
+// TRIP WRAPPED — visibile solo per viaggi 'done'
+// =============================================================================
+function renderWrappedIfDone() {
+  const box = document.getElementById("td-wrapped");
+  if (!box) return;
+  const today = todayISO();
+  const status = computeStatus(state.trip, today);
+  if (status !== "done") {
+    box.classList.add("hidden");
+    return;
+  }
+  const outfits = state.trip.outfits_by_day || {};
+  if (Object.keys(outfits).length === 0) {
+    // Niente outfit generati -> niente da wrappare
+    box.classList.add("hidden");
+    return;
+  }
+
+  const weightsMap = (Theme.getPreferences() || {}).itemWeights;
+  const stats = computeWrappedStats(state.trip, state.items, weightsMap);
+  state.wrappedStats = stats;
+
+  // Periodo
+  document.getElementById("wrapped-period").textContent =
+    formatTripDates(state.trip.start_date, state.trip.end_date);
+
+  // Big numbers
+  document.getElementById("wrap-days").textContent    = stats.days;
+  document.getElementById("wrap-packed").textContent  = stats.packedCount;
+  document.getElementById("wrap-outfits").textContent = stats.outfitDays;
+
+  // MVP
+  const mvpBlock = document.getElementById("wrap-mvp-block");
+  if (stats.mvp && stats.mvp.item) {
+    const m = stats.mvp.item;
+    const subcat = m.subcategory || m.category || "Capo";
+    const color = m.color_primary || m.color || "";
+    document.getElementById("wrap-mvp-name").textContent =
+      `${capitalize(subcat)}${color ? " " + color : ""}`;
+    document.getElementById("wrap-mvp-count").textContent =
+      `Indossato ${stats.mvp.count} ${stats.mvp.count === 1 ? "giorno" : "giorni"} su ${stats.days}`;
+    const thumbEl = document.getElementById("wrap-mvp-thumb");
+    if (m.photo_url) {
+      thumbEl.innerHTML = `<img src="${escapeHtml(m.photo_url)}" alt="" />`;
+    } else {
+      thumbEl.textContent = categoryEmoji(m.category);
+    }
+    mvpBlock.classList.remove("hidden");
+  } else {
+    mvpBlock.classList.add("hidden");
+  }
+
+  // Palette
+  const paletteBlock = document.getElementById("wrap-palette-block");
+  const palette = document.getElementById("wrap-palette");
+  if (stats.colorPalette.length > 0) {
+    palette.innerHTML = stats.colorPalette.map(c =>
+      `<div class="wrapped-color-chip" style="background:${escapeHtml(c.hex)}" title="${escapeHtml(c.name)}">
+        <span class="wrapped-color-name">${escapeHtml(c.name)}</span>
+        <span class="wrapped-color-count">${c.count}</span>
+      </div>`
+    ).join("");
+    paletteBlock.classList.remove("hidden");
+  } else {
+    paletteBlock.classList.add("hidden");
+  }
+
+  // Occasioni
+  const occBlock = document.getElementById("wrap-occ-block");
+  const occList = document.getElementById("wrap-occ-list");
+  if (stats.occasionsBreakdown.length > 0) {
+    occList.innerHTML = stats.occasionsBreakdown.map(o =>
+      `<div class="wrapped-occ-row">
+        <span class="wrapped-occ-icon">${o.icon}</span>
+        <span class="wrapped-occ-label">${escapeHtml(o.label)}</span>
+        <span class="wrapped-occ-bar"><span class="wrapped-occ-fill" style="width:${o.pct}%"></span></span>
+        <span class="wrapped-occ-count">${o.count}gg</span>
+      </div>`
+    ).join("");
+    occBlock.classList.remove("hidden");
+  } else {
+    occBlock.classList.add("hidden");
+  }
+
+  // Reuse + valigia
+  document.getElementById("wrap-reuse").textContent   = stats.reuseRate + "%";
+  document.getElementById("wrap-luggage").textContent = `${stats.luggage.icon} ${stats.weightKg}kg`;
+
+  box.classList.remove("hidden");
+}
+
+async function onShareWrapped() {
+  const btn = document.getElementById("btn-share-wrapped");
+  if (!state.wrappedStats) return;
+  btn.disabled = true;
+  btn.textContent = "📸 Generazione immagine...";
+  try {
+    const blob = await buildWrappedImageBlob(state.trip, state.wrappedStats);
+    if (!blob) throw new Error("Impossibile generare immagine");
+    const file = new File([blob], `wrapped-${state.trip.id}.png`, { type: "image/png" });
+    const shareData = {
+      title: state.trip.name || "Trip Wrapped",
+      text: `✨ Il mio Trip Wrapped: ${state.trip.days || ""} giorni, ${state.wrappedStats.packedCount} capi.`,
+      files: [file],
+    };
+    if (navigator.canShare && navigator.canShare(shareData)) {
+      await navigator.share(shareData);
+    } else {
+      // Fallback: download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `wrapped-${state.trip.id}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      toast("Immagine scaricata", "success");
+    }
+  } catch (err) {
+    if (err.name !== "AbortError") {
+      console.error(err);
+      toast("Errore condivisione: " + err.message, "error");
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "📸 Condividi il Wrapped";
+  }
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
 async function onDuplicate() {
   if (!confirm(`Duplicare "${state.trip.name || "questo viaggio"}"?\nSarà creato un nuovo viaggio con destinazione e occasioni copiate. Le date e gli outfit saranno da impostare/rigenerare.`)) return;
   try {
@@ -474,5 +606,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-duplicate-trip").addEventListener("click", onDuplicate);
   document.getElementById("btn-freeze-trip").addEventListener("click", onToggleFreeze);
   document.getElementById("btn-delete-trip").addEventListener("click", onDelete);
+  document.getElementById("btn-share-wrapped").addEventListener("click", onShareWrapped);
   load();
 });

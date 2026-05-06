@@ -667,6 +667,251 @@ a.trip-card:active { transform: scale(0.99); }
 }
 .td-actions.hidden { display: none; }
 
+/* =============================================================================
+   TRIP WRAPPED — summary post-viaggio condivisibile
+   ============================================================================= */
+.td-wrapped {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a1f08 100%);
+  border-radius: var(--radius-card);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+.td-wrapped.hidden { display: none; }
+.td-wrapped::before {
+  content: "";
+  position: absolute;
+  top: -100px; left: -100px;
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.td-wrapped::after {
+  content: "";
+  position: absolute;
+  bottom: -120px; right: -120px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.wrapped-header {
+  text-align: center;
+  margin-bottom: var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+.wrapped-label {
+  display: block;
+  color: #d4af37;
+  font-weight: var(--font-weight-bold);
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.wrapped-sub {
+  display: block;
+  color: #a89968;
+  font-size: 13px;
+}
+
+/* Big stats row */
+.wrapped-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+.wrapped-stat {
+  text-align: center;
+  padding: var(--space-3) 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+.wrapped-stat-num {
+  display: block;
+  font-family: var(--font-family-heading);
+  font-size: 42px;
+  font-weight: var(--font-weight-bold);
+  color: #d4af37;
+  line-height: 1;
+}
+.wrapped-stat-lbl {
+  display: block;
+  font-size: 11px;
+  color: #a89968;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* MVP block */
+.wrapped-mvp {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-4);
+  position: relative; z-index: 1;
+}
+.wrapped-mvp.hidden { display: none; }
+.wrapped-mvp-crown { font-size: 28px; flex: 0 0 auto; }
+.wrapped-mvp-info { flex: 1; min-width: 0; }
+.wrapped-mvp-label {
+  font-size: 11px;
+  color: #a89968;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.wrapped-mvp-name {
+  font-family: var(--font-family-heading);
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  color: #ffffff;
+  line-height: 1.2;
+}
+.wrapped-mvp-count {
+  font-size: 12px;
+  color: #a89968;
+  margin-top: 2px;
+}
+.wrapped-mvp-thumb {
+  width: 64px; height: 64px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #d4af37;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+.wrapped-mvp-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Sezione titolo */
+.wrapped-section-title {
+  color: #d4af37;
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: var(--space-2);
+}
+
+/* Palette colori */
+.wrapped-palette-block { margin-bottom: var(--space-4); position: relative; z-index: 1; }
+.wrapped-palette-block.hidden { display: none; }
+.wrapped-palette {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.wrapped-color-chip {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 60px;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding: 4px;
+}
+.wrapped-color-name {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 2px 5px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-weight: var(--font-weight-bold);
+}
+.wrapped-color-count {
+  position: absolute;
+  top: 4px; right: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  border-radius: 8px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+}
+
+/* Distribuzione occasioni */
+.wrapped-occ-block { margin-bottom: var(--space-4); position: relative; z-index: 1; }
+.wrapped-occ-block.hidden { display: none; }
+.wrapped-occ-list { display: flex; flex-direction: column; gap: 6px; }
+.wrapped-occ-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0;
+}
+.wrapped-occ-icon { font-size: 18px; flex: 0 0 auto; width: 24px; }
+.wrapped-occ-label {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: #ffffff;
+  width: 90px;
+}
+.wrapped-occ-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.wrapped-occ-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #d4af37, #e8c248);
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.wrapped-occ-count {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: #a89968;
+  font-weight: var(--font-weight-bold);
+  width: 36px;
+  text-align: right;
+}
+
+/* Misc cards (reuse rate + luggage) */
+.wrapped-misc {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  position: relative; z-index: 1;
+}
+.wrapped-misc-card {
+  text-align: center;
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+.wrapped-misc-num {
+  font-family: var(--font-family-heading);
+  font-size: 24px;
+  font-weight: var(--font-weight-bold);
+  color: #d4af37;
+}
+.wrapped-misc-lbl {
+  font-size: 10px;
+  color: #a89968;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
 /* Banner conflitti capi tra viaggi sovrapposti */
 .td-conflicts {
   margin-top: var(--space-3);

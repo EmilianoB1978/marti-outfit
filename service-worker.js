@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v64-edge-cases';
+const CACHE_VERSION = 'v65-trip-wrapped';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -66,6 +66,7 @@ const SHELL_FILES = [
   './js/trips-data.js',
   './js/trips-generator.js',
   './js/trip-detail.js',
+  './js/trip-wrapped.js',
   './css/trips.css',
   './trips.html',
   './trip-detail.html',
@@ -110,7 +111,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🔁 Duplica un viaggio in 1 tap, ❄️ mettilo in pausa, e Marty ora avvisa se un capo è già 'prenotato' su un altro viaggio nelle stesse date.";
+const WHATS_NEW = "✨ Trip Wrapped! Al rientro dal viaggio scopri il capo MVP, palette del viaggio, distribuzione occasioni e condividi tutto con un tap.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

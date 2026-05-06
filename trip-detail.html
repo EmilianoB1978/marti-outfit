@@ -55,6 +55,61 @@
       <!-- Tags occasioni -->
       <div class="td-occasion-tags" id="td-occasions"></div>
 
+      <!-- TRIP WRAPPED (solo per viaggi 'done') -->
+      <section id="td-wrapped" class="td-wrapped hidden">
+        <div class="wrapped-header">
+          <span class="wrapped-label">✨ TRIP WRAPPED</span>
+          <span class="wrapped-sub" id="wrapped-period">—</span>
+        </div>
+
+        <!-- Big numbers row -->
+        <div class="wrapped-stats-row">
+          <div class="wrapped-stat"><span class="wrapped-stat-num" id="wrap-days">0</span><span class="wrapped-stat-lbl">giorni</span></div>
+          <div class="wrapped-stat"><span class="wrapped-stat-num" id="wrap-packed">0</span><span class="wrapped-stat-lbl">capi</span></div>
+          <div class="wrapped-stat"><span class="wrapped-stat-num" id="wrap-outfits">0</span><span class="wrapped-stat-lbl">outfit</span></div>
+        </div>
+
+        <!-- Capo MVP -->
+        <div class="wrapped-mvp" id="wrap-mvp-block">
+          <div class="wrapped-mvp-crown">👑</div>
+          <div class="wrapped-mvp-info">
+            <div class="wrapped-mvp-label">Il capo MVP del viaggio</div>
+            <div class="wrapped-mvp-name" id="wrap-mvp-name">—</div>
+            <div class="wrapped-mvp-count" id="wrap-mvp-count">—</div>
+          </div>
+          <div class="wrapped-mvp-thumb" id="wrap-mvp-thumb">👕</div>
+        </div>
+
+        <!-- Palette colori -->
+        <div class="wrapped-palette-block" id="wrap-palette-block">
+          <div class="wrapped-section-title">🎨 Palette del viaggio</div>
+          <div class="wrapped-palette" id="wrap-palette"></div>
+        </div>
+
+        <!-- Occasioni -->
+        <div class="wrapped-occ-block" id="wrap-occ-block">
+          <div class="wrapped-section-title">🎯 Distribuzione occasioni</div>
+          <div class="wrapped-occ-list" id="wrap-occ-list"></div>
+        </div>
+
+        <!-- Reuse rate + valigia -->
+        <div class="wrapped-misc">
+          <div class="wrapped-misc-card">
+            <div class="wrapped-misc-num" id="wrap-reuse">0%</div>
+            <div class="wrapped-misc-lbl">indice riuso capi</div>
+          </div>
+          <div class="wrapped-misc-card">
+            <div class="wrapped-misc-num" id="wrap-luggage">—</div>
+            <div class="wrapped-misc-lbl">valigia</div>
+          </div>
+        </div>
+
+        <!-- Share -->
+        <button class="btn btn--gold btn--block" id="btn-share-wrapped" style="margin-top:var(--space-3);">
+          📸 Condividi il Wrapped
+        </button>
+      </section>
+
       <!-- Valigia: tipo bagaglio + capacita' + lista capi -->
       <section class="td-luggage" id="td-luggage">
         <h3 class="td-section-title">🧳 La tua valigia</h3>

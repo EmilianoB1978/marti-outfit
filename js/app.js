@@ -17,7 +17,6 @@ import * as TodayOutfit from "./today-outfit.js";
 import { renderBottomNav, NAV_DESTINATIONS } from "./bottom-nav.js";
 import { showOnboarding } from "./onboarding.js";
 import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
-import * as ImportLink from "./import-link.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
@@ -1949,129 +1948,8 @@ function capitalize(s) {
 }
 
 // =============================================================================
-// Import da link prodotto
+// Incolla foto dalla clipboard (Safari/altra app -> tap lungo foto -> Copia)
 // =============================================================================
-async function openImportLinkModal() {
-  const modal = document.getElementById("modal-import-link");
-  const ta = document.getElementById("import-url");
-  const status = document.getElementById("import-status");
-  ta.value = "";
-  status.textContent = "";
-  status.className = "import-status";
-  modal.classList.remove("hidden");
-
-  // Tenta lettura clipboard automatica (richiede gesture user-initiated, ma
-  // openImportLinkModal e' chiamata da un click -> il browser lo accetta).
-  const clip = await ImportLink.tryReadClipboard();
-  const url = ImportLink.extractUrl(clip);
-  if (url) {
-    ta.value = url;
-    status.textContent = "✓ URL incollato dagli appunti";
-    status.className = "import-status success";
-  }
-  setTimeout(() => ta.focus(), 50);
-}
-
-function closeImportLinkModal() {
-  document.getElementById("modal-import-link").classList.add("hidden");
-}
-
-async function pasteIntoImport() {
-  const ta = document.getElementById("import-url");
-  const status = document.getElementById("import-status");
-  const clip = await ImportLink.tryReadClipboard();
-  if (!clip) {
-    status.textContent = "Clipboard vuota o accesso negato — incolla manualmente con tap lungo";
-    status.className = "import-status error";
-    return;
-  }
-  const url = ImportLink.extractUrl(clip) || clip.trim();
-  ta.value = url;
-  status.textContent = "✓ Incollato dagli appunti";
-  status.className = "import-status success";
-}
-
-async function confirmImport() {
-  const ta = document.getElementById("import-url");
-  const status = document.getElementById("import-status");
-  const btn = document.getElementById("btn-confirm-import");
-
-  const url = ImportLink.extractUrl(ta.value);
-  if (!url) {
-    status.textContent = "Inserisci un URL valido (deve iniziare con http)";
-    status.className = "import-status error";
-    return;
-  }
-
-  btn.disabled = true;
-  status.textContent = "Estrazione metadati in corso";
-  status.className = "import-status busy";
-
-  try {
-    const raw = await ImportLink.scrapeProduct(url);
-    const fields = ImportLink.mapRawToFields(raw);
-
-    // Foto (asincrono - dopo aver chiuso il modal di import)
-    let photoBlob = null;
-    if (fields._imageUrl) {
-      status.textContent = "Scarico la foto";
-      try {
-        photoBlob = await ImportLink.fetchImageBlob(fields._imageUrl);
-      } catch (e) {
-        console.warn("Foto non disponibile:", e);
-      }
-    }
-
-    // Apri il modal "Nuovo capo" con i campi pre-compilati
-    closeImportLinkModal();
-    openAddItem();  // resetta tutti i campi
-    applyImportedFields(fields);
-    if (photoBlob) {
-      await applyImportedPhoto(photoBlob);
-    }
-
-    // Toast contestuale in base a quanto siamo riusciti a estrarre
-    if (raw._blocked || !fields._hasMetadata) {
-      toast("⚠ Sito anti-bot. Apri il link, copia foto (tap lungo → Copia immagine) e tap '📋 Incolla foto'.", "default");
-      // Apro il link in nuova tab cosi' l'utente vede il prodotto e puo' copiare info
-      try { window.open(fields.link_url, "_blank", "noopener"); } catch {}
-    } else if (photoBlob) {
-      toast("✓ Importato (rivedi e salva)", "success");
-    } else {
-      toast("✓ Dati importati. Per la foto: copia da link e tap '📋 Incolla foto'.", "default");
-      try { window.open(fields.link_url, "_blank", "noopener"); } catch {}
-    }
-  } catch (err) {
-    console.error("Import fallito:", err);
-    status.textContent = `Errore: ${err.message}. Apri il link e compila a mano.`;
-    status.className = "import-status error";
-    btn.disabled = false;
-  }
-}
-
-function applyImportedFields(fields) {
-  if (fields.category) setSelectValueOrAdd("field-category", fields.category);
-  refreshSubcategorySelect();
-  if (fields.subcategory) setSelectValueOrAdd("field-subcategory", fields.subcategory);
-  if (fields.color_primary)   setSelectValueOrAdd("field-color", fields.color_primary);
-  if (fields.color_secondary) setSelectValueOrAdd("field-color-secondary", fields.color_secondary);
-  if (fields.material) setSelectValueOrAdd("field-material", fields.material);
-  if (fields.pattern)  setSelectValueOrAdd("field-pattern", fields.pattern);
-  if (fields.price !== null) {
-    document.getElementById("field-price").value = formatNumberIT(fields.price);
-  }
-  if (fields.link_url) document.getElementById("field-link").value = fields.link_url;
-  if (fields.notes)    document.getElementById("field-notes").value = fields.notes;
-}
-
-async function applyImportedPhoto(blob) {
-  // Wrap il blob come File-like e riusa il flow esistente (resize + preview)
-  const file = blob instanceof File ? blob : new File([blob], "imported.jpg", { type: blob.type || "image/jpeg" });
-  await handlePhotoSelected(file);
-}
-
-// Tenta lettura immagine dalla clipboard (utile se l'utente ha fatto "Copia
-// immagine" da Safari/altra app prima di tornare in Marty Outfit).
 async function pastePhotoFromClipboard() {
   if (!navigator.clipboard || !navigator.clipboard.read) {
     toast("Lettura clipboard non supportata sul browser", "error");
@@ -2084,7 +1962,12 @@ async function pastePhotoFromClipboard() {
       if (!imgType) continue;
       const blob = await item.getType(imgType);
       await handlePhotoSelected(new File([blob], "pasted.jpg", { type: imgType }));
-      toast("✓ Foto incollata dalla clipboard", "success");
+      toast("✓ Foto incollata. Lancio analisi AI...", "success");
+      // Auto-trigger AI subito dopo la paste, cosi' l'utente non deve toccare
+      // un secondo bottone. analyzePhoto() e' la funzione esistente.
+      setTimeout(() => {
+        try { analyzePendingPhoto(); } catch (e) { console.warn("Auto-analyze fail:", e); }
+      }, 200);
       return;
     }
     toast("Clipboard non contiene un'immagine. Copia un'immagine prima (tap lungo → Copia)", "default");
@@ -2092,26 +1975,6 @@ async function pastePhotoFromClipboard() {
     console.error(err);
     toast("Impossibile leggere clipboard: " + err.message, "error");
   }
-}
-
-// Web Share Target: se l'app si apre con ?url=... o ?text=... (condivisione
-// da altre app), apre direttamente il modal di import con l'URL precompilato.
-function maybeAutoImportFromShareTarget() {
-  try {
-    const params = new URLSearchParams(location.search);
-    const candidate = params.get("url") || params.get("text") || params.get("title");
-    const u = ImportLink.extractUrl(candidate);
-    if (!u) return;
-    // Pulisci la query string per non riattivare al prossimo refresh
-    history.replaceState(null, "", location.pathname);
-    setTimeout(async () => {
-      await openImportLinkModal();
-      const ta = document.getElementById("import-url");
-      ta.value = u;
-      // Auto-conferma immediata: l'utente ha gia' confermato condividendo
-      confirmImport();
-    }, 400);
-  } catch (e) { console.warn("Share target parse fail:", e); }
 }
 
 // =============================================================================
@@ -2131,28 +1994,9 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("Bottom nav setup fail (non blocco il boot):", err);
   }
 
-  // Incolla foto da clipboard
+  // Incolla foto da clipboard (con auto-analisi AI)
   const btnPastePhoto = document.getElementById("btn-paste-photo");
   if (btnPastePhoto) btnPastePhoto.addEventListener("click", pastePhotoFromClipboard);
-
-  // Import da link: bottone nel modal Nuovo capo + modal dedicato
-  const btnImport = document.getElementById("btn-import-link");
-  if (btnImport) btnImport.addEventListener("click", openImportLinkModal);
-  const btnImportCancel = document.getElementById("btn-cancel-import");
-  if (btnImportCancel) btnImportCancel.addEventListener("click", closeImportLinkModal);
-  const btnPaste = document.getElementById("btn-paste-import");
-  if (btnPaste) btnPaste.addEventListener("click", pasteIntoImport);
-  const btnClear = document.getElementById("btn-clear-import");
-  if (btnClear) btnClear.addEventListener("click", () => {
-    document.getElementById("import-url").value = "";
-    const st = document.getElementById("import-status");
-    st.textContent = ""; st.className = "import-status";
-  });
-  const btnConfirmImport = document.getElementById("btn-confirm-import");
-  if (btnConfirmImport) btnConfirmImport.addEventListener("click", confirmImport);
-
-  // Web Share Target: se l'app e' aperta con ?url=... -> auto-import
-  maybeAutoImportFromShareTarget();
 
   // Foto inputs
   document.getElementById("input-photo-camera").addEventListener("change", e => {

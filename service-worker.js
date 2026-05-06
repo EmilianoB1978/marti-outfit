@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v32-bar-balanced';
+const CACHE_VERSION = 'v36-bar-50-fab-pop22';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -67,6 +67,16 @@ const SHELL_FILES = [
   './js/theme/manager.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/apple-touch-icon.png',
+  './icons/icon-192-pink.png',
+  './icons/icon-192-navy.png',
+  './icons/icon-192-mono.png',
+  './icons/icon-512-pink.png',
+  './icons/icon-512-navy.png',
+  './icons/icon-512-mono.png',
+  './icons/apple-touch-icon-pink.png',
+  './icons/apple-touch-icon-navy.png',
+  './icons/apple-touch-icon-mono.png',
   './fonts/inter.woff2',
   './fonts/playfair.woff2',
   './fonts/dmsans.woff2',

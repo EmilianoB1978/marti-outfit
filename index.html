@@ -17,6 +17,23 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="./icons/icon-192.png" />
 
+  <!-- App icon variant: applica preferenza utente prima di "Add to Home Screen" -->
+  <script>
+    (function() {
+      try {
+        const raw = localStorage.getItem("marty_theme_v1");
+        if (!raw) return;
+        const variant = (JSON.parse(raw) || {}).appIcon || "default";
+        if (variant === "default") return;
+        const suffix = "-" + variant;
+        const apple = document.querySelector('link[rel="apple-touch-icon"]');
+        const fav   = document.querySelector('link[rel="icon"]');
+        if (apple) apple.href = "./icons/apple-touch-icon" + suffix + ".png";
+        if (fav)   fav.href   = "./icons/icon-192" + suffix + ".png";
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Stili (ordine: tokens -> components -> styles app -> settings -> extras) -->
   <link rel="stylesheet" href="./css/tokens.css" />
   <link rel="stylesheet" href="./css/components.css" />

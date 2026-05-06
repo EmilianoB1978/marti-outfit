@@ -609,6 +609,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initWeather();
   initLinks();
   initFAB();
+  initAppIcon();
 });
 
 // =============================================================================
@@ -671,13 +672,23 @@ function initFAB() {
     };
   }
 
+  const iconGrid = document.getElementById("fab-icon-grid");
+
   function syncUI() {
     const prefs = Theme.getPreferences();
     const fab = prefs.fab || {};
     const def = readDefaults();
+    const currentIcon = fab.icon || "🛍️";
 
     bgInput.value = hexFromCss(fab.bgColor || def.bg);
     iconInput.value = hexFromCss(fab.iconColor || def.icon);
+
+    // Highlight icona attiva nella griglia
+    if (iconGrid) {
+      iconGrid.querySelectorAll(".fab-icon-opt").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.icon === currentIcon && !fab.logoUrl);
+      });
+    }
 
     // Anteprima
     preview.style.background = fab.bgColor || def.bg;
@@ -688,10 +699,20 @@ function initFAB() {
       logoImg.src = fab.logoUrl;
       previewSub.textContent = "Logo personalizzato attivo";
     } else {
-      preview.innerHTML = `<span style="font-size: 28px; font-weight: 700;">+</span>`;
+      preview.innerHTML = `<span style="font-size: 28px; line-height: 1;">${currentIcon}</span>`;
       logoCurrent.classList.add("hidden");
-      previewSub.textContent = "Tap sul + dalla home apre 'Nuovo capo'";
+      previewSub.textContent = `Icona attuale: ${currentIcon}`;
     }
+  }
+
+  if (iconGrid) {
+    iconGrid.addEventListener("click", (e) => {
+      const btn = e.target.closest(".fab-icon-opt");
+      if (!btn) return;
+      const prefs = Theme.getPreferences();
+      Theme.set("fab", { ...(prefs.fab || {}), icon: btn.dataset.icon });
+      syncUI();
+    });
   }
 
   bgInput.addEventListener("input", () => {
@@ -752,9 +773,69 @@ function initFAB() {
         await Logo.deleteLogo(oldPath);
       } catch {}
     }
-    Theme.set("fab", { bgColor: "", iconColor: "", logoUrl: null, logoPath: null });
+    Theme.set("fab", { icon: "🛍️", bgColor: "", iconColor: "", logoUrl: null, logoPath: null });
     syncUI();
     toast("FAB ripristinato al default", "success");
+  });
+
+  syncUI();
+  Theme.subscribe(syncUI);
+}
+
+// =============================================================================
+// App icon (PWA) variant picker (Layout tab)
+// =============================================================================
+function initAppIcon() {
+  const grid = document.getElementById("appicon-grid");
+  const activeLabel = document.getElementById("appicon-active");
+  if (!grid) return;
+
+  const VARIANTS = {
+    default: { label: "Classico", suffix: "" },
+    pink:    { label: "Rosa cipria", suffix: "-pink" },
+    navy:    { label: "Navy", suffix: "-navy" },
+    mono:    { label: "Mono", suffix: "-mono" },
+  };
+
+  function applyToManifestLinks(variant) {
+    const cfg = VARIANTS[variant] || VARIANTS.default;
+    const apple = document.querySelector('link[rel="apple-touch-icon"]');
+    if (apple) apple.href = `./icons/apple-touch-icon${cfg.suffix}.png`;
+
+    // Genera manifest dinamico con URL assoluti (blob URL non risolve path relativi)
+    fetch('./manifest.json').then(r => r.json()).then(m => {
+      const base = new URL('./', location.href).href;
+      m.start_url = new URL(m.start_url || './index.html', base).href;
+      m.scope = new URL(m.scope || './', base).href;
+      m.icons = (m.icons || []).map(ic => {
+        const sizeMatch = (ic.src || '').match(/icon-(\d+)/);
+        if (!sizeMatch) return ic;
+        return { ...ic, src: new URL(`icons/icon-${sizeMatch[1]}${cfg.suffix}.png`, base).href };
+      });
+      const blob = new Blob([JSON.stringify(m)], { type: 'application/manifest+json' });
+      const link = document.querySelector('link[rel="manifest"]');
+      if (link) link.href = URL.createObjectURL(blob);
+    }).catch(() => {});
+  }
+
+  function syncUI() {
+    const prefs = Theme.getPreferences();
+    const variant = prefs.appIcon || "default";
+    grid.querySelectorAll(".appicon-opt").forEach(btn => {
+      btn.classList.toggle("is-active", btn.dataset.variant === variant);
+    });
+    if (activeLabel) {
+      activeLabel.innerHTML = `Variante attiva: <strong>${VARIANTS[variant]?.label || "Classico"}</strong>. Per applicarla all'icona già installata, rimuovi dalla home e re-installa da Safari.`;
+    }
+    applyToManifestLinks(variant);
+  }
+
+  grid.addEventListener("click", (e) => {
+    const btn = e.target.closest(".appicon-opt");
+    if (!btn) return;
+    Theme.set("appIcon", btn.dataset.variant);
+    syncUI();
+    toast("Icona app aggiornata", "success");
   });
 
   syncUI();

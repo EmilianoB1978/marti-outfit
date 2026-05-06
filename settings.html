@@ -212,8 +212,8 @@
         ridotte automaticamente.
       </p>
 
-      <h2 class="settings-section-title">🟡 Pulsante + (FAB)</h2>
-      <p class="settings-hint">Personalizza il pulsante + nella barra inferiore.</p>
+      <h2 class="settings-section-title">🟡 Pulsante centrale (FAB)</h2>
+      <p class="settings-hint">Personalizza il pulsante grande nella barra inferiore.</p>
 
       <!-- Anteprima FAB -->
       <div class="fab-preview-row">
@@ -225,17 +225,31 @@
       </div>
 
       <div class="settings-row">
+        <label class="settings-row-title">Icona</label>
+        <div class="fab-icon-grid" id="fab-icon-grid">
+          <button type="button" class="fab-icon-opt" data-icon="🛍️" aria-label="Borsa shopping">🛍️</button>
+          <button type="button" class="fab-icon-opt" data-icon="👗" aria-label="Vestito">👗</button>
+          <button type="button" class="fab-icon-opt" data-icon="✨" aria-label="Sparkle">✨</button>
+          <button type="button" class="fab-icon-opt" data-icon="📷" aria-label="Camera">📷</button>
+          <button type="button" class="fab-icon-opt" data-icon="➕" aria-label="Plus">➕</button>
+          <button type="button" class="fab-icon-opt" data-icon="🪄" aria-label="Magic wand">🪄</button>
+          <button type="button" class="fab-icon-opt" data-icon="💎" aria-label="Diamante">💎</button>
+          <button type="button" class="fab-icon-opt" data-icon="🌸" aria-label="Fiore">🌸</button>
+        </div>
+      </div>
+
+      <div class="settings-row">
         <label class="settings-row-title" for="fab-bg-color">Colore sfondo</label>
         <input type="color" id="fab-bg-color" class="color-picker-input" value="#d4af37" />
       </div>
 
       <div class="settings-row">
-        <label class="settings-row-title" for="fab-icon-color">Colore icona "+"</label>
+        <label class="settings-row-title" for="fab-icon-color">Colore icona</label>
         <input type="color" id="fab-icon-color" class="color-picker-input" value="#ffffff" />
       </div>
 
       <h2 class="settings-section-title">Logo personalizzato</h2>
-      <p class="settings-hint">Carica un'immagine (logo, foto, illustrazione). Sostituirà il "+" rotondo.</p>
+      <p class="settings-hint">Carica un'immagine (logo, foto, illustrazione). Sostituirà l'icona scelta sopra.</p>
 
       <div id="fab-logo-current" class="fab-logo-current hidden">
         <img id="fab-logo-img" alt="Logo corrente" />
@@ -248,8 +262,35 @@
       </label>
 
       <button class="btn btn--ghost btn--block" id="btn-reset-fab" style="margin-top: var(--space-3);">
-        ↺ Ripristina default (oro + "+")
+        ↺ Ripristina default (oro · 🛍️)
       </button>
+
+      <h2 class="settings-section-title">📲 Icona App (PWA)</h2>
+      <p class="settings-hint">
+        Scegli l'icona "M" che apparirà sulla home dello smartphone.
+        <strong>Nota:</strong> per vedere il cambio sull'icona già installata,
+        rimuovi l'app dalla home e aggiungila di nuovo da Safari.
+      </p>
+
+      <div class="appicon-grid" id="appicon-grid">
+        <button type="button" class="appicon-opt" data-variant="default" aria-label="Default oro su nero">
+          <img src="./icons/icon-192.png" alt="" />
+          <span>Classico</span>
+        </button>
+        <button type="button" class="appicon-opt" data-variant="pink" aria-label="Rosa cipria">
+          <img src="./icons/icon-192-pink.png" alt="" />
+          <span>Rosa</span>
+        </button>
+        <button type="button" class="appicon-opt" data-variant="navy" aria-label="Blu navy">
+          <img src="./icons/icon-192-navy.png" alt="" />
+          <span>Navy</span>
+        </button>
+        <button type="button" class="appicon-opt" data-variant="mono" aria-label="Bianco e nero">
+          <img src="./icons/icon-192-mono.png" alt="" />
+          <span>Mono</span>
+        </button>
+      </div>
+      <p class="settings-hint" id="appicon-active" style="margin-top: var(--space-2);"></p>
     </section>
 
     <!-- ==================================================================

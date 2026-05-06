@@ -350,11 +350,14 @@ export const defaultPreferences = {
   shareTemplate: "classic",   // template default per outfit card (classic|dark|pastel|magazine)
   // Bottom nav (4 destinazioni: 2 a sinistra del FAB, 2 a destra)
   bottomNav: ["wardrobe", "calendar", "capsules", "outfits"],
-  // FAB customization (pulsante + nella barra inferiore)
+  // FAB customization (pulsante centrale nella barra inferiore)
   fab: {
+    icon: "🛍️",          // emoji o testo singolo carattere; ignorato se logoUrl
     bgColor: "",         // vuoto = usa --color-primary
     iconColor: "",       // vuoto = usa --color-text-inverse
-    logoUrl: null,       // se settato, sostituisce il "+" con immagine
+    logoUrl: null,       // se settato, sostituisce icona con immagine
     logoPath: null,      // path Storage per cleanup
   },
+  // Icona PWA (cambia l'icona installata dopo reinstall dalla home)
+  appIcon: "default",    // "default" | "pink" | "navy" | "mono" | "custom"
 };

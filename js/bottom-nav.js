@@ -64,7 +64,7 @@ export function renderBottomNav(onSection, onFab) {
   const fabStyle = fabStyles.length ? `style="${fabStyles.join('; ')}"` : "";
   const fabContent = fab.logoUrl
     ? `<img class="nav-fab-logo" src="${fab.logoUrl}" alt="" />`
-    : `<span class="nav-icon-fab">+</span>`;
+    : `<span class="nav-icon-fab">${fab.icon || "🛍️"}</span>`;
 
   nav.innerHTML = `
     ${buildBtn(keys[0], NAV_DESTINATIONS[keys[0]]?.page === defaultPage)}

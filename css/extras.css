@@ -1816,6 +1816,65 @@ body.editor-page {
   flex-shrink: 0;
 }
 
+/* Griglia selettore icona FAB (8 emoji) */
+.fab-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  width: 100%;
+}
+.fab-icon-opt {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  transition: all var(--animation-speed) var(--animation-easing);
+}
+.fab-icon-opt:hover { background: var(--color-surface-alt); }
+.fab-icon-opt.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
+  box-shadow: 0 0 0 2px var(--color-primary) inset;
+}
+
+/* Griglia varianti icona PWA (4 immagini) */
+.appicon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.appicon-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  transition: all var(--animation-speed) var(--animation-easing);
+}
+.appicon-opt img {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+.appicon-opt.is-active {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
 /* Personalizza barra inferiore: slot rows */
 .nav-slot-row {
   display: flex;

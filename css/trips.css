@@ -123,6 +123,25 @@
   display: flex; justify-content: flex-end; gap: 6px;
   margin-top: 4px;
 }
+.trip-card-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 4px;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+.trip-card-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+}
+.trip-card-arrow {
+  font-size: 18px;
+  color: var(--color-primary);
+  flex: 0 0 auto;
+}
+/* Trip card e' un <a>: rimuovo underline + hover */
+a.trip-card { text-decoration: none; color: inherit; }
+a.trip-card:active { transform: scale(0.99); }
 
 /* Badge stato */
 .trip-badge {
@@ -334,3 +353,156 @@
   border-top: 1px solid var(--color-border);
   background: var(--color-bg);
 }
+
+/* =============================================================================
+   Trip Detail page
+   ============================================================================= */
+
+/* Hero card del viaggio */
+.td-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  border-radius: var(--radius-card);
+  color: var(--color-text-inverse);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
+}
+.td-hero-flag { font-size: 44px; line-height: 1; flex: 0 0 auto; }
+.td-hero-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.td-hero-name {
+  font-family: var(--font-family-heading);
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.15;
+}
+.td-hero-meta {
+  font-size: 13px;
+  opacity: 0.95;
+  line-height: 1.4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.td-hero-badge { flex: 0 0 auto; }
+.td-hero-badge .trip-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--color-text-inverse);
+}
+
+.td-occasion-tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: var(--space-4);
+}
+
+/* Empty state outfit non generati */
+.td-empty {
+  text-align: center;
+  padding: var(--space-5) var(--space-3);
+  background: var(--color-surface);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-card);
+}
+.td-empty.hidden { display: none; }
+.td-empty-icon { font-size: 48px; margin-bottom: var(--space-2); }
+.td-empty h3 {
+  font-family: var(--font-family-heading);
+  font-size: 18px;
+  margin: 0 0 var(--space-2);
+  color: var(--color-text);
+}
+.td-empty p {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 auto var(--space-4);
+  max-width: 320px;
+}
+
+/* Lista giorni */
+.td-days {
+  display: flex; flex-direction: column; gap: var(--space-2);
+}
+.td-days.hidden { display: none; }
+
+.td-day-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.td-day-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+}
+.td-day-title {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+  font-size: 15px;
+  color: var(--color-text);
+}
+.td-day-occ {
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3px;
+  padding: 3px 8px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+.td-day-shuffle {
+  flex: 0 0 auto;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background var(--animation-speed) var(--animation-easing);
+}
+.td-day-shuffle:active { background: var(--color-primary); transform: scale(0.94); }
+
+/* Thumb degli outfit */
+.td-thumbs {
+  display: flex; gap: 6px; overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.td-thumb {
+  flex: 0 0 auto;
+  width: 72px; height: 72px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  border: 1px solid var(--color-border);
+}
+.td-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.td-thumb--placeholder { font-size: 28px; color: var(--color-text-muted); }
+.td-thumb--missing {
+  font-size: 18px;
+  color: var(--color-error);
+  background: var(--color-surface);
+}
+.td-day-empty {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: var(--space-3);
+}
+
+/* Footer azioni viaggio */
+.td-actions {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.td-actions.hidden { display: none; }

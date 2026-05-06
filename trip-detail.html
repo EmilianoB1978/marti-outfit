@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Viaggio · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/trips.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./trips.html" class="btn-icon" aria-label="Torna ai viaggi">←</a>
+    <h1 id="td-title">Viaggio</h1>
+    <button class="btn-icon" id="btn-td-menu" aria-label="Menu">⋯</button>
+  </header>
+
+  <main class="settings-main">
+
+    <!-- Loading -->
+    <div id="td-loading" class="trips-loading">
+      <div class="trips-spinner"></div>
+    </div>
+
+    <!-- Error -->
+    <div id="td-error" class="trips-empty hidden">
+      <div class="trips-empty-illustration">😕</div>
+      <h2>Viaggio non trovato</h2>
+      <p>Il link potrebbe essere obsoleto. Torna alla lista.</p>
+      <a href="./trips.html" class="btn btn--gold btn--block">← Tutti i viaggi</a>
+    </div>
+
+    <!-- Contenuto -->
+    <section id="td-content" class="hidden">
+
+      <!-- Header card del viaggio -->
+      <article class="td-hero">
+        <div class="td-hero-flag" id="td-flag">🌍</div>
+        <div class="td-hero-info">
+          <div class="td-hero-name" id="td-name">—</div>
+          <div class="td-hero-meta" id="td-meta">—</div>
+        </div>
+        <div class="td-hero-badge" id="td-badge"></div>
+      </article>
+
+      <!-- Tags occasioni -->
+      <div class="td-occasion-tags" id="td-occasions"></div>
+
+      <!-- CTA generazione (visibile se outfit non generati) -->
+      <section id="td-empty-outfits" class="td-empty hidden">
+        <div class="td-empty-icon">✨</div>
+        <h3>Pronta a comporre la valigia?</h3>
+        <p>
+          Genero un outfit per ogni giorno del viaggio, scegliendo dal tuo
+          guardaroba in base a stagione, occasione e formalità. Tap "Ricomponi"
+          su un giorno se non ti convince.
+        </p>
+        <button class="btn btn--gold btn--block" id="btn-generate">
+          ✨ Genera outfit del viaggio
+        </button>
+      </section>
+
+      <!-- Lista outfit per giorno -->
+      <section id="td-days" class="td-days hidden"></section>
+
+      <!-- Footer azioni quando outfit generati -->
+      <div id="td-actions" class="td-actions hidden">
+        <button class="btn btn--ghost btn--block" id="btn-shuffle-all">🔀 Rigenera tutti gli outfit</button>
+        <button class="btn btn--danger btn--block" id="btn-delete-trip" style="margin-top:var(--space-2);">🗑 Elimina viaggio</button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/trip-detail.js"></script>
+</body>
+</html>

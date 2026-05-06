@@ -74,7 +74,11 @@ function renderTripsList() {
       const opt = OCCASION_OPTIONS.find(x => x.key === o);
       return opt ? `<span class="trip-tag">${opt.icon} ${opt.label}</span>` : "";
     }).join("");
-    return `<article class="trip-card" data-id="${escapeAttr(t.id)}">
+    const outfitsCount = Object.keys(t.outfits_by_day || {}).length;
+    const outfitsHint = outfitsCount > 0
+      ? `<span class="trip-card-hint">✨ ${outfitsCount} outfit pronti</span>`
+      : `<span class="trip-card-hint">✨ Outfit da generare</span>`;
+    return `<a class="trip-card" href="./trip-detail.html?id=${escapeAttr(t.id)}" data-id="${escapeAttr(t.id)}">
       <div class="trip-card-head">
         <div class="trip-card-title">
           <span class="trip-card-flag">${countryFlag(t.destination?.country_code)}</span>
@@ -88,10 +92,11 @@ function renderTripsList() {
         <span>⏱️ ${t.days || 0} ${t.days === 1 ? "giorno" : "giorni"}</span>
       </div>
       <div class="trip-card-tags">${occasionsTags}</div>
-      <div class="trip-card-actions">
-        <button class="btn btn--ghost btn--sm" data-action="delete" data-id="${escapeAttr(t.id)}">🗑 Elimina</button>
+      <div class="trip-card-foot">
+        ${outfitsHint}
+        <span class="trip-card-arrow">→</span>
       </div>
-    </article>`;
+    </a>`;
   }).join("");
   list.innerHTML = html;
 }
@@ -381,20 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupDestinationSearch();
   setupDates();
 
-  // Click su trip card -> elimina (per ora, in futuro apri dettaglio)
-  document.getElementById("trips-list").addEventListener("click", async (e) => {
-    const btn = e.target.closest('[data-action="delete"]');
-    if (!btn) return;
-    e.stopPropagation();
-    if (!confirm("Eliminare questo viaggio?")) return;
-    try {
-      await deleteTrip(btn.dataset.id);
-      toast("Viaggio eliminato", "success");
-      await loadTrips();
-    } catch (err) {
-      toast("Errore eliminazione: " + err.message, "error");
-    }
-  });
+  // (Tap su una trip card -> naviga a trip-detail.html?id=ID, gestito dall'<a>)
 
   loadTrips();
 });

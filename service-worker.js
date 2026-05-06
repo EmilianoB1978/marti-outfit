@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v58-trips-wizard';
+const CACHE_VERSION = 'v59-trip-outfit-generator';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -64,8 +64,11 @@ const SHELL_FILES = [
   './js/it-format.js',
   './js/trips.js',
   './js/trips-data.js',
+  './js/trips-generator.js',
+  './js/trip-detail.js',
   './css/trips.css',
   './trips.html',
+  './trip-detail.html',
   './dormant.html',
   './js/theme/tokens.js',
   './js/theme/manager.js',
@@ -107,7 +110,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✈️ Crea il tuo primo viaggio! Cerca una città, scegli le date e dicci cosa farai. La valigia smart arriva nel prossimo update.";
+const WHATS_NEW = "✨ La valigia si compone da sola: tap su un viaggio, ✨ Genera outfit, e Marty pesca dal tuo guardaroba un look diverso per ogni giorno.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

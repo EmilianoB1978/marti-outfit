@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v114-fixes';
+const CACHE_VERSION = 'v115-cleanup';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -152,7 +152,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🔧 Fix: la X rossa nell'editor outfit ora cancella davvero la foto scontornata. Rimosso badge armocromia dalle card guardaroba (troppo invasivo) — resta solo nella card dettaglio del capo.";
+const WHATS_NEW = "🧹 Cleanup CSS dead code dopo rimozione badge armocromia dalle card guardaroba.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

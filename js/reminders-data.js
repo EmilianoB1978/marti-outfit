@@ -17,11 +17,11 @@
 //   In-app banner via Notification API (se permesso) + badge count.
 //   Web Push e' fuori scope ora (richiede VAPID server-side).
 
-import { db } from "./firebase-config.js";
 import {
+  db,
   collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, limit, Timestamp,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  query, where, orderBy, Timestamp,
+} from "./firebase-config.js";
 
 const COL = "reminders";
 const cache = { items: null, ts: 0 };

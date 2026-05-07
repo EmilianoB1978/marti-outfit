@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v99-cal-reminders';
+const CACHE_VERSION = 'v100-firebase-fix';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -141,7 +141,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📅 Modal calendario completo: tap su un giorno mostra ora anche i promemoria pending. Calendario = dashboard temporale unificato (outfit + diario + reminders).";
+const WHATS_NEW = "🐛 Hotfix Diario e Promemoria: errore Firebase risolto. Ora il diario si apre senza errori e i promemoria salvano correttamente.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

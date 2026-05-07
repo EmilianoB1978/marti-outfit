@@ -13,14 +13,12 @@
 //   created_at    timestamp
 //   updated_at    timestamp
 
-import { db, storage } from "./firebase-config.js";
 import {
-  collection, doc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy,
-  Timestamp, updateDoc,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-  ref as storageRef, uploadBytes, getDownloadURL, deleteObject,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+  db, storage,
+  collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc,
+  query, orderBy, Timestamp,
+  storageRef, uploadBytes, getDownloadURL, deleteObject,
+} from "./firebase-config.js";
 
 const COL = "diary";
 

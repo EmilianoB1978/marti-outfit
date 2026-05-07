@@ -23,7 +23,8 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import {
   getStorage,
@@ -76,6 +77,7 @@ export {
   where,
   orderBy,
   serverTimestamp,
+  Timestamp,
   // Storage
   storageRef,
   uploadBytes,

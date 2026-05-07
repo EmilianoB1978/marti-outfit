@@ -570,6 +570,33 @@ html, body {
   text-transform: capitalize;
 }
 
+/* Alert pre-acquisto: impatto del prezzo sul budget mese corrente */
+.budget-impact {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+.budget-impact.hidden { display: none; }
+.budget-impact.is-info {
+  background: rgba(33, 150, 243, 0.08);
+  color: #1a4a73;
+  border-color: rgba(33, 150, 243, 0.25);
+}
+.budget-impact.is-warning {
+  background: rgba(231, 126, 34, 0.1);
+  color: #8a4a10;
+  border-color: rgba(231, 126, 34, 0.35);
+}
+.budget-impact.is-danger {
+  background: rgba(192, 57, 43, 0.12);
+  color: #8a2818;
+  border-color: rgba(192, 57, 43, 0.4);
+  font-weight: var(--font-weight-bold);
+}
+
 /* =============================================================================
    Multi-chips (campi multi-select del modal capo: colori, pattern,
    materiali, occasioni). Wrappano in un container che si auto-flow,

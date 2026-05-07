@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v81-budget-alerts';
+const CACHE_VERSION = 'v82-budget-pre-buy';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -121,7 +121,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🔔 Avvisi budget proattivi! 'Hai usato l'80%, mancano 12 giorni' o 'a questo ritmo sforerai di 30€'. Marty ti tiene d'occhio le spese.";
+const WHATS_NEW = "🚨 Alert pre-acquisto! Quando aggiungi un capo, Marty ti dice subito quanto del budget userai (e se sfori). Niente sorprese a fine mese.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

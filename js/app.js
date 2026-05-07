@@ -16,7 +16,7 @@ import * as DormantMod from "./dormant.js";
 import * as TodayOutfit from "./today-outfit.js";
 import { renderBottomNav, NAV_DESTINATIONS } from "./bottom-nav.js";
 import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
-import { addTransaction as addBudgetTransaction, monthKey, formatMonth as formatBudgetMonth } from "./budget-data.js";
+import { addTransaction as addBudgetTransaction, monthKey, formatMonth as formatBudgetMonth, getBudget, computeSummary as computeBudgetSummary } from "./budget-data.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
@@ -1023,7 +1023,7 @@ function setSelectedWeight(key) {
 }
 
 // Toggle "Registra in budget": visibile solo se prezzo > 0 E capo nuovo
-function updateBudgetToggleVisibility() {
+async function updateBudgetToggleVisibility() {
   const wrap = document.getElementById("field-budget-toggle-wrap");
   const lbl = document.getElementById("budget-toggle-month-label");
   if (!wrap) return;
@@ -1033,9 +1033,44 @@ function updateBudgetToggleVisibility() {
   if (isNew && hasPrice) {
     wrap.classList.remove("hidden");
     if (lbl) lbl.textContent = formatBudgetMonth(monthKey());
+    refreshBudgetImpact(price);
   } else {
     wrap.classList.add("hidden");
+    const imp = document.getElementById("budget-impact");
+    if (imp) { imp.classList.add("hidden"); imp.innerHTML = ""; }
   }
+}
+
+/**
+ * Mostra impatto del prezzo sul budget mese corrente:
+ * - Se non c'e' budget impostato: nessun banner
+ * - Se rientra: 'Spenderai 60% del budget'
+ * - Se sfori: '⚠ Questo capo ti farebbe sforare di 27€'
+ */
+async function refreshBudgetImpact(price) {
+  const box = document.getElementById("budget-impact");
+  if (!box) return;
+  let budget;
+  try { budget = await getBudget(monthKey()); } catch { return; }
+  if (!budget || (!budget.budget && !budget.rollover_in)) {
+    box.classList.add("hidden"); box.innerHTML = ""; return;
+  }
+  const summary = computeBudgetSummary(budget);
+  const newSpent = summary.spent + price;
+  const overshoot = newSpent - summary.available;
+  const newPct = summary.available > 0 ? Math.round((newSpent / summary.available) * 100) : 100;
+
+  if (overshoot > 0) {
+    box.className = "budget-impact is-danger";
+    box.innerHTML = `🚨 Con questo capo sfori di <strong>${formatNumberIT(overshoot, { decimals: 0, euro: true })}</strong> il budget ${formatBudgetMonth(monthKey())}.`;
+  } else if (newPct >= 80) {
+    box.className = "budget-impact is-warning";
+    box.innerHTML = `⚠️ Arriverai al <strong>${newPct}%</strong> del budget di ${formatBudgetMonth(monthKey())} (resterà ${formatNumberIT(summary.available - newSpent, { decimals: 0, euro: true })}).`;
+  } else {
+    box.className = "budget-impact is-info";
+    box.innerHTML = `💡 Userai il <strong>${newPct}%</strong> del budget · ti resterà ${formatNumberIT(summary.available - newSpent, { decimals: 0, euro: true })}.`;
+  }
+  box.classList.remove("hidden");
 }
 
 // =============================================================================

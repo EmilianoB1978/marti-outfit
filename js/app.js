@@ -82,6 +82,7 @@ async function boot() {
     renderTodayOutfit();
     renderDormantBanner();
     renderHomeHubCard().catch(err => console.warn("home hub card:", err));
+    runBootChecks().catch(err => console.warn("boot checks:", err));
   } catch (err) {
     console.error("Errore boot:", err);
     toast("Errore caricamento dati", "error");
@@ -2622,6 +2623,50 @@ function setupPullToRefresh() {
     startY = null;
     dy = 0;
   });
+}
+
+// =============================================================================
+// Boot checks: notifiche reminder scaduti + warning streak diary
+// =============================================================================
+// Eseguito asincrono dopo il render iniziale; tutto fail-soft.
+async function runBootChecks() {
+  // 1. Reminders scaduti -> notifica nativa se permesso, altrimenti toast
+  try {
+    const { listReminders, bucketOf, tryNotifyDue, REMINDER_TYPES } =
+      await import("./reminders-data.js");
+    const items = await listReminders();
+    const overdue = items.filter(r => r.status !== "done" && bucketOf(r) === "overdue");
+    if (overdue.length > 0) {
+      // Tenta notifica nativa per quelli mai notificati
+      tryNotifyDue(items);
+      // Toast in-app se non gia' visto in questa sessione
+      if (!sessionStorage.getItem("__bootRemNotified")) {
+        const first = overdue[0];
+        const meta = REMINDER_TYPES[first.type] || REMINDER_TYPES.manual;
+        const msg = overdue.length === 1
+          ? `${meta.icon} Promemoria scaduto: ${first.title}`
+          : `⚠️ ${overdue.length} promemoria scaduti`;
+        toast(msg, "warn");
+        sessionStorage.setItem("__bootRemNotified", "1");
+      }
+    }
+  } catch (_) { /* fail-soft */ }
+
+  // 2. Streak warning: se streak attivo, oggi non ho scritto, e sono dopo le 22:00
+  try {
+    const { listEntries, computeStreak, todayId } = await import("./diary-data.js");
+    const entries = await listEntries();
+    const streak = computeStreak(entries);
+    if (streak < 2) return; // streak minimo 2 per warning sensato
+    const today = todayId();
+    const hasToday = entries.some(e => e.id === today);
+    if (hasToday) return;
+    const hour = new Date().getHours();
+    if (hour < 22) return;
+    if (sessionStorage.getItem("__bootStreakWarn")) return;
+    toast(`🔥 Stai per perdere lo streak di ${streak} giorni! Apri il diario.`, "warn");
+    sessionStorage.setItem("__bootStreakWarn", "1");
+  } catch (_) { /* fail-soft */ }
 }
 
 // Esporto helpers chiamati inline da HTML (onclick)

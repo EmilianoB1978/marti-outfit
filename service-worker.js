@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v94-diary-wrapped';
+const CACHE_VERSION = 'v95-top-month';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -85,6 +85,7 @@ const SHELL_FILES = [
   './js/diary-detail.js',
   './js/diary-wrapped.js',
   './js/home-hub-card.js',
+  './js/top-month-banner.js',
   './css/trips.css',
   './css/budget.css',
   './css/notes.css',
@@ -139,7 +140,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📊 Diary Wrapped! Riassunto annuale del diario in immagine 1080x1080 condivisibile su Stories. Mood top, streak record, foto totali, top tag. Tap su 📊 nella pagina diario.";
+const WHATS_NEW = "⭐ Top Capi del Mese sulla home: i 3 capi piu' indossati negli ultimi 30 giorni con podio (1/2/3). Complementare al banner dei capi a riposo.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

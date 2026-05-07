@@ -18,6 +18,7 @@ import { renderBottomNav, NAV_DESTINATIONS, MENU_DRAWER_KEYS } from "./bottom-na
 import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
 import { addTransaction as addBudgetTransaction, monthKey, formatMonth as formatBudgetMonth, getBudget, computeSummary as computeBudgetSummary } from "./budget-data.js";
 import { renderHomeHubCard } from "./home-hub-card.js";
+import { renderTopMonthBanner } from "./top-month-banner.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
@@ -82,6 +83,7 @@ async function boot() {
     renderTodayOutfit();
     renderDormantBanner();
     renderHomeHubCard().catch(err => console.warn("home hub card:", err));
+    renderTopMonthBanner().catch(err => console.warn("top month banner:", err));
     runBootChecks().catch(err => console.warn("boot checks:", err));
   } catch (err) {
     console.error("Errore boot:", err);

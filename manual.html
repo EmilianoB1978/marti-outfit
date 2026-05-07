@@ -925,6 +925,94 @@ jeans: https://...
       </div>
     </div>
 
+    <!-- ===== Sezione: Note (template wishlist/sarta/moodboard/regali) ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📝 Note (wishlist, sarta, mood board, regali)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>La sezione <strong>📝 Note</strong> raccoglie 5 tipi di appunti collegati al guardaroba:</p>
+        <ul class="manual-list">
+          <li><strong>📝 Nota libera</strong> — testo, foto, checklist</li>
+          <li><strong>🛍️ Wishlist capo</strong> — capo desiderato con prezzo target e alert</li>
+          <li><strong>✂️ Sarta / Ritocchi</strong> — capo, modifica, preventivo, data ritiro</li>
+          <li><strong>💄 Mood board</strong> — ispirazioni look con foto multiple</li>
+          <li><strong>🎁 Regali</strong> — persona, idea, budget, data evento (compleanno, anniversario)</li>
+        </ul>
+        <p>Ogni nota può avere allegati foto, tag custom e può essere "pinnata" in cima. La ricerca filtra titolo, testo e tag.</p>
+        <p class="manual-tip">💡 <strong>Le note tipo Sarta e Regali alimentano i Promemoria automatici</strong>: se imposti una data ritiro o una data evento, il Diario suggerisce di creare un reminder.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Promemoria armadio-aware ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>⏰ Promemoria intelligenti</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>I <strong>Promemoria</strong> di Marty non sono semplici reminder: <strong>sanno cosa hai nell'armadio</strong>. 7 tipi:</p>
+        <ul class="manual-list">
+          <li><strong>📝 Manuale</strong> — promemoria libero</li>
+          <li><strong>👕 Capo</strong> — legato a un capo (riprovalo, lavalo, ritiralo)</li>
+          <li><strong>✂️ Sarta</strong> — ritiro lavoro (linkato a una nota tipo Sarta)</li>
+          <li><strong>🎁 Regalo</strong> — comprare un regalo (linkato a una nota tipo Regali)</li>
+          <li><strong>🧺 Lavaggio</strong> — lavare un capo dopo l'uso</li>
+          <li><strong>🍂 Cambio stagione</strong> — armadio invernale ↔ estivo</li>
+          <li><strong>👗 Outfit programmato</strong> — indossa un look il giorno X</li>
+        </ul>
+        <p><strong>Suggerimenti automatici dall'armadio</strong> (sezione 💡 in cima alla lista):</p>
+        <ul class="manual-list">
+          <li>Capi non indossati da oltre 60 giorni → <em>"Riprova questo capo"</em></li>
+          <li>Note Sarta con data ritiro → <em>"Ritira da sarta"</em> a quella data</li>
+          <li>Note Regali con data evento entro 60gg → <em>"Compra regalo"</em> 7 giorni prima</li>
+        </ul>
+        <p>Tap su un suggerimento per pre-compilare il form. Tap su ✓ per completare, ⏱ per posticipare di 24h, × per eliminare.</p>
+        <p class="manual-tip">🔔 <strong>Notifiche</strong>: tap sull'icona campanella in alto per attivare le notifiche locali (banner di sistema). I promemoria con ripetizione (giornaliera/settimanale/mensile/annuale) avanzano automaticamente al completamento invece di chiudersi.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Diario armadio-aware ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📔 Diario (con outfit del giorno)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Il <strong>Diario</strong> di Marty ricorda anche cosa indossavi. Per ogni giorno puoi scrivere una pagina con:</p>
+        <ul class="manual-list">
+          <li><strong>Mood</strong> tra 10 emoji (felice, innamorata, calma, carica, pensierosa, triste, arrabbiata, stanca, entusiasta, stressata)</li>
+          <li><strong>Titolo + pensieri</strong> rich text</li>
+          <li><strong>Foto multiple</strong> (caricate su Storage)</li>
+          <li><strong>Tag custom</strong> separati da virgola</li>
+        </ul>
+        <p><strong>Outfit del giorno auto-link</strong>: se hai marcato dei capi come "indossati oggi" dal guardaroba, l'entry del diario li mostra automaticamente in una griglia <em>"👗 Cosa indossavi"</em>. Magia: nessun input manuale, viene letto dal <code>wear_history</code> dei capi.</p>
+        <p>La timeline è <strong>raggruppata per mese</strong> con statistiche in cima:</p>
+        <ul class="manual-list">
+          <li>🔥 <strong>Streak</strong>: giorni consecutivi a ritroso da oggi</li>
+          <li>📔 <strong>Pagine totali</strong></li>
+          <li>😊 <strong>Mood preferito</strong> (più frequente)</li>
+        </ul>
+        <p class="manual-tip">💾 <strong>Auto-save</strong>: ogni modifica viene salvata dopo 800ms di inattività. Anche se chiudi la pagina prima del timer, l'app forza il salvataggio. Niente dati persi.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Personalizzazione menu ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📋 Personalizzazione menu</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Il <strong>menu drawer</strong> (icona ⋯ in alto a destra) è completamente personalizzabile:</p>
+        <ul class="manual-list">
+          <li><strong>Card grid 3 colonne</strong> con icona + label, tutte di dimensione identica</li>
+          <li>Personalizza ordine e visibilità in <strong>Aspetto → 📋 Menu</strong></li>
+          <li>Frecce ↑↓ per riordinare le voci</li>
+          <li>Toggle 🙈/👁 per nascondere voci che non usi (mantengono comunque la posizione)</li>
+          <li>Bottone <strong>Reset</strong> per ripristinare l'ordine consigliato</li>
+        </ul>
+        <p>Il bottone <em>"🔄 Forza aggiornamento app"</em> è in fondo al drawer come utility separata (non occupa una card).</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione 10: Domande frequenti ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

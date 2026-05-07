@@ -64,8 +64,14 @@ export function renderBottomNav(onSection, onFab) {
 
   const prefs = Theme.getPreferences();
   let raw = prefs.bottomNav || DEFAULT_BOTTOM_NAV;
-  // Migrazione legacy: vecchio formato 4 slot -> inserisce add_item al centro
-  if (raw.length === 4) raw = [raw[0], raw[1], "add_item", raw[2], raw[3]];
+  // Migrazione legacy: vecchio formato 4 slot -> inserisce tree al centro
+  if (raw.length === 4) raw = [raw[0], raw[1], "tree", raw[2], raw[3]];
+  // Migrazione v105: chi aveva 'add_item' al centro lo aggiorna a 'tree'
+  // (l'azione "aggiungi capo" e' ora dentro l'albero come primo frutto)
+  if (raw[2] === "add_item") {
+    raw = [...raw];
+    raw[2] = "tree";
+  }
   const keys = raw.slice(0, 5);
   while (keys.length < 5) keys.push("wardrobe");
 
@@ -138,8 +144,13 @@ export function renderBottomNav(onSection, onFab) {
     } else if (dest.type === "tree") {
       btn.addEventListener("click", async (e) => {
         e.preventDefault();
-        const m = await import("./action-tree.js");
-        m.openActionTree({ onAction: typeof onFab === "function" ? null : null });
+        try {
+          const m = await import("./action-tree.js");
+          m.openActionTree();
+        } catch (err) {
+          console.error("[action-tree] import fallito:", err);
+          alert("Errore caricamento albero: " + err.message);
+        }
       });
     } else if (dest.type === "section") {
       btn.addEventListener("click", () => onSection(btn.dataset.page));

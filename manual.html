@@ -1192,7 +1192,15 @@ jeans: https://...
         </ul>
         <p class="manual-tip">💡 <strong>Pattern italiano</strong>: nomenclatura ispirata al sistema di Rossella Migliaccio (Inverno Brillante, Estate Morbida, ecc.). Algoritmo basato su 3 assi T/V/I + lookup table 12-stagioni con tie-breaker per i casi neutri (es. Soft Autumn vs Soft Summer).</p>
         <p class="manual-tip">⚠️ <strong>Limiti</strong>: è un test self-administered con accuratezza ~80% per stagioni "pure" e ~65% per quelle ibride. Per la massima precisione, una consulente armocromica con drappi reali resta lo standard.</p>
-        <p>La tua stagione è salvata su questo dispositivo e sarà usata da <strong>nuove feature in arrivo</strong>: alert capo-fuori-palette sul guardaroba, score outfit cromatico, suggerimenti shopping basati sulla tua palette.</p>
+        <p>La tua stagione è salvata su questo dispositivo e usata <strong>ovunque nell'app</strong>:</p>
+        <ul class="manual-list">
+          <li>🟢 <strong>Badge sulle card capo</strong> nel guardaroba: 🟢 In palette · 🟡 Vicino · 🔴 Fuori palette · 🚫 Da evitare</li>
+          <li>🎨 <strong>Filtro "Solo palette"</strong> nella barra dei filtri del guardaroba (e anche "🚫 Fuori palette" per scoprire i capi che ti spengono)</li>
+          <li>📊 <strong>Tile sulla home</strong> con il match: "Estate Soft · 67% in palette" + breakdown perfetti/vicini/fuori</li>
+          <li>📋 <strong>Info nel modal capo</strong>: quando apri un capo per modificarlo, vedi il suo match (es. "🟢 In palette — Match 87/100") + il colore della tua palette più vicino + un consiglio su come indossarlo</li>
+        </ul>
+        <p class="manual-tip">🧮 <strong>Algoritmo</strong>: ogni colore-capo (italiano, es. "rosso", "denim", "verde salvia") viene tradotto in HEX tramite la mappa colori italiani. Distanza redmean weighted RGB → confronto con la palette della tua stagione. Soglie: distanza &lt;110 = in palette, 110-200 = vicino, &gt;200 = fuori. Match con un colore "avoid" prevale sul punteggio palette.</p>
+        <p class="manual-tip">⚠️ <strong>Limiti</strong>: i capi senza colore taggato non hanno badge. Aggiungi il colore (anche secondario) quando crei/modifichi il capo per ricevere l'analisi. I colori non in tassonomia (es. nomi inventati) vengono ignorati silenziosamente.</p>
       </div>
     </div>
 

@@ -4,6 +4,10 @@
 import { listReminders, bucketOf, REMINDER_TYPES } from "./reminders-data.js";
 import { listEntries, todayId, computeStreak, MOODS, getOrCreateEntry, updateEntry } from "./diary-data.js";
 import { listNotes } from "./notes-data.js";
+import * as Theme from "./theme/manager.js";
+import { SEASONS } from "./armocromia-data.js";
+import { paletteStats } from "./color-match.js";
+import { listItems } from "./wardrobe.js";
 
 let mounted = false;
 
@@ -14,10 +18,11 @@ export async function renderHomeHubCard() {
   if (!root) return;
 
   // Lazy load in parallelo, fail-soft per ogni source
-  const [reminders, entries, notes] = await Promise.all([
+  const [reminders, entries, notes, items] = await Promise.all([
     listReminders().catch(() => []),
     listEntries().catch(() => []),
     listNotes().catch(() => []),
+    listItems().catch(() => []),
   ]);
 
   const todayReminders = reminders.filter(r =>
@@ -83,6 +88,25 @@ export async function renderHomeHubCard() {
         <span class="hub-tile-arrow">›</span>
       </a>
     `);
+  }
+
+  // Tile armocromia (se test fatto)
+  const armoData = Theme.getPreferences().armocromia;
+  if (armoData?.seasonKey && SEASONS[armoData.seasonKey] && items.length >= 5) {
+    const season = SEASONS[armoData.seasonKey];
+    const stats = paletteStats(items);
+    if (stats.applicable >= 3) {
+      tiles.push(`
+        <a href="./armocromia.html" class="hub-tile hub-tile-armo">
+          <div class="hub-tile-icon" style="background:${season.palette[0]}33;color:${season.palette[0]}">${season.emoji}</div>
+          <div class="hub-tile-body">
+            <div class="hub-tile-label">${escapeHtml(season.name)} · ${stats.percent}% in palette</div>
+            <div class="hub-tile-sub">${stats.in} perfetti · ${stats.near} vicini · ${stats.out + stats.avoid} fuori</div>
+          </div>
+          <span class="hub-tile-arrow">›</span>
+        </a>
+      `);
+    }
   }
 
   // Tile nota pinnata

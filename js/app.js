@@ -12,6 +12,7 @@ import * as Haptic from "./haptic.js";
 import * as Search from "./search.js";
 import * as Taxonomies from "./taxonomies.js";
 import * as ChipStyles from "./chip-styles.js";
+import * as ColorMatch from "./color-match.js";
 import * as ShareOutfit from "./share-outfit.js";
 import * as DormantMod from "./dormant.js";
 import * as TodayOutfit from "./today-outfit.js";
@@ -31,6 +32,7 @@ const state = {
   savedOutfits: [],   // outfit salvati
   currentOutfits: [], // outfit appena generati (non ancora salvati)
   filters: {},        // filtri attivi sulla griglia
+  armoFilter: null,   // null | 'good' (in palette) | 'out' (fuori palette)
   editingId: null,    // null = nuovo capo, string = modifica capo esistente
   pendingPhoto: null, // { blob, base64, dataUrl } in attesa di salvataggio
 };
@@ -1380,7 +1382,18 @@ function renderWardrobe() {
   const grid = document.getElementById("wardrobe-grid");
   const empty = document.getElementById("empty-state");
 
-  const filtered = Wardrobe.filterItems(state.items, state.filters);
+  let filtered = Wardrobe.filterItems(state.items, state.filters);
+  // Filtro armocromia: se attivo, mostra solo capi in palette o vicini
+  if (state.armoFilter) {
+    filtered = filtered.filter(it => {
+      const m = ColorMatch.matchItemColor(it);
+      if (!m) return false;
+      if (state.armoFilter === "in")    return m.status === "in";
+      if (state.armoFilter === "good")  return m.status === "in" || m.status === "near";
+      if (state.armoFilter === "out")   return m.status === "out" || m.status === "avoid";
+      return true;
+    });
+  }
 
   if (state.items.length === 0) {
     grid.innerHTML = "";
@@ -1400,6 +1413,15 @@ function renderWardrobe() {
     let linkBadge = "";
     if (linkStatus === "expired") linkBadge = `<div class="item-link-badge is-expired" title="Link scaduto">⚠️</div>`;
     else if (linkStatus === "ok" || linkStatus === "warning") linkBadge = `<div class="item-link-badge" title="Link prodotto">🔗</div>`;
+    // Badge armocromia (solo se test completato)
+    let armoBadge = "";
+    const match = ColorMatch.matchItemColor(item);
+    if (match) {
+      const meta = ColorMatch.statusMeta(match.status);
+      if (meta) {
+        armoBadge = `<div class="item-armo-badge is-${match.status}" title="${meta.label} (${match.score}/100)" style="--armo-color:${meta.color}">${meta.emoji}</div>`;
+      }
+    }
     return `
     <div class="item-card" data-id="${item.id}">
       ${item.photo_url
@@ -1407,6 +1429,7 @@ function renderWardrobe() {
         : `<div class="item-photo" style="display:flex;align-items:center;justify-content:center;font-size:48px;opacity:0.3">👕</div>`
       }
       ${linkBadge}
+      ${armoBadge}
       ${wearCount > 0 ? `<div class="item-wear-badge">👕 ${wearCount}</div>` : ''}
       <div class="item-info">
         <div class="item-category">${item.category || "—"}</div>
@@ -1523,6 +1546,28 @@ function renderFilters() {
     return `<button class="filter-chip ${active ? 'active' : ''}" data-idx="${i}">${chip.label}</button>`;
   }).join("");
 
+  // Chip filtro armocromia (solo se test completato)
+  const armoData = Theme.getPreferences().armocromia;
+  if (armoData?.seasonKey) {
+    const opts = [
+      { key: "good", label: "🎨 Solo palette", title: "Solo capi della tua stagione" },
+      { key: "out",  label: "🚫 Fuori palette", title: "Capi che ti spengono" },
+    ];
+    for (const o of opts) {
+      const active = state.armoFilter === o.key;
+      const btn = document.createElement("button");
+      btn.className = `filter-chip filter-chip-armo ${active ? "active" : ""}`;
+      btn.title = o.title;
+      btn.textContent = o.label;
+      btn.addEventListener("click", () => {
+        state.armoFilter = (state.armoFilter === o.key) ? null : o.key;
+        renderFilters();
+        renderWardrobe();
+      });
+      bar.appendChild(btn);
+    }
+  }
+
   bar.querySelectorAll(".filter-chip").forEach((btn, i) => {
     btn.addEventListener("click", () => {
       const chip = chips[i];
@@ -1632,7 +1677,41 @@ function openEditItem(id) {
   renderWearStats(item);
   document.getElementById("wear-stats-section").classList.remove("hidden");
 
+  // Info palette armocromia (se test completato)
+  renderArmocromiaInfo(item);
+
   document.getElementById("modal-item").classList.remove("hidden");
+}
+
+function renderArmocromiaInfo(item) {
+  const host = document.getElementById("item-armo-info");
+  if (!host) return;
+  const m = ColorMatch.matchItemColor(item);
+  if (!m) {
+    host.classList.add("hidden");
+    host.innerHTML = "";
+    return;
+  }
+  const meta = ColorMatch.statusMeta(m.status);
+  const tip = m.status === "in"
+    ? "Questo capo è perfetto per la tua stagione."
+    : m.status === "near"
+      ? "Vicino alla palette. Va bene, ma esistono colori più adatti."
+      : m.status === "out"
+        ? "Fuori palette: ti spegne. Indossalo lontano dal viso (pantaloni, scarpe)."
+        : "Da evitare vicino al viso: usa solo come accessorio.";
+  host.classList.remove("hidden");
+  host.innerHTML = `
+    <div class="armo-info-row">
+      <span class="armo-info-emoji">${meta.emoji}</span>
+      <div class="armo-info-text">
+        <div class="armo-info-status" style="color:${meta.color}">${meta.label}</div>
+        <div class="armo-info-score">Match ${m.score}/100</div>
+      </div>
+      ${m.closest ? `<div class="armo-info-swatch" style="background:${m.closest}" title="Colore palette piu' vicino: ${m.closest}"></div>` : ""}
+    </div>
+    <p class="armo-info-tip">${tip}</p>
+  `;
 }
 
 // Render della sezione "Indossato N volte" + bottone "Indossato oggi"

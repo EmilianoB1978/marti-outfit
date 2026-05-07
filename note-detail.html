@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Nota · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/notes.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header note-detail-header">
+    <a href="./notes.html" class="btn-icon" aria-label="Torna alle note">←</a>
+    <span id="note-type-badge" class="note-type-badge">📝 Nota</span>
+    <div class="note-detail-actions">
+      <button class="btn-icon" id="btn-pin-note" aria-label="Blocca in cima">📌</button>
+      <button class="btn-icon" id="btn-delete-note" aria-label="Elimina">🗑</button>
+    </div>
+  </header>
+
+  <main class="settings-main note-editor-main">
+
+    <input type="text" id="nd-title" class="nd-title" placeholder="Titolo (opzionale)" maxlength="120" />
+
+    <!-- Body universale (rich text minimo) -->
+    <div id="nd-body" class="nd-body" contenteditable="true" data-placeholder="Scrivi qui..."></div>
+
+    <!-- Toolbar formattazione (sticky sopra tastiera) -->
+    <div class="nd-toolbar">
+      <button type="button" data-cmd="bold" aria-label="Grassetto"><strong>B</strong></button>
+      <button type="button" data-cmd="italic" aria-label="Corsivo"><em>I</em></button>
+      <button type="button" data-cmd="insertUnorderedList" aria-label="Lista">• Lista</button>
+      <button type="button" id="nd-add-checklist" aria-label="Checklist">☐ Check</button>
+      <button type="button" id="nd-add-photo" aria-label="Aggiungi foto">📷</button>
+      <input type="file" accept="image/*" id="nd-photo-input" hidden multiple />
+    </div>
+
+    <!-- Allegati (mostrati come griglia) -->
+    <div id="nd-attachments" class="nd-attachments"></div>
+
+    <!-- Sezione tipo-specifica (popolata in base a note.type) -->
+    <div id="nd-typed-section" class="nd-typed-section"></div>
+
+    <!-- Tag editor -->
+    <div class="nd-tags-editor">
+      <label class="nd-tags-label">Tag</label>
+      <div id="nd-tags-list" class="nd-tags-list"></div>
+      <input type="text" id="nd-tag-input" placeholder="+ Aggiungi tag" maxlength="24" />
+    </div>
+
+    <!-- Status save (auto-save indicator) -->
+    <div id="nd-save-status" class="nd-save-status">Salvato</div>
+
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/note-detail.js"></script>
+</body>
+</html>

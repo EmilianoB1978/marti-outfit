@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Note · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/notes.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>📝 Note</h1>
+    <span></span>
+  </header>
+
+  <main class="settings-main">
+
+    <!-- Search bar -->
+    <div class="notes-search">
+      <input type="search" id="notes-search-input" placeholder="🔍 Cerca tra le note..." autocomplete="off" />
+    </div>
+
+    <!-- Filtro tag (chip orizzontali) -->
+    <div id="notes-tags-filter" class="notes-tags-filter hidden"></div>
+
+    <!-- Lista note -->
+    <section id="notes-list" class="notes-list">
+      <div class="notes-loading">⏳</div>
+    </section>
+
+  </main>
+
+  <!-- FAB Aggiungi nota: apre menu coi 5 tipi -->
+  <button class="notes-fab" id="btn-add-note" aria-label="Aggiungi nota">＋</button>
+
+  <!-- Bottom-sheet menu tipi nota -->
+  <div id="notes-type-sheet" class="notes-sheet hidden">
+    <div class="notes-sheet-backdrop" id="notes-sheet-backdrop"></div>
+    <div class="notes-sheet-content">
+      <div class="notes-sheet-handle"></div>
+      <h3 class="notes-sheet-title">Che tipo di nota?</h3>
+      <div id="notes-type-list" class="notes-type-list">
+        <!-- popolato dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/theme/manager.js"></script>
+  <script type="module" src="./js/notes-page.js"></script>
+</body>
+</html>

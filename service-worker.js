@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v83-manual-budget';
+const CACHE_VERSION = 'v84-notes-foundation';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -75,9 +75,15 @@ const SHELL_FILES = [
   './js/instagram-share.js',
   './js/budget-data.js',
   './js/budget-page.js',
+  './js/notes-data.js',
+  './js/notes-page.js',
+  './js/note-detail.js',
   './css/trips.css',
   './css/budget.css',
+  './css/notes.css',
   './budget.html',
+  './notes.html',
+  './note-detail.html',
   './trips.html',
   './trip-detail.html',
   './dormant.html',
@@ -121,7 +127,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📖 Manuale aggiornato con la sezione completa Budget mensile (impostazione, rollover, avvisi proattivi, statistiche…).";
+const WHATS_NEW = "📝 Note! Lista, editor full-screen, foto, checklist, tag, pin, search. Foundation pronta — i 4 template verticali (wishlist, sarta, mood board, regali) arrivano nel prossimo update.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

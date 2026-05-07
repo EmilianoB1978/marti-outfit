@@ -57,10 +57,65 @@ async function load() {
   renderCloseButtons();
 }
 
+function computeProactiveAlert(b, summary) {
+  // Solo per il mese corrente E budget non chiuso
+  if (b.month !== monthKey() || b.closed) return null;
+  if (b.budget <= 0 && b.rollover_in === 0) return null;
+
+  const today = new Date();
+  const dayOfMonth = today.getDate();
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const daysLeft = lastDay - dayOfMonth;
+  const dayProgress = dayOfMonth / lastDay; // 0..1
+
+  // Sforamento gia' avvenuto
+  if (summary.delta < 0) {
+    return {
+      kind: "danger",
+      icon: "🚨",
+      message: `Hai già sforato di <strong>${formatNumberIT(Math.abs(summary.delta), { decimals: 0, euro: true })}</strong>. Mancano <strong>${daysLeft}</strong> ${daysLeft === 1 ? "giorno" : "giorni"} alla fine del mese.`,
+    };
+  }
+
+  // Proiezione: se mantieni questo ritmo, sforerai?
+  if (summary.spent > 0 && dayProgress > 0.15) {
+    const projected = summary.spent / dayProgress;
+    const overshoot = projected - summary.available;
+    if (overshoot > 0 && overshoot >= summary.available * 0.05) {
+      return {
+        kind: "warning",
+        icon: "⚠️",
+        message: `Stai spendendo più del previsto. A questo ritmo arriverai a <strong>${formatNumberIT(projected, { decimals: 0, euro: true })}</strong> a fine mese (sforando di ~${formatNumberIT(overshoot, { decimals: 0, euro: true })}).`,
+      };
+    }
+  }
+
+  // 80%+ del budget speso
+  if (summary.pct >= 80) {
+    return {
+      kind: "warning",
+      icon: "⚠️",
+      message: `Hai usato <strong>${summary.pct}%</strong> del budget. Mancano <strong>${daysLeft}</strong> ${daysLeft === 1 ? "giorno" : "giorni"} e <strong>${formatNumberIT(summary.delta, { decimals: 0, euro: true })}</strong>.`,
+    };
+  }
+
+  // Sotto la metà del mese e già 50%+ speso
+  if (dayProgress < 0.5 && summary.pct >= 50) {
+    return {
+      kind: "info",
+      icon: "💡",
+      message: `Hai speso <strong>${summary.pct}%</strong> del budget e siamo solo a metà mese. Tieni il ritmo!`,
+    };
+  }
+
+  return null;
+}
+
 function renderSummary() {
   const b = state.budget;
   const s = computeSummary(b);
   const isClosed = !!b.closed;
+  const alert = computeProactiveAlert(b, s);
 
   // Stato semaforo
   let statusClass = "is-good";
@@ -103,6 +158,10 @@ function renderSummary() {
 
       ${isClosed ? `<div class="bg-locked-tag">🔒 Mese chiuso</div>` : ""}
     </div>
+    ${alert ? `<div class="bg-alert bg-alert--${alert.kind}">
+      <span class="bg-alert-icon">${alert.icon}</span>
+      <span class="bg-alert-msg">${alert.message}</span>
+    </div>` : ""}
   `;
   document.getElementById("bg-summary").innerHTML = html;
 

@@ -149,6 +149,37 @@
   text-transform: uppercase;
 }
 
+/* Alert proattivi (banner contestuale dentro summary) */
+.bg-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: var(--space-3);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  border: 1px solid transparent;
+}
+.bg-alert-icon { font-size: 22px; line-height: 1; flex: 0 0 auto; }
+.bg-alert-msg  { flex: 1; min-width: 0; }
+.bg-alert--info {
+  background: rgba(33, 150, 243, 0.1);
+  color: #1a4a73;
+  border-color: rgba(33, 150, 243, 0.3);
+}
+.bg-alert--warning {
+  background: rgba(231, 126, 34, 0.12);
+  color: #8a4a10;
+  border-color: rgba(231, 126, 34, 0.4);
+}
+.bg-alert--danger {
+  background: rgba(192, 57, 43, 0.12);
+  color: #8a2818;
+  border-color: rgba(192, 57, 43, 0.45);
+  font-weight: var(--font-weight-bold);
+}
+
 /* Banner rollover-in */
 .bg-rollover-in {
   margin-bottom: var(--space-3);

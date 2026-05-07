@@ -270,6 +270,14 @@
           <button class="btn btn--secondary btn--sm" id="btn-mark-worn">✓ Indossato oggi</button>
         </div>
 
+        <!-- Quick actions cross-feature: reminders / notes / wash (visible solo in edit mode) -->
+        <div id="item-quick-actions" class="item-quick-actions hidden">
+          <button type="button" class="quick-action-chip" data-action="rem-wash" title="Crea promemoria lavaggio">🧺 Lava</button>
+          <button type="button" class="quick-action-chip" data-action="rem-tailor" title="Crea promemoria sarta">✂️ Sarta</button>
+          <button type="button" class="quick-action-chip" data-action="rem-retry" title="Crea promemoria 'riprova'">🔄 Riprova</button>
+          <button type="button" class="quick-action-chip" data-action="note-tailor" title="Apri nota sarta">📝 Nota</button>
+        </div>
+
         <!-- Tag form -->
         <div class="form-group">
           <label>Categoria</label>

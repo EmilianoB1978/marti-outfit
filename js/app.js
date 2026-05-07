@@ -1532,6 +1532,7 @@ function openAddItem() {
   document.getElementById("modal-title").textContent = "Nuovo capo";
   document.getElementById("btn-delete-item").classList.add("hidden");
   document.getElementById("wear-stats-section").classList.add("hidden");
+  document.getElementById("item-quick-actions")?.classList.add("hidden");
   document.getElementById("photo-preview").innerHTML = '<span class="photo-placeholder">📷</span>';
   document.getElementById("btn-analyze").classList.add("hidden");
   document.getElementById("analyze-status").textContent = "";
@@ -1576,6 +1577,7 @@ function openEditItem(id) {
 
   document.getElementById("modal-title").textContent = "Modifica capo";
   document.getElementById("btn-delete-item").classList.remove("hidden");
+  document.getElementById("item-quick-actions")?.classList.remove("hidden");
   document.getElementById("photo-preview").innerHTML = item.photo_url
     ? `<img src="${item.photo_url}" alt="" />`
     : '<span class="photo-placeholder">📷</span>';
@@ -2391,6 +2393,33 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-save-item").addEventListener("click", saveItem);
   document.getElementById("btn-delete-item").addEventListener("click", deleteCurrentItem);
   document.getElementById("btn-mark-worn").addEventListener("click", markCurrentItemAsWorn);
+
+  // Quick actions cross-feature dal modal capo (reminders/notes pre-compilati)
+  const quickActionsEl = document.getElementById("item-quick-actions");
+  if (quickActionsEl) {
+    quickActionsEl.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".quick-action-chip");
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const item = state.items.find(i => i.id === state.editingId);
+      if (!item) {
+        toast("Apri prima un capo per usare l'azione rapida", "warn");
+        return;
+      }
+      btn.disabled = true;
+      try {
+        const { handleItemQuickAction } = await import("./item-quick-actions.js");
+        const res = await handleItemQuickAction(action, item);
+        if (res?.kind === "reminder") toast(res.message, "success");
+        // se kind=navigate, l'azione fa gia' il redirect
+      } catch (err) {
+        console.error(err);
+        toast("Errore: " + err.message, "warn");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
 
   // Share modal binding
   document.getElementById("btn-cancel-share").addEventListener("click", closeShareModal);

@@ -2194,3 +2194,30 @@ body.editor-page {
   color: #ca8a04;
   font-weight: var(--font-weight-bold);
 }
+
+/* Quick actions cross-feature nel modal capo */
+.item-quick-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  margin: 8px 0 12px;
+  background: var(--color-surface-alt);
+  border-radius: 12px;
+}
+.item-quick-actions.hidden { display: none; }
+.quick-action-chip {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.12s, background 0.12s;
+}
+.quick-action-chip:active { transform: scale(0.95); background: rgba(167,139,250,0.15); }
+.quick-action-chip:disabled { opacity: 0.5; cursor: default; }

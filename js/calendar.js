@@ -279,6 +279,11 @@ async function saveAssignment() {
         await Wardrobe.markOutfitAsWorn(outfit.item_ids || [], state.items);
       }
     }
+
+    // Se "planned": propone di creare un reminder T-2h
+    if (type === "planned") {
+      offerOutfitReminder(dateKey, outfitId);
+    }
   } catch (err) {
     console.error(err);
     toast("Errore: " + err.message, "error");
@@ -351,3 +356,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 });
+
+// Propone di creare un reminder T-2h "Indossa outfit X" per un outfit
+// pianificato in calendario. UX non bloccante: confirm semplice.
+async function offerOutfitReminder(dateKey, outfitId) {
+  try {
+    const outfit = state.outfits.find(o => o.id === outfitId);
+    if (!outfit) return;
+    // Default a ore 9:00 del giorno pianificato (Martina decidera' quando vuole
+    // davvero ricordarsi). Reminder a -2h da quell'ora.
+    const targetDate = new Date(`${dateKey}T09:00:00`);
+    if (isNaN(targetDate.getTime())) return;
+    const dueAt = new Date(targetDate.getTime() - 2 * 3600 * 1000);
+    if (dueAt < new Date()) return; // Skip se siamo gia' oltre
+
+    const ok = confirm(`💡 Vuoi un promemoria 2h prima per ricordarti "${outfit.title}"?`);
+    if (!ok) return;
+
+    const { createReminder } = await import("./reminders-data.js");
+    await createReminder({
+      type: "outfit",
+      title: `Indossa: ${outfit.title}`,
+      dueAt,
+      priority: "medium",
+    });
+    toast("✅ Promemoria creato 2h prima", "success");
+  } catch (err) {
+    console.error("offerOutfitReminder:", err);
+  }
+}

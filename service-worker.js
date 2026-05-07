@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v96-item-quick';
+const CACHE_VERSION = 'v97-outfit-reminder';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -141,7 +141,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "⚡ Azioni rapide nel modal capo: Lava (stasera), Sarta (tra 7gg), Riprova (domani), Nota sarta. Un tap crea promemoria pre-compilati linkati al capo.";
+const WHATS_NEW = "📅 Outfit pianificato in calendario: l'app propone di creare un promemoria 2h prima. Niente piu' outfit dimenticato il giorno dell'evento.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

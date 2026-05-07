@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v92-boot-checks';
+const CACHE_VERSION = 'v93-search-all';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -138,7 +138,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🔔 All'apertura dell'app ora ricevi un avviso per i promemoria scaduti, e dopo le 22:00 un warning se stai per perdere lo streak del diario. Niente piu' dimenticanze.";
+const WHATS_NEW = "🔍 Ricerca globale potenziata! Ora cerca anche tra Note, Diario e Promemoria — non solo capi e outfit. Risultati raggruppati per tipo, tap apre il detail.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

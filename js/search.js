@@ -1,5 +1,5 @@
 // =============================================================================
-// Ricerca globale (capi + outfit + capsule)
+// Ricerca globale (capi + outfit + capsule + note + diario + promemoria)
 // =============================================================================
 
 import * as Wardrobe from "./wardrobe.js";
@@ -11,18 +11,24 @@ let cacheTime = 0;
 const CACHE_TTL = 30 * 1000;  // 30s
 
 /**
- * Carica tutti i dati cercabili (cached) e ritorna { items, outfits, capsules }.
+ * Carica tutti i dati cercabili (cached). Tutte le source sono fail-soft:
+ * se un modulo non e' disponibile (es. notes-data.js per chi ha disabilitato
+ * la sezione), la lista e' vuota ma la ricerca continua a funzionare sulle
+ * altre source.
  */
 async function getSearchData() {
   if (cachedData && (Date.now() - cacheTime) < CACHE_TTL) return cachedData;
 
-  const [items, outfits, capsules] = await Promise.all([
-    Wardrobe.listItems(),
-    Outfit.listSavedOutfits(),
-    Capsules.listCapsules(),
+  const [items, outfits, capsules, notes, diary, reminders] = await Promise.all([
+    Wardrobe.listItems().catch(() => []),
+    Outfit.listSavedOutfits().catch(() => []),
+    Capsules.listCapsules().catch(() => []),
+    import("./notes-data.js").then(m => m.listNotes()).catch(() => []),
+    import("./diary-data.js").then(m => m.listEntries()).catch(() => []),
+    import("./reminders-data.js").then(m => m.listReminders()).catch(() => []),
   ]);
 
-  cachedData = { items, outfits, capsules };
+  cachedData = { items, outfits, capsules, notes, diary, reminders };
   cacheTime = Date.now();
   return cachedData;
 }
@@ -35,53 +41,65 @@ function normalize(s) {
     .replace(/[̀-ͯ]/g, "");
 }
 
-/** Verifica se il "haystack" contiene il "needle" (case+accent insensitive). */
+/** Verifica se l'haystack contiene il needle (case+accent insensitive). */
 function matches(haystack, needle) {
-  // haystack puo' essere string o array (campi multi-select dei capi)
   if (Array.isArray(haystack)) {
     return haystack.some(v => normalize(v).includes(needle));
   }
   return normalize(haystack).includes(needle);
 }
 
-/**
- * Cerca tra capi, outfit, capsule. Ritorna 3 array di risultati.
- */
+/** Strip HTML tags da body rich-text per la ricerca. */
+function stripHtml(s) {
+  return String(s || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 async function performSearch(query) {
   const q = normalize(query);
-  if (q.length < 2) return { items: [], outfits: [], capsules: [] };
+  if (q.length < 2) return { items: [], outfits: [], capsules: [], notes: [], diary: [], reminders: [] };
 
   const data = await getSearchData();
 
   const itemMatches = data.items.filter(it =>
-    matches(it.category, q) ||
-    matches(it.subcategory, q) ||
-    matches(it.color || it.color_primary, q) ||
-    matches(it.color_secondary, q) ||
-    matches(it.style, q) ||
-    matches(it.pattern, q) ||
-    matches(it.material, q) ||
-    matches(it.occasion, q) ||
-    matches(it.notes, q) ||
-    matches(it.description, q) ||
+    matches(it.category, q) || matches(it.subcategory, q) ||
+    matches(it.color || it.color_primary, q) || matches(it.color_secondary, q) ||
+    matches(it.style, q) || matches(it.pattern, q) || matches(it.material, q) ||
+    matches(it.occasion, q) || matches(it.notes, q) || matches(it.description, q) ||
     (Array.isArray(it.season) && it.season.some(s => matches(s, q)))
   );
 
   const outfitMatches = data.outfits.filter(o =>
-    matches(o.title, q) ||
-    matches(o.context, q) ||
-    matches(o.description, q)
+    matches(o.title, q) || matches(o.context, q) || matches(o.description, q)
   );
 
   const capsuleMatches = data.capsules.filter(c =>
-    matches(c.name, q) ||
-    matches(c.icon, q)
+    matches(c.name, q) || matches(c.icon, q)
+  );
+
+  const noteMatches = data.notes.filter(n =>
+    matches(n.title, q) ||
+    matches(stripHtml(n.body), q) ||
+    matches(n.tags, q)
+  );
+
+  const diaryMatches = data.diary.filter(e =>
+    matches(e.title, q) ||
+    matches(stripHtml(e.body), q) ||
+    matches(e.tags, q) ||
+    matches(e.id, q)  // permette ricerca per data YYYY-MM-DD
+  );
+
+  const reminderMatches = data.reminders.filter(r =>
+    r.status !== "done" && (matches(r.title, q) || matches(r.notes, q))
   );
 
   return {
     items: itemMatches.slice(0, 8),
     outfits: outfitMatches.slice(0, 5),
     capsules: capsuleMatches.slice(0, 5),
+    notes: noteMatches.slice(0, 5),
+    diary: diaryMatches.slice(0, 5),
+    reminders: reminderMatches.slice(0, 5),
   };
 }
 
@@ -97,7 +115,7 @@ export function openSearch() {
   overlay.innerHTML = `
     <div class="search-header">
       <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="search-input" placeholder="Cerca capi, outfit, capsule..." autocomplete="off" />
+      <input type="text" class="search-input" id="search-input" placeholder="Cerca ovunque: capi, note, diario, promemoria..." autocomplete="off" />
       <button class="btn-icon" id="search-close" aria-label="Chiudi">✕</button>
     </div>
     <div class="search-results" id="search-results">
@@ -109,24 +127,20 @@ export function openSearch() {
   const input = overlay.querySelector("#search-input");
   const results = overlay.querySelector("#search-results");
 
-  // Focus immediato (con delay per iOS che ritarda la tastiera)
   setTimeout(() => input.focus(), 100);
 
-  // Debounce input
   let debTimer = null;
   input.addEventListener("input", () => {
     clearTimeout(debTimer);
     debTimer = setTimeout(() => doSearch(input.value), 200);
   });
 
-  // Chiudi
   function close() { overlay.remove(); }
   overlay.querySelector("#search-close").addEventListener("click", close);
   overlay.addEventListener("click", e => {
     if (e.target === overlay) close();
   });
 
-  // Esc per chiudere
   function onKey(e) {
     if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); }
   }
@@ -137,9 +151,7 @@ export function openSearch() {
       results.innerHTML = `<p class="search-hint">Scrivi almeno 2 caratteri per cercare.</p>`;
       return;
     }
-
     results.innerHTML = `<p class="search-hint">⏳ Ricerca...</p>`;
-
     try {
       const r = await performSearch(query);
       renderResults(r, results);
@@ -150,8 +162,8 @@ export function openSearch() {
   }
 }
 
-function renderResults({ items, outfits, capsules }, container) {
-  const total = items.length + outfits.length + capsules.length;
+function renderResults({ items, outfits, capsules, notes, diary, reminders }, container) {
+  const total = items.length + outfits.length + capsules.length + notes.length + diary.length + reminders.length;
   if (total === 0) {
     container.innerHTML = `<p class="search-hint">Nessun risultato. Prova un altro termine.</p>`;
     return;
@@ -203,12 +215,56 @@ function renderResults({ items, outfits, capsules }, container) {
     html += `</div>`;
   }
 
+  if (notes.length > 0) {
+    html += `<div class="search-section"><div class="search-section-title">📝 Note (${notes.length})</div>`;
+    html += notes.map(n => {
+      const icon = noteIcon(n.type);
+      return `
+      <a class="search-result" href="./note-detail.html?id=${n.id}">
+        <div class="search-result-thumb">${icon}</div>
+        <div class="search-result-info">
+          <div class="search-result-title">${escapeHtml(n.title || '(senza titolo)')}</div>
+          <div class="search-result-sub">${escapeHtml(stripHtml(n.body).slice(0, 70))}</div>
+        </div>
+      </a>`;
+    }).join("");
+    html += `</div>`;
+  }
+
+  if (diary.length > 0) {
+    html += `<div class="search-section"><div class="search-section-title">📔 Diario (${diary.length})</div>`;
+    html += diary.map(e => {
+      const dateLabel = formatDateShort(e.id);
+      return `
+      <a class="search-result" href="./diary-detail.html?date=${e.id}">
+        <div class="search-result-thumb">📔</div>
+        <div class="search-result-info">
+          <div class="search-result-title">${dateLabel} — ${escapeHtml(e.title || '(senza titolo)')}</div>
+          <div class="search-result-sub">${escapeHtml(stripHtml(e.body).slice(0, 70))}</div>
+        </div>
+      </a>`;
+    }).join("");
+    html += `</div>`;
+  }
+
+  if (reminders.length > 0) {
+    html += `<div class="search-section"><div class="search-section-title">⏰ Promemoria (${reminders.length})</div>`;
+    html += reminders.map(r => `
+      <a class="search-result" href="./reminders.html">
+        <div class="search-result-thumb">⏰</div>
+        <div class="search-result-info">
+          <div class="search-result-title">${escapeHtml(r.title)}</div>
+          <div class="search-result-sub">${reminderDueText(r)}</div>
+        </div>
+      </a>
+    `).join("");
+    html += `</div>`;
+  }
+
   container.innerHTML = html;
 
-  // Click handlers per item/outfit (apre il modal/scrolla nella pagina)
   container.querySelectorAll(".search-result[data-type='item']").forEach(el => {
     el.addEventListener("click", () => {
-      // Notifico la pagina che l'utente vuole aprire l'item
       document.getElementById("search-overlay")?.remove();
       window.dispatchEvent(new CustomEvent("marty:open-item", { detail: { id: el.dataset.id } }));
     });
@@ -216,11 +272,37 @@ function renderResults({ items, outfits, capsules }, container) {
   container.querySelectorAll(".search-result[data-type='outfit']").forEach(el => {
     el.addEventListener("click", () => {
       document.getElementById("search-overlay")?.remove();
-      // Vai al tab Outfit
       const btn = document.querySelector('.nav-btn[data-page="outfits"]');
       if (btn) btn.click();
     });
   });
+}
+
+function noteIcon(type) {
+  switch (type) {
+    case "wishlist": return "🛍️";
+    case "tailor": return "✂️";
+    case "moodboard": return "💄";
+    case "gift": return "🎁";
+    default: return "📝";
+  }
+}
+
+function formatDateShort(id) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(id || "")) return id || "";
+  const [y, m, d] = id.split("-");
+  return `${d}/${m}/${y.slice(2)}`;
+}
+
+function reminderDueText(r) {
+  if (!r.dueAt) return "Senza data";
+  const due = r.dueAt.toDate ? r.dueAt.toDate() : new Date(r.dueAt);
+  const now = new Date();
+  const diff = Math.round((due - now) / 86400000);
+  if (diff < 0) return `${Math.abs(diff)} giorni fa`;
+  if (diff === 0) return "Oggi";
+  if (diff === 1) return "Domani";
+  return due.toLocaleDateString("it-IT", { day: "2-digit", month: "short" });
 }
 
 function escapeHtml(s) {

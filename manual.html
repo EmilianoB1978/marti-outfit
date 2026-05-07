@@ -1009,7 +1009,141 @@ jeans: https://...
           <li>Toggle 🙈/👁 per nascondere voci che non usi (mantengono comunque la posizione)</li>
           <li>Bottone <strong>Reset</strong> per ripristinare l'ordine consigliato</li>
         </ul>
+        <p>Le card di <strong>Promemoria</strong> e <strong>Diario</strong> mostrano badge dinamici: count rosso se hai promemoria pending oggi, ✍️ viola se non hai ancora scritto nel diario, oppure "N 🔥" se hai uno streak attivo.</p>
         <p>Il bottone <em>"🔄 Forza aggiornamento app"</em> è in fondo al drawer come utility separata (non occupa una card).</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Hub Oggi sulla home ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>✨ Hub Oggi sulla home</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Sulla home (sopra "Today's Outfit") compaiono fino a <strong>3 tile dinamiche</strong> che riassumono la giornata:</p>
+        <ul class="manual-list">
+          <li><strong>⏰ Promemoria oggi</strong>: count + titolo del primo. Bordo rosso ⚠️ se ci sono promemoria scaduti. Tap → /reminders.html</li>
+          <li><strong>📔 Diario</strong>: se non hai ancora scritto, vedi una <strong>mini-toolbar mood</strong> con 10 emoji — 1 tap registra il mood di oggi senza aprire l'editor. Se hai già scritto e c'è uno streak attivo, vedi "Streak N giorni 🔥"</li>
+          <li><strong>📌 Nota pinnata</strong>: la prima nota fissata, tap → editor</li>
+        </ul>
+        <p>L'hub si <strong>auto-nasconde</strong> se non c'è nulla di rilevante (no reminder, già scritto nel diario, nessuna nota pinnata).</p>
+        <h3 class="settings-section-title">⭐ Top Capi del Mese</h3>
+        <p>Banner sopra il banner Dormienti: i 3 capi più indossati negli ultimi 30 giorni con podio (1/2/3 in cerchio dorato). Tap apre il modal capo. Compare solo se hai indossato almeno 3 capi nel periodo.</p>
+        <p class="manual-tip">💡 <strong>Pattern complementare</strong>: il Dormant celebra i capi orfani (CTA "riprovali"); il Top Mese celebra quelli amati. Insieme creano un'overview narrativa del guardaroba.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Memory Lane "Un anno fa" ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>⏳ Un anno fa (Memory Lane)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Aprendo una pagina del diario, una sezione <strong>"⏳ Un tempo fa"</strong> mostra automaticamente le pagine e i capi indossati esattamente <strong>1, 2, 5, 10 anni fa</strong> in quella stessa data.</p>
+        <ul class="manual-list">
+          <li>Card cliccabili che aprono direttamente la pagina diario di quella data</li>
+          <li>Cover: foto della pagina passata > foto del primo capo indossato > emoji mood placeholder</li>
+          <li>Mostra titolo + mood + count capi indossati</li>
+          <li>Auto-hide se non ci sono memorie disponibili</li>
+        </ul>
+        <p class="manual-tip">📸 <strong>Pattern Apple Memories / Google Photos "On this day"</strong>: forte impatto emotivo, ma trasferito al guardaroba. Riusa il <code>wear_history</code> dei capi e le entry diary, zero storage aggiuntivo.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Calendario unificato ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📅 Calendario unificato</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Il calendario è il <strong>dashboard temporale</strong> dell'app. Su ogni cella giorno vedi:</p>
+        <ul class="manual-list">
+          <li><strong>Thumbnail outfit</strong> se assegnato</li>
+          <li><strong>Emoji mood 😊</strong> in alto a sinistra: dal Diario di quel giorno (o pallino viola se entry senza mood)</li>
+          <li><strong>Emoji promemoria ⏰</strong> in alto a destra: tipo del primo reminder pending (con badge count se &gt;1)</li>
+          <li><strong>Marker colorato</strong>: pianificato (oro) o indossato (verde)</li>
+        </ul>
+        <p>Tap su un giorno apre il modal con:</p>
+        <ul class="manual-list">
+          <li>Outfit corrente assegnato (se presente)</li>
+          <li>Sezione <strong>"⏰ Promemoria di questo giorno"</strong> con icona, titolo e orario di ognuno</li>
+          <li>Bottone <strong>📔 Apri pagina diario di questo giorno</strong></li>
+          <li>Lista outfit selezionabili</li>
+        </ul>
+        <p class="manual-tip">📅 <strong>Bridge automatico</strong>: quando pianifichi un outfit per un giorno futuro, l'app ti chiede se vuoi un <strong>promemoria 2 ore prima</strong>. Niente più outfit dimenticato il giorno dell'evento.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Azioni rapide modal capo ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>⚡ Azioni rapide modal capo</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Quando apri un capo per modificarlo, sotto la statistica "Indossato N volte" compare una riga di <strong>4 chip per azioni rapide</strong> linkate al capo:</p>
+        <ul class="manual-list">
+          <li><strong>🧺 Lava</strong>: crea promemoria type=wash con dueAt=stasera 20:00 (o domani se passate)</li>
+          <li><strong>✂️ Sarta</strong>: crea promemoria type=tailor con dueAt=tra 7gg, priority=alta</li>
+          <li><strong>🔄 Riprova</strong>: crea promemoria type=garment con dueAt=domani, priority=bassa</li>
+          <li><strong>📝 Nota</strong>: crea una nota tipo "sarta" pre-compilata e ti porta direttamente al suo editor</li>
+        </ul>
+        <p>Tutte le azioni linkano <code>garmentId=item.id</code>, così nel promemoria vedi il riferimento al capo. Toast feedback: "🧺 Promemoria lavaggio creato per stasera" ecc.</p>
+        <p class="manual-tip">⚡ <strong>Pattern frizione zero</strong>: dal cuore dell'app (modal capo) attivi le 3 nuove sezioni in un tap. Non devi navigare a /reminders.html, comporre il form, scegliere il tipo, settare la data — è tutto pre-compilato.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Diary Wrapped ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📊 Diary Wrapped</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Bottone <strong>📊</strong> nella topbar di /diary.html (accanto a 📍 Oggi) genera un'<strong>immagine 1080x1080 condivisibile</strong> con il riassunto annuale del diario. Pattern Spotify/Apple Wrapped applicato al guardaroba.</p>
+        <p>Statistiche calcolate:</p>
+        <ul class="manual-list">
+          <li><strong>Pagine scritte</strong> nell'anno</li>
+          <li><strong>Mood ricorrente</strong> (più frequente) con emoji 100px</li>
+          <li><strong>Streak record</strong> 🔥 — la più lunga sequenza consecutiva di giorni con entry</li>
+          <li><strong>Foto totali</strong> 📸 nelle entry diary</li>
+          <li><strong>Top tag</strong> #lavoro #vacanza #famiglia ...</li>
+          <li><strong>Mood distribution dots</strong> scaled per frequenza</li>
+        </ul>
+        <p>Sotto l'immagine 2 bottoni: <strong>📤 Condividi</strong> (Web Share API → Instagram Stories / WhatsApp / Mail) e <strong>💾 Salva immagine</strong>.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Ricerca globale ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🔍 Ricerca globale</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>L'icona 🔍 nella topbar dell'app apre una ricerca <strong>full-text accent-insensitive</strong> attraverso <strong>6 source</strong>:</p>
+        <ul class="manual-list">
+          <li>👕 <strong>Capi</strong>: categoria, sub, colori, stile, pattern, materiale, occasion, note, season</li>
+          <li>✨ <strong>Outfit</strong>: titolo, contesto, descrizione</li>
+          <li>🎒 <strong>Capsule</strong>: nome, icona</li>
+          <li>📝 <strong>Note</strong>: titolo, body strippato HTML, tag</li>
+          <li>📔 <strong>Diario</strong>: titolo, body, tag, e anche <strong>data YYYY-MM-DD</strong> (puoi cercare "2026-04" per tutte le pagine di aprile)</li>
+          <li>⏰ <strong>Promemoria pending</strong>: titolo, note</li>
+        </ul>
+        <p>Risultati raggruppati per tipo con count, max 5-8 per gruppo. Tap apre il detail giusto: note → /note-detail, diary → /diary-detail con data, reminders → /reminders.</p>
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Avvisi proattivi ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>🔔 Avvisi proattivi all'apertura</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>All'apertura dell'app vengono eseguiti 3 controlli proattivi (tutti silenziosi se non c'è nulla):</p>
+        <ol class="manual-list">
+          <li><strong>Promemoria scaduti</strong>: se ce ne sono, tenta una <strong>notifica nativa</strong> (banner di sistema) per quelli mai notificati, e mostra un toast in-app "⚠️ N promemoria scaduti". One-shot per sessione.</li>
+          <li><strong>Cambio stagione</strong>: tra il 1 e il 15 aprile / 1 e 15 ottobre, se non hai già un promemoria attivo, l'app ti chiede con un confirm: <em>"È tempo di cambio stagione! Vuoi creare un promemoria 'Cambio armadio'?"</em>. One-shot per anno+stagione (anche se rifiuti, non riprova fino all'anno dopo).</li>
+          <li><strong>Streak warning</strong>: se hai uno streak diary di almeno 2 giorni, oggi non hai ancora scritto, e sono <strong>dopo le 22:00</strong>, l'app mostra: <em>"🔥 Stai per perdere lo streak di N giorni! Apri il diario."</em> One-shot per sessione.</li>
+        </ol>
+        <p class="manual-tip">🤫 <strong>Anti-stalking</strong>: tutti i flag one-shot sono persistenti (localStorage o sessionStorage), così l'app non importuna anche se navighi tra le pagine. Le notifiche di sistema richiedono il permesso (icona 🔔 nella pagina Promemoria).</p>
       </div>
     </div>
 

@@ -37,6 +37,7 @@
     <button class="tab" data-tab="layout">📱 Layout</button>
     <button class="tab" data-tab="bar">⚙️ Barra</button>
     <button class="tab" data-tab="menu">📋 Menu</button>
+    <button class="tab" data-tab="chips">🎨 Chip</button>
     <button class="tab" data-tab="seasons">🌍 Stagioni</button>
     <button class="tab" data-tab="weights">⚖️ Pesi</button>
     <button class="tab" data-tab="weather">🌤️ Meteo</button>
@@ -352,6 +353,24 @@
 
       <button class="btn btn--ghost btn--block" id="btn-reset-menu" style="margin-top: var(--space-3);">
         ↺ Ripristina ordine e voci di default
+      </button>
+    </section>
+
+    <!-- ==================================================================
+         TAB: CHIP (personalizzazione visiva colori, pattern, occasioni)
+         ================================================================== -->
+    <section id="tab-chips" class="settings-tab-panel">
+      <h2 class="settings-section-title" style="margin-top:0">🎨 Personalizza le chip</h2>
+      <p class="settings-hint">
+        Assegna a ogni colore, pattern e occasione un look personalizzato:
+        sfondo, motivo, emoji. I valori predefiniti sono già pronti — modifica
+        solo quello che vuoi.
+      </p>
+      <div id="chip-editor-root">
+        <!-- popolato da settings.js -->
+      </div>
+      <button class="btn btn--ghost btn--block" id="btn-reset-chips" style="margin-top: var(--space-3);">
+        ↺ Ripristina tutti i look di default
       </button>
     </section>
 

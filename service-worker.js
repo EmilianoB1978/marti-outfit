@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v100-firebase-fix';
+const CACHE_VERSION = 'v101-chip-styles';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -87,6 +87,7 @@ const SHELL_FILES = [
   './js/home-hub-card.js',
   './js/top-month-banner.js',
   './js/item-quick-actions.js',
+  './js/chip-styles.js',
   './css/trips.css',
   './css/budget.css',
   './css/notes.css',
@@ -141,7 +142,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🐛 Hotfix Diario e Promemoria: errore Firebase risolto. Ora il diario si apre senza errori e i promemoria salvano correttamente.";
+const WHATS_NEW = "🎨 Chip personalizzabili! Colori, pattern e occasioni ora hanno look propri (sfondo + motivo + emoji). Modificali in Aspetto → 🎨 Chip. Default belli pre-popolati.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

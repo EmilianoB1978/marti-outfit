@@ -353,6 +353,10 @@ export const defaultPreferences = {
   // Menu drawer (icona ⋯ in header): ordine + voci nascoste
   menuOrder: ["diary", "reminders", "notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"],
   menuHidden: [],
+  // Override visivi per le chip multi-select (colors, patterns, occasions).
+  // Dict piatto "taxonomy:value" -> { bg, fg, pattern, icon }. I default
+  // arrivano da chip-styles.js (zero override = look default).
+  chipStyles: {},
   // 8 stagioni in ordine cronologico annuale (4 reali + 4 mezze stagioni di
   // transizione). Ogni stagione: { label, icon, enabled, kind }.
   // kind="full" -> sempre attiva (non disabilitabile), nome editabile.

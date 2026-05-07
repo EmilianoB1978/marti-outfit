@@ -11,6 +11,7 @@ import * as Weather from "./weather.js";
 import * as Haptic from "./haptic.js";
 import * as Search from "./search.js";
 import * as Taxonomies from "./taxonomies.js";
+import * as ChipStyles from "./chip-styles.js";
 import * as ShareOutfit from "./share-outfit.js";
 import * as DormantMod from "./dormant.js";
 import * as TodayOutfit from "./today-outfit.js";
@@ -933,12 +934,26 @@ function renderMultiChips(rootId) {
   const tax = root.dataset.tax;
   const values = Taxonomies.listSimpleValues(tax);
   const selected = new Set(getSelectedMulti(rootId));
+  // Applica chip-styles personalizzati (colors, colors-secondary, patterns,
+  // occasions). Per le altre tassonomie ChipStyles ritorna {} -> nessun
+  // styling extra, render legacy.
+  const chipTax = (tax === "colors" && rootId === "field-color-secondary")
+    ? "colors-secondary" : tax;
+  const stylable = ChipStyles.isTaxonomyStylable(chipTax);
 
-  const chips = values.map(v =>
-    `<button type="button" class="multi-chip${selected.has(v) ? " is-active" : ""}" data-val="${escapeHtml(v)}">
-      ${escapeHtml(capitalize(v))}
-    </button>`
-  ).join("");
+  const chips = values.map(v => {
+    let styleAttr = "";
+    let iconPrefix = "";
+    if (stylable) {
+      const st = ChipStyles.getChipStyle(chipTax, v);
+      const css = ChipStyles.styleToCss(st);
+      if (css) styleAttr = ` style="${css}"`;
+      if (st && st.icon) iconPrefix = `<span class="multi-chip-icon">${st.icon}</span> `;
+    }
+    return `<button type="button" class="multi-chip${selected.has(v) ? " is-active" : ""}${stylable ? " multi-chip-styled" : ""}" data-val="${escapeHtml(v)}"${styleAttr}>
+      ${iconPrefix}${escapeHtml(capitalize(v))}
+    </button>`;
+  }).join("");
   root.innerHTML = chips +
     `<button type="button" class="multi-chip multi-chip-add" data-action="add-new">+ Aggiungi</button>`;
 }

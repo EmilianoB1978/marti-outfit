@@ -1413,15 +1413,6 @@ function renderWardrobe() {
     let linkBadge = "";
     if (linkStatus === "expired") linkBadge = `<div class="item-link-badge is-expired" title="Link scaduto">⚠️</div>`;
     else if (linkStatus === "ok" || linkStatus === "warning") linkBadge = `<div class="item-link-badge" title="Link prodotto">🔗</div>`;
-    // Badge armocromia (solo se test completato)
-    let armoBadge = "";
-    const match = ColorMatch.matchItemColor(item);
-    if (match) {
-      const meta = ColorMatch.statusMeta(match.status);
-      if (meta) {
-        armoBadge = `<div class="item-armo-badge is-${match.status}" title="${meta.label} (${match.score}/100)" style="--armo-color:${meta.color}">${meta.emoji}</div>`;
-      }
-    }
     return `
     <div class="item-card" data-id="${item.id}">
       ${item.photo_url
@@ -1429,7 +1420,6 @@ function renderWardrobe() {
         : `<div class="item-photo" style="display:flex;align-items:center;justify-content:center;font-size:48px;opacity:0.3">👕</div>`
       }
       ${linkBadge}
-      ${armoBadge}
       ${wearCount > 0 ? `<div class="item-wear-badge">👕 ${wearCount}</div>` : ''}
       <div class="item-info">
         <div class="item-category">${item.category || "—"}</div>

@@ -219,6 +219,12 @@ function attachGestures(ci) {
   let active = null;  // { startTouches, startState }
 
   function onTouchStart(e) {
+    // Se il touch e' sul bottone delete (✕), lascia passare l'evento al click
+    // handler. Senza questo, preventDefault() blocca la sintesi del click event
+    // e il bottone diventa inerte.
+    if (e.target.closest(".canvas-item-delete")) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
     selectItem(ci);
@@ -305,6 +311,7 @@ function attachGestures(ci) {
 
   // Mouse events fallback (desktop testing)
   el.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".canvas-item-delete")) return;
     e.stopPropagation();
     selectItem(ci);
     const startX = e.clientX, startY = e.clientY;

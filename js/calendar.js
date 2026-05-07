@@ -208,11 +208,39 @@ function openAssignModal(dateKey) {
   const diaryLink = document.getElementById("btn-open-diary");
   if (diaryLink) diaryLink.href = `./diary-detail.html?date=${dateKey}`;
 
+  // Lista promemoria del giorno (se presenti)
+  renderDayReminders(dateKey);
+
   document.getElementById("modal-assign").classList.remove("hidden");
+}
+
+function renderDayReminders(dateKey) {
+  const wrap = document.getElementById("assign-reminders");
+  if (!wrap) return;
+  const list = state.reminders.get(dateKey) || [];
+  if (list.length === 0) { wrap.classList.add("hidden"); wrap.innerHTML = ""; return; }
+  wrap.classList.remove("hidden");
+  wrap.innerHTML = `
+    <div class="assign-reminders-title">⏰ Promemoria di questo giorno</div>
+    ${list.map(r => {
+      const meta = REMINDER_TYPES[r.type] || REMINDER_TYPES.manual;
+      const due = r.dueAt?.toDate ? r.dueAt.toDate() : (r.dueAt ? new Date(r.dueAt) : null);
+      const time = due ? due.toTimeString().slice(0, 5) : "";
+      return `<div class="assign-reminder-row" data-id="${r.id}">
+        <span class="assign-reminder-icon" style="background:${meta.color}22;color:${meta.color}">${meta.icon}</span>
+        <div class="assign-reminder-body">
+          <div class="assign-reminder-title">${escapeHtml(r.title)}</div>
+          ${time ? `<div class="assign-reminder-time">${time}</div>` : ""}
+        </div>
+        <a href="./reminders.html" class="assign-reminder-arrow" aria-label="Apri">›</a>
+      </div>`;
+    }).join("")}
+  `;
 }
 
 function closeAssignModal() {
   document.getElementById("modal-assign").classList.add("hidden");
+  document.getElementById("assign-reminders")?.classList.add("hidden");
   state.selectedDate = null;
 }
 

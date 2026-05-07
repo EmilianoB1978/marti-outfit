@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v98-season-suggest';
+const CACHE_VERSION = 'v99-cal-reminders';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -141,7 +141,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🍂 Cambio stagione automatico: a inizio aprile e ottobre l'app ti chiede se vuoi un promemoria per il cambio armadio. Una volta all'anno, gentile.";
+const WHATS_NEW = "📅 Modal calendario completo: tap su un giorno mostra ora anche i promemoria pending. Calendario = dashboard temporale unificato (outfit + diario + reminders).";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

@@ -17,6 +17,7 @@ import * as TodayOutfit from "./today-outfit.js";
 import { renderBottomNav, NAV_DESTINATIONS, MENU_DRAWER_KEYS } from "./bottom-nav.js";
 import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
 import { addTransaction as addBudgetTransaction, monthKey, formatMonth as formatBudgetMonth, getBudget, computeSummary as computeBudgetSummary } from "./budget-data.js";
+import { renderHomeHubCard } from "./home-hub-card.js";
 
 // Init theme manager PRIMA di qualsiasi altra cosa: applica colori/font/density
 // al documento prima del primo paint per evitare flash visivo.
@@ -80,6 +81,7 @@ async function boot() {
     renderSavedOutfits();
     renderTodayOutfit();
     renderDormantBanner();
+    renderHomeHubCard().catch(err => console.warn("home hub card:", err));
   } catch (err) {
     console.error("Errore boot:", err);
     toast("Errore caricamento dati", "error");
@@ -1013,8 +1015,48 @@ function renderMenuGrid() {
     return `<a class="menu-card" href="${dest.href}" data-key="${key}">
       <span class="menu-card-icon">${dest.icon}</span>
       <span class="menu-card-label">${escapeHtml(dest.label)}</span>
+      <span class="menu-card-badge" data-badge-for="${key}" hidden></span>
     </a>`;
   }).join("");
+  // Badge dinamici (lazy, fail-soft)
+  refreshMenuBadges();
+}
+
+// Badge dinamici sulle card menu (Reminders pending today, Diary streak)
+async function refreshMenuBadges() {
+  try {
+    const [reminders, entries] = await Promise.all([
+      import("./reminders-data.js").then(m => m.listReminders()).catch(() => []),
+      import("./diary-data.js").then(m => m.listEntries()).catch(() => []),
+    ]);
+    const remindersBadge = document.querySelector('[data-badge-for="reminders"]');
+    if (remindersBadge) {
+      const { bucketOf } = await import("./reminders-data.js");
+      const today = reminders.filter(r => r.status !== "done" && (bucketOf(r) === "today" || bucketOf(r) === "overdue")).length;
+      if (today > 0) {
+        remindersBadge.textContent = today;
+        remindersBadge.hidden = false;
+      }
+    }
+    const diaryBadge = document.querySelector('[data-badge-for="diary"]');
+    if (diaryBadge) {
+      const { computeStreak, todayId } = await import("./diary-data.js");
+      const today = todayId();
+      const hasToday = entries.some(e => e.id === today);
+      if (!hasToday) {
+        diaryBadge.textContent = "✍️";
+        diaryBadge.hidden = false;
+        diaryBadge.classList.add("menu-card-badge-soft");
+      } else {
+        const streak = computeStreak(entries);
+        if (streak > 0) {
+          diaryBadge.textContent = `${streak} 🔥`;
+          diaryBadge.hidden = false;
+          diaryBadge.classList.add("menu-card-badge-soft");
+        }
+      }
+    }
+  } catch (_) { /* fail-soft */ }
 }
 
 function renderWeightChips() {

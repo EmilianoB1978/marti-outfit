@@ -612,7 +612,80 @@ document.addEventListener("DOMContentLoaded", () => {
   initAppIcon();
   initSeasons();
   initWeights();
+  initMenu();
 });
+
+// =============================================================================
+// Menu drawer editor (riordina + nascondi voci)
+// =============================================================================
+function initMenu() {
+  const root = document.getElementById("menu-editor");
+  const btnReset = document.getElementById("btn-reset-menu");
+  if (!root) return;
+
+  const ALL_KEYS = ["calendar", "trips", "budget", "notes", "capsules",
+    "analytics", "live", "palette", "dormant", "taxonomies", "settings", "system", "manual"];
+
+  function getList() {
+    const prefs = Theme.getPreferences();
+    const order = (prefs.menuOrder || []).filter(k => ALL_KEYS.includes(k));
+    for (const k of ALL_KEYS) if (!order.includes(k)) order.push(k);
+    return order;
+  }
+
+  function isHidden(key) {
+    return (Theme.getPreferences().menuHidden || []).includes(key);
+  }
+
+  function render() {
+    const order = getList();
+    root.innerHTML = order.map((key, i) => {
+      const dest = NAV_DESTINATIONS[key];
+      if (!dest) return "";
+      const hidden = isHidden(key);
+      return `<div class="menu-edit-row${hidden ? ' is-hidden' : ''}" data-key="${key}">
+        <span class="menu-edit-icon">${dest.icon}</span>
+        <span class="menu-edit-label">${dest.label}</span>
+        <div class="menu-edit-actions">
+          <button class="menu-edit-arrow" data-action="up" data-idx="${i}" ${i === 0 ? "disabled" : ""} aria-label="Sposta su">↑</button>
+          <button class="menu-edit-arrow" data-action="down" data-idx="${i}" ${i === order.length - 1 ? "disabled" : ""} aria-label="Sposta giù">↓</button>
+          <button class="menu-edit-vis" data-action="toggle" data-key="${key}" aria-label="${hidden ? 'Mostra' : 'Nascondi'}">${hidden ? '👁' : '🙈'}</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  root.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const order = getList();
+    if (action === "up" || action === "down") {
+      const idx = Number(btn.dataset.idx);
+      const target = action === "up" ? idx - 1 : idx + 1;
+      if (target < 0 || target >= order.length) return;
+      [order[idx], order[target]] = [order[target], order[idx]];
+      Theme.set("menuOrder", order);
+      render();
+    } else if (action === "toggle") {
+      const key = btn.dataset.key;
+      const hidden = (Theme.getPreferences().menuHidden || []).slice();
+      if (hidden.includes(key)) Theme.set("menuHidden", hidden.filter(k => k !== key));
+      else Theme.set("menuHidden", [...hidden, key]);
+      render();
+    }
+  });
+
+  btnReset.addEventListener("click", () => {
+    Theme.set("menuOrder", ["notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"]);
+    Theme.set("menuHidden", []);
+    render();
+    toast("Menu ripristinato al default", "success");
+  });
+
+  render();
+  Theme.subscribe(render);
+}
 
 // =============================================================================
 // 5 livelli peso del capo: editor nome (label) + grammi

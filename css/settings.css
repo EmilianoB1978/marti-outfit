@@ -626,3 +626,64 @@ body.settings-page {
   color: var(--color-text-muted);
   font-weight: var(--font-weight-bold);
 }
+
+/* ============================================================================
+   Editor menu drawer (tab Menu): riordina + toggle visibility
+   ============================================================================ */
+.menu-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.menu-edit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  transition: opacity var(--animation-speed) var(--animation-easing);
+}
+.menu-edit-row.is-hidden {
+  opacity: 0.45;
+  background: var(--color-surface-alt);
+  border-style: dashed;
+}
+.menu-edit-icon { font-size: 22px; flex: 0 0 auto; line-height: 1; }
+.menu-edit-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  min-width: 0;
+}
+.menu-edit-row.is-hidden .menu-edit-label {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+.menu-edit-actions {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.menu-edit-arrow,
+.menu-edit-vis {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.menu-edit-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.menu-edit-arrow:not(:disabled):active,
+.menu-edit-vis:active { background: var(--color-surface-alt); }

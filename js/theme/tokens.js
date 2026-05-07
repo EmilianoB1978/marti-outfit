@@ -350,6 +350,9 @@ export const defaultPreferences = {
   shareTemplate: "classic",   // template default per outfit card (classic|dark|pastel|magazine)
   // Bottom nav (5 slot personalizzabili. Slot 2 = centrale ingrandito.)
   bottomNav: ["wardrobe", "calendar", "add_item", "capsules", "outfits"],
+  // Menu drawer (icona ⋯ in header): ordine + voci nascoste
+  menuOrder: ["notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"],
+  menuHidden: [],
   // 8 stagioni in ordine cronologico annuale (4 reali + 4 mezze stagioni di
   // transizione). Ogni stagione: { label, icon, enabled, kind }.
   // kind="full" -> sempre attiva (non disabilitabile), nome editabile.

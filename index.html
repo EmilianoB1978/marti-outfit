@@ -676,50 +676,12 @@
   <div id="menu-drawer" class="menu-overlay hidden">
     <div class="menu-panel">
       <div class="menu-handle"></div>
-      <div class="menu-list">
-        <a href="./live-memory.html" class="menu-link">
-          <span class="menu-link-icon">🤳</span>
-          <span>Live & Memory</span>
-        </a>
-        <a href="./palette.html" class="menu-link">
-          <span class="menu-link-icon">🎨</span>
-          <span>Palette Match</span>
-        </a>
-        <a href="./dormant.html" class="menu-link">
-          <span class="menu-link-icon">💤</span>
-          <span>Capi a riposo</span>
-        </a>
-        <a href="./analytics.html" class="menu-link">
-          <span class="menu-link-icon">📊</span>
-          <span>Statistiche</span>
-        </a>
-        <a href="./budget.html" class="menu-link">
-          <span class="menu-link-icon">💰</span>
-          <span>Budget mensile</span>
-        </a>
-        <a href="./notes.html" class="menu-link">
-          <span class="menu-link-icon">📝</span>
-          <span>Note</span>
-        </a>
-        <a href="./taxonomies.html" class="menu-link">
-          <span class="menu-link-icon">🏷️</span>
-          <span>Categorie e tag</span>
-        </a>
-        <a href="./settings.html" class="menu-link">
-          <span class="menu-link-icon">🎨</span>
-          <span>Aspetto</span>
-        </a>
-        <a href="./system.html" class="menu-link">
-          <span class="menu-link-icon">⚙️</span>
-          <span>Impostazioni</span>
-        </a>
-        <a href="./manual.html" class="menu-link">
-          <span class="menu-link-icon">📖</span>
-          <span>Aiuto</span>
-        </a>
-        <button class="menu-link" id="btn-force-update" type="button">
-          <span class="menu-link-icon">🔄</span>
-          <span>Forza aggiornamento</span>
+      <div class="menu-grid" id="menu-grid">
+        <!-- popolato dinamicamente da js/app.js renderMenuGrid() -->
+      </div>
+      <div class="menu-utility">
+        <button class="menu-utility-btn" id="btn-force-update" type="button">
+          🔄 Forza aggiornamento app
         </button>
       </div>
     </div>

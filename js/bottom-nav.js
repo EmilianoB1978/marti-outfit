@@ -30,7 +30,19 @@ export const NAV_DESTINATIONS = {
   dormant:     { icon: "💤",  label: "A riposo",     type: "link",    href: "./dormant.html" },
   live:        { icon: "🤳",  label: "Live",         type: "link",    href: "./live-memory.html" },
   palette:     { icon: "🎨",  label: "Palette",      type: "link",    href: "./palette.html" },
+  system:      { icon: "⚙️",  label: "Sistema",      type: "link",    href: "./system.html" },
 };
+
+/**
+ * Pool delle destinazioni mostrabili nel menu drawer (tutte tranne sezioni
+ * interne wardrobe/outfits e l'add_item che è il FAB). Usato per il render
+ * della griglia card del menu drawer.
+ */
+export const MENU_DRAWER_KEYS = [
+  "calendar", "trips", "budget", "notes",
+  "capsules", "analytics", "live", "palette",
+  "dormant", "taxonomies", "settings", "system", "manual",
+];
 
 export const DEFAULT_BOTTOM_NAV = ["wardrobe", "calendar", "add_item", "capsules", "outfits"];
 

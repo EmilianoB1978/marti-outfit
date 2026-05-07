@@ -14,7 +14,7 @@ import * as Taxonomies from "./taxonomies.js";
 import * as ShareOutfit from "./share-outfit.js";
 import * as DormantMod from "./dormant.js";
 import * as TodayOutfit from "./today-outfit.js";
-import { renderBottomNav, NAV_DESTINATIONS } from "./bottom-nav.js";
+import { renderBottomNav, NAV_DESTINATIONS, MENU_DRAWER_KEYS } from "./bottom-nav.js";
 import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
 import { addTransaction as addBudgetTransaction, monthKey, formatMonth as formatBudgetMonth, getBudget, computeSummary as computeBudgetSummary } from "./budget-data.js";
 
@@ -991,6 +991,32 @@ async function onMultiChipClick(rootId, e) {
 // =============================================================================
 // Single-chip peso del capo (5 livelli con grammi modificabili in Settings)
 // =============================================================================
+// =============================================================================
+// Menu drawer grid (card 3-col personalizzabili da Settings -> Menu)
+// =============================================================================
+function renderMenuGrid() {
+  const grid = document.getElementById("menu-grid");
+  if (!grid) return;
+  const prefs = Theme.getPreferences();
+  const allowed = new Set(MENU_DRAWER_KEYS);
+  const hidden = new Set(prefs.menuHidden || []);
+  const order = (prefs.menuOrder || []).filter(k => allowed.has(k));
+  // Aggiungi le destinazioni "nuove" non ancora presenti in menuOrder (es.
+  // dopo aggiornamento app che introduce sezioni nuove)
+  for (const k of MENU_DRAWER_KEYS) {
+    if (!order.includes(k)) order.push(k);
+  }
+  const visible = order.filter(k => !hidden.has(k));
+  grid.innerHTML = visible.map(key => {
+    const dest = NAV_DESTINATIONS[key];
+    if (!dest) return "";
+    return `<a class="menu-card" href="${dest.href}" data-key="${key}">
+      <span class="menu-card-icon">${dest.icon}</span>
+      <span class="menu-card-label">${escapeHtml(dest.label)}</span>
+    </a>`;
+  }).join("");
+}
+
 function renderWeightChips() {
   const root = document.getElementById("field-weight");
   if (!root) return;
@@ -2460,11 +2486,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Menu drawer (icona ⋯ in header)
   const menuDrawer = document.getElementById("menu-drawer");
   document.getElementById("btn-menu").addEventListener("click", () => {
+    renderMenuGrid();
     menuDrawer.classList.remove("hidden");
   });
   menuDrawer.addEventListener("click", (e) => {
     if (e.target === menuDrawer) menuDrawer.classList.add("hidden");
   });
+  // Render iniziale (cosi' il primo apri non flicca)
+  try { renderMenuGrid(); } catch {}
 
   // (Personalizza barra ora dentro Aspetto -> tab Barra)
 

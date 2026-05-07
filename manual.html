@@ -219,6 +219,67 @@
       </div>
     </div>
 
+    <!-- ===== Sezione: Budget mensile ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>💰 Budget mensile</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Imposta un budget per il guardaroba <strong>mese-per-mese</strong> (non fisso!), traccia ogni spesa e a fine mese decidi se rollare avanzo/sforamento o azzerare. Apri da: <strong>Menu ⋯ → 💰 Budget mensile</strong>, oppure metti <strong>💰 Budget</strong> in barra (Aspetto → Barra).</p>
+
+        <p><strong>1. Imposta il budget del mese</strong></p>
+        <ul class="manual-list">
+          <li>Naviga al mese con le frecce <strong>‹ ›</strong></li>
+          <li>Tap sul valore "Budget mensile" → prompt per inserire l'importo (es. <code>200</code>)</li>
+          <li>Ogni mese può avere un budget diverso (a marzo magari 150€, a giugno 300€ per i saldi)</li>
+        </ul>
+
+        <p><strong>2. Aggiungi una spesa</strong></p>
+        <p>Bottone <strong>+ Aggiungi spesa</strong>: label, importo (formato italiano con virgola), data, link prodotto opzionale. Il bottone X su ogni riga elimina.</p>
+
+        <p class="manual-tip">🛍️ <strong>Auto-link col guardaroba</strong>: quando aggiungi un capo nuovo con un prezzo, sotto al campo Prezzo compare il toggle <strong>"💰 Registra in budget [mese]"</strong>. Se ON (default), la spesa finisce automatica nel budget del mese corrente. Disattiva se non vuoi tracciarla.</p>
+
+        <p><strong>3. Card riepilogo & avvisi proattivi</strong></p>
+        <p>La card in cima mostra: budget impostato, eventuale rollover dal mese precedente (pill verde se avanzo, rossa se sforamento), barra capacità colorata (verde / gialla 80%+ / rossa 95%+), 3 stat (Speso · Disponibile · Resta). Sotto, banner contestuali in 4 livelli:</p>
+        <ul class="manual-list">
+          <li>💡 <strong>Info</strong>: "Userai il 45% del budget · ti resterà 110€" (pre-acquisto, mentre digiti il prezzo)</li>
+          <li>⚠️ <strong>Warning 80%</strong>: "Hai usato 80% del budget. Mancano 12 giorni e 30€."</li>
+          <li>⚠️ <strong>Warning proiezione</strong>: "A questo ritmo arriverai a 247€ a fine mese (sforando di ~47€)"</li>
+          <li>🚨 <strong>Danger</strong>: "Hai già sforato di 30€. Mancano 5 giorni alla fine del mese."</li>
+        </ul>
+
+        <p><strong>4. Alert pre-acquisto</strong></p>
+        <p>Mentre digiti il prezzo nel modal Nuovo capo, sotto al toggle compare l'impatto in tempo reale: <em>"💡 Userai il 45% del budget"</em> oppure <em>"🚨 Con questo capo sfori di 27€ il budget Maggio 2026"</em>. Frena gli acquisti impulsivi prima che diventino spese registrate.</p>
+
+        <p><strong>5. Chiusura mese (la magia del rollover)</strong></p>
+        <p>Bottone <strong>🔒 Chiudi questo mese</strong>: apre un modal con recap stats e domanda contestuale.</p>
+        <ul class="manual-list">
+          <li><strong>Avanzo</strong> (delta positivo): "Hai avanzato 50€ a Maggio. Aggiungi a Giugno o azzera?" → <em>📥 Aggiungi a Giugno</em> o <em>🪄 Azzera, ripartiamo da zero</em></li>
+          <li><strong>Sforamento</strong> (delta negativo): "Hai sforato di 47€. Sottrai da Giugno o azzera?" → stesse 2 opzioni</li>
+          <li><strong>Pari</strong>: "Bilancio in pari! Niente da rollare."</li>
+        </ul>
+        <p>Se scegli rollover, il delta viene <strong>automaticamente</strong> sommato al rollover-in del mese successivo (anche se quel mese non esiste ancora — viene creato).</p>
+
+        <p><strong>6. Riapri un mese chiuso</strong></p>
+        <p>Bottone <strong>🔓 Riapri questo mese</strong>: revert della chiusura. Se avevi rollato, il rollover viene sottratto dal mese successivo (con conferma). Niente vincoli — puoi cambiare idea quando vuoi.</p>
+
+        <p><strong>7. 📊 Statistiche & storico</strong></p>
+        <p>Sezione collassabile in fondo alla pagina. Tap per espandere → carica:</p>
+        <ul class="manual-list">
+          <li><strong>Media ultimi 6 mesi</strong></li>
+          <li><strong>Spesa anno corrente</strong> (somma cumulativa)</li>
+          <li><strong>% Budget rispettato</strong> (mesi chiusi entro il limite)</li>
+          <li><strong>Bar chart ultimi 12 mesi</strong> con label MM/YY</li>
+          <li><strong>🥇🥈🥉 Top 3 mesi più costosi</strong></li>
+          <li><strong>Distribuzione per categoria</strong> (top capi capienti vs accessori vs scarpe…)</li>
+        </ul>
+
+        <p class="manual-tip">💡 <strong>Workflow consigliato</strong>: a inizio mese imposti il budget. Durante il mese registri ogni acquisto (manuale o automatico via guardaroba). Tieni d'occhio gli avvisi proattivi. A fine mese chiudi e decidi rollover/azzera. La % rispetto del budget cresce nel tempo come un "voto di disciplina".</p>
+
+        <p class="manual-tip">⚙️ <strong>Niente AI</strong>: tutto algoritmico (proiezione lineare basata sul giorno del mese, statistiche aggregate sui dati storici Firestore). Costo zero per uso.</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Calendario ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Armocromia · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/armocromia.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>🎨 Armocromia</h1>
+    <button class="btn-icon" id="btn-info" type="button" aria-label="Info" title="Info">ℹ️</button>
+  </header>
+
+  <main class="settings-main">
+    <!-- ============== INTRO (mostrata se nessun risultato) ============== -->
+    <section id="ar-intro" class="ar-section ar-intro">
+      <div class="ar-intro-icon">🎨</div>
+      <h2 class="ar-intro-title">Scopri la tua palette</h2>
+      <p class="ar-intro-text">
+        Un test guidato in <strong>14 domande</strong> ti dice a quale delle
+        <strong>12 stagioni</strong> appartieni: capirai quali colori ti
+        valorizzano davvero e quali invece ti spengono.
+      </p>
+      <ul class="ar-intro-list">
+        <li>📍 <strong>3-4 minuti</strong> per completarlo</li>
+        <li>🪞 Fai il test con luce naturale, senza trucco</li>
+        <li>🟢 Risultato salvato su questo dispositivo</li>
+      </ul>
+      <button class="btn btn--primary btn--block ar-start-btn" id="btn-start">
+        ✨ Inizia il test
+      </button>
+    </section>
+
+    <!-- ============== TEST (stepper) ============== -->
+    <section id="ar-test" class="ar-section hidden">
+      <div class="ar-progress-bar">
+        <div class="ar-progress-fill" id="ar-progress-fill"></div>
+        <div class="ar-progress-text" id="ar-progress-text">1 / 14</div>
+      </div>
+      <div id="ar-question-wrap" class="ar-question-wrap">
+        <!-- popolato da JS -->
+      </div>
+      <div class="ar-test-nav">
+        <button class="btn btn--ghost ar-back-btn" id="btn-back" type="button">‹ Indietro</button>
+        <button class="btn btn--ghost ar-cancel-btn" id="btn-cancel" type="button">Annulla</button>
+      </div>
+    </section>
+
+    <!-- ============== RISULTATO ============== -->
+    <section id="ar-result" class="ar-section hidden">
+      <!-- popolato da JS -->
+    </section>
+
+    <!-- ============== RISULTATO SALVATO (se gia' fatto in passato) ============== -->
+    <section id="ar-saved" class="ar-section hidden">
+      <!-- popolato da JS -->
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/armocromia-page.js"></script>
+</body>
+</html>

@@ -351,7 +351,7 @@ export const defaultPreferences = {
   // Bottom nav (5 slot personalizzabili. Slot 2 = centrale ingrandito.)
   bottomNav: ["wardrobe", "calendar", "add_item", "capsules", "outfits"],
   // Menu drawer (icona ⋯ in header): ordine + voci nascoste
-  menuOrder: ["diary", "outfit_history", "reminders", "notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"],
+  menuOrder: ["armocromia", "diary", "outfit_history", "reminders", "notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"],
   menuHidden: [],
   // Override visivi per le chip multi-select (colors, patterns, occasions).
   // Dict piatto "taxonomy:value" -> { bg, fg, pattern, icon }. I default
@@ -360,6 +360,8 @@ export const defaultPreferences = {
   // Albero del + centrale (bottom-nav). 6 chiavi da TREE_DESTINATIONS in
   // ordine bottom-up alternato sx/dx.
   treeMenu: ["add_item", "add_outfit", "add_note", "add_reminder", "diary_today", "add_capsule"],
+  // Armocromia: stagione + scores + timestamp del test. null = test non fatto.
+  armocromia: null,
   // 8 stagioni in ordine cronologico annuale (4 reali + 4 mezze stagioni di
   // transizione). Ogni stagione: { label, icon, enabled, kind }.
   // kind="full" -> sempre attiva (non disabilitabile), nome editabile.

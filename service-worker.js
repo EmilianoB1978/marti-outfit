@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v110-outfit-history';
+const CACHE_VERSION = 'v111-armocromia';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -93,6 +93,10 @@ const SHELL_FILES = [
   './js/outfit-history-page.js',
   './css/outfit-history.css',
   './outfit-history.html',
+  './js/armocromia-data.js',
+  './js/armocromia-page.js',
+  './css/armocromia.css',
+  './armocromia.html',
   './css/trips.css',
   './css/budget.css',
   './css/notes.css',
@@ -147,7 +151,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📍 Storico outfit! Timeline verticale a scroll infinito con tutti i tuoi outfit indossati e pianificati, raggruppati per mese, con mood emoji e thumbnail dei capi. Dal menu ⋯.";
+const WHATS_NEW = "🎨 Armocromia! Test guidato in 14 domande → la tua stagione tra le 12 (Primavera/Estate/Autunno/Inverno + 3 sotto-tipi). Palette con HEX e colori da evitare. Apri dal menu.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

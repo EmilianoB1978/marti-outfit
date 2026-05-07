@@ -23,6 +23,7 @@ export const NAV_DESTINATIONS = {
   budget:      { icon: "💰",  label: "Budget",       type: "link",    href: "./budget.html" },
   notes:       { icon: "📝",  label: "Note",         type: "link",    href: "./notes.html" },
   reminders:   { icon: "⏰",  label: "Promemoria",   type: "link",    href: "./reminders.html" },
+  diary:       { icon: "📔",  label: "Diario",       type: "link",    href: "./diary.html" },
   capsules:    { icon: "🎒",  label: "Capsule",      type: "link",    href: "./capsules.html" },
   analytics:   { icon: "📊",  label: "Statistiche",  type: "link",    href: "./analytics.html" },
   settings:    { icon: "🎨",  label: "Aspetto",      type: "link",    href: "./settings.html" },
@@ -40,7 +41,7 @@ export const NAV_DESTINATIONS = {
  * della griglia card del menu drawer.
  */
 export const MENU_DRAWER_KEYS = [
-  "calendar", "trips", "budget", "notes", "reminders",
+  "calendar", "trips", "budget", "notes", "reminders", "diary",
   "capsules", "analytics", "live", "palette",
   "dormant", "taxonomies", "settings", "system", "manual",
 ];

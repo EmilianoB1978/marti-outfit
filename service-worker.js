@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v87-reminders';
+const CACHE_VERSION = 'v88-diary';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -80,14 +80,20 @@ const SHELL_FILES = [
   './js/note-detail.js',
   './js/reminders-data.js',
   './js/reminders-page.js',
+  './js/diary-data.js',
+  './js/diary-page.js',
+  './js/diary-detail.js',
   './css/trips.css',
   './css/budget.css',
   './css/notes.css',
   './css/reminders.css',
+  './css/diary.css',
   './budget.html',
   './notes.html',
   './note-detail.html',
   './reminders.html',
+  './diary.html',
+  './diary-detail.html',
   './trips.html',
   './trip-detail.html',
   './dormant.html',
@@ -131,7 +137,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "⏰ Promemoria intelligenti! Sarta, regali, lavaggi, capi dimenticati: l'unico promemoria che sa cos'hai nell'armadio. Suggerimenti automatici dai tuoi capi e note.";
+const WHATS_NEW = "📔 Diario arrivato! Mood, foto, pensieri e auto-link: ricorda anche cosa indossavi quel giorno. Streak giorni consecutivi e statistiche mood.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

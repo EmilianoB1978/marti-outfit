@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1f3a">
+  <title>Pagina Diario · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/extras.css">
+  <link rel="stylesheet" href="./css/diary.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button class="topbar-back" onclick="goBack()" aria-label="Indietro">‹</button>
+      <h1 class="topbar-title" id="entry-date-title">Pagina</h1>
+      <button class="topbar-action" id="btn-delete" type="button" aria-label="Elimina">🗑️</button>
+    </header>
+
+    <main class="main-content diary-edit">
+      <section class="diary-header-card">
+        <div class="diary-mood-row">
+          <span class="diary-mood-label">Come ti senti?</span>
+          <div class="diary-mood-list" id="mood-list"></div>
+        </div>
+        <input type="text" id="entry-title" class="diary-title-input" placeholder="Titolo della giornata..." maxlength="120">
+      </section>
+
+      <section class="diary-outfit-section" id="diary-outfit-section" hidden>
+        <h3 class="diary-section-title">👗 Cosa indossavi</h3>
+        <div class="diary-outfit-grid" id="diary-outfit-grid"></div>
+      </section>
+
+      <section class="diary-photos-section">
+        <h3 class="diary-section-title">📸 Foto</h3>
+        <div class="diary-photos-grid" id="diary-photos-grid"></div>
+        <button class="btn btn-ghost btn-add-photo" type="button" id="btn-add-photo">+ Aggiungi foto</button>
+        <input type="file" id="file-photo" accept="image/*" hidden>
+      </section>
+
+      <section class="diary-body-section">
+        <h3 class="diary-section-title">✍️ Pensieri</h3>
+        <div id="entry-body" class="diary-body-editor" contenteditable="true" data-placeholder="Scrivi qui i pensieri di oggi..."></div>
+      </section>
+
+      <section class="diary-tags-section">
+        <h3 class="diary-section-title">🏷️ Tag</h3>
+        <input type="text" id="entry-tags" placeholder="vacanza, lavoro, famiglia (separati da virgola)">
+      </section>
+
+      <p class="diary-saved-hint" id="saved-hint">💾 Salvato automaticamente</p>
+    </main>
+  </div>
+
+  <script type="module" src="./js/diary-detail.js"></script>
+</body>
+</html>

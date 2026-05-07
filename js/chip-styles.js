@@ -111,6 +111,18 @@ function key(taxonomy, value) {
   return `${tax}:${String(value || "").toLowerCase().trim()}`;
 }
 
+// Default per le categorie: emoji icona gia' presente in
+// taxonomies.DEFAULT_TAXONOMIES.categories — qui aggiungiamo solo bg/fg.
+export const CATEGORY_DEFAULTS = {
+  "top":        { bg: "#e0e0e2", fg: "#1a1a1a" },
+  "bottom":     { bg: "#5478a8", fg: "#ffffff" },
+  "vestito":    { bg: "#d63484", fg: "#ffffff" },
+  "scarpe":     { bg: "#3d2817", fg: "#ffffff" },
+  "accessori":  { bg: "#d4af37", fg: "#1a1a1a" },
+  "capospalla": { bg: "#4b5d3a", fg: "#ffffff" },
+  "completo":   { bg: "#1a1a1a", fg: "#ffffff" },
+};
+
 /** Stile di default per una voce (senza override utente). */
 export function getDefaultStyle(taxonomy, value) {
   const v = String(value || "").toLowerCase().trim();
@@ -126,6 +138,11 @@ export function getDefaultStyle(taxonomy, value) {
   }
   if (taxonomy === "occasions") {
     const def = OCCASION_DEFAULTS[v];
+    if (def) return { ...def };
+    return null;
+  }
+  if (taxonomy === "categories") {
+    const def = CATEGORY_DEFAULTS[v];
     if (def) return { ...def };
     return null;
   }
@@ -176,5 +193,21 @@ export function styleToCss(style) {
 
 /** Quando una tassonomia supporta lo styling. */
 export function isTaxonomyStylable(taxonomy) {
-  return ["colors", "colors-secondary", "patterns", "occasions"].includes(taxonomy);
+  return ["colors", "colors-secondary", "patterns", "occasions", "categories"].includes(taxonomy);
+}
+
+/** Capabilities supportate per la tassonomia (cosa mostrare nell'editor). */
+export function styleCapsFor(taxonomy) {
+  switch (taxonomy) {
+    case "colors":
+    case "colors-secondary":
+      return { color: true, pattern: false, icon: false };
+    case "patterns":
+      return { color: true, pattern: true, icon: false };
+    case "occasions":
+    case "categories":
+      return { color: true, pattern: false, icon: true };
+    default:
+      return { color: false, pattern: false, icon: false };
+  }
 }

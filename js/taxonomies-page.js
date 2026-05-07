@@ -1,10 +1,15 @@
 // =============================================================================
 // Taxonomies management page controller
 // =============================================================================
+// Gestisce le tassonomie del guardaroba (categorie, sotto-categorie, colori,
+// pattern, materiali, stili, stagioni, occasioni). Per le tassonomie
+// "stylable" (colors / colors-secondary / patterns / occasions / categories)
+// integra anche un editor di look (sfondo, motivo, emoji) accanto alla riga.
 
 import * as Theme from "./theme/manager.js";
 import * as Taxonomies from "./taxonomies.js";
 import * as Wardrobe from "./wardrobe.js";
+import * as ChipStyles from "./chip-styles.js";
 
 Theme.init();
 
@@ -12,6 +17,7 @@ const STRUCTURED = ["categories"];
 
 const state = {
   currentTax: "categories",
+  expanded: null,   // valore della row con pannello look aperto, null se nessuno
 };
 
 // =============================================================================
@@ -30,16 +36,23 @@ function escapeHtml(s) {
   }[c]));
 }
 
+function capWord(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+function toHex(c) {
+  if (typeof c !== "string") return "#cccccc";
+  if (c.startsWith("#") && (c.length === 7 || c.length === 4)) {
+    if (c.length === 4) return "#" + c.slice(1).split("").map(x => x + x).join("");
+    return c.toLowerCase();
+  }
+  return "#cccccc";
+}
+
 // =============================================================================
 // Boot
 // =============================================================================
 async function boot() {
-  // Carico anche i capi esistenti per la migrazione iniziale
   let items = [];
-  try {
-    items = await Wardrobe.listItems();
-  } catch (err) { /* OK se il guardaroba e' vuoto */ }
-
+  try { items = await Wardrobe.listItems(); } catch (err) {}
   await Taxonomies.load(items);
   render();
 }
@@ -57,43 +70,158 @@ function render() {
     return;
   }
 
-  if (STRUCTURED.includes(tax)) {
-    // Render con icon (per categories)
-    list.innerHTML = values.map(item => `
-      <div class="tax-row" data-value="${escapeHtml(item.value)}">
-        <span class="tax-row-icon">${escapeHtml(item.icon || '🏷️')}</span>
-        <span class="tax-row-label">${escapeHtml(item.label)}</span>
-        ${item.builtIn ? '<span class="tax-row-builtin">built-in</span>' : ''}
-        <button class="btn-icon tax-row-edit" aria-label="Rinomina">✏️</button>
-        <button class="btn-icon tax-row-delete" aria-label="Elimina">🗑️</button>
-      </div>
-    `).join("");
-  } else {
-    // Render plain string
-    list.innerHTML = values.map(v => `
-      <div class="tax-row" data-value="${escapeHtml(v)}">
-        <span class="tax-row-label">${escapeHtml(v)}</span>
-        <button class="btn-icon tax-row-edit" aria-label="Rinomina">✏️</button>
-        <button class="btn-icon tax-row-delete" aria-label="Elimina">🗑️</button>
-      </div>
-    `).join("");
-  }
+  const stylable = ChipStyles.isTaxonomyStylable(tax);
 
+  list.innerHTML = values.map(v => renderRow(tax, v, stylable)).join("");
+
+  // Bind edit/delete/look toggle
   list.querySelectorAll(".tax-row-edit").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const value = btn.closest(".tax-row").dataset.value;
-      onRename(value);
+      onRename(btn.closest(".tax-row").dataset.value);
     });
   });
-
   list.querySelectorAll(".tax-row-delete").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const value = btn.closest(".tax-row").dataset.value;
-      onDelete(value);
+      onDelete(btn.closest(".tax-row").dataset.value);
     });
   });
+  list.querySelectorAll(".tax-row-look").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const value = btn.closest(".tax-row").dataset.value;
+      toggleLookPanel(value);
+    });
+  });
+  // Bind controlli pannello look (se aperto)
+  if (state.expanded) bindLookPanel(state.expanded);
+}
+
+function renderRow(tax, item, stylable) {
+  const isStruct = STRUCTURED.includes(tax);
+  const value = isStruct ? item.value : item;
+  const label = isStruct ? item.label : item;
+  const builtIn = isStruct ? item.builtIn : false;
+  const expanded = state.expanded === value;
+
+  // Anteprima look (se stylable)
+  let preview = "";
+  if (stylable) {
+    const st = ChipStyles.getChipStyle(tax, value);
+    const css = ChipStyles.styleToCss(st);
+    // Per categories l'icon di default arriva da DEFAULT_TAXONOMIES.icon, ma
+    // qui usiamo solo la chip-style icon (bg + fg + opzionale emoji).
+    const icon = st?.icon ? `${st.icon} ` : (isStruct ? `${item.icon || ''} ` : '');
+    preview = `<span class="tax-row-preview" style="${css}">${escapeHtml(icon)}</span>`;
+  } else if (isStruct) {
+    preview = `<span class="tax-row-icon">${escapeHtml(item.icon || '🏷️')}</span>`;
+  }
+
+  const lookBtn = stylable
+    ? `<button class="btn-icon tax-row-look${expanded ? ' is-active' : ''}" aria-label="Look" title="Personalizza look">🎨</button>`
+    : "";
+
+  const builtInBadge = builtIn ? '<span class="tax-row-builtin">built-in</span>' : '';
+
+  const lookPanel = (stylable && expanded) ? renderLookPanel(tax, value) : "";
+
+  return `<div class="tax-row${expanded ? ' tax-row-expanded' : ''}" data-value="${escapeHtml(value)}">
+    <div class="tax-row-main">
+      ${preview}
+      <span class="tax-row-label">${escapeHtml(label)}</span>
+      ${builtInBadge}
+      ${lookBtn}
+      <button class="btn-icon tax-row-edit" aria-label="Rinomina">✏️</button>
+      <button class="btn-icon tax-row-delete" aria-label="Elimina">🗑️</button>
+    </div>
+    ${lookPanel}
+  </div>`;
+}
+
+function renderLookPanel(tax, value) {
+  const caps = ChipStyles.styleCapsFor(tax);
+  const style = ChipStyles.getChipStyle(tax, value);
+  const bg = (style && style.bg) ? toHex(style.bg) : "#cccccc";
+  const icon = style?.icon || "";
+  const pattern = style?.pattern || "tinta unita";
+  const patternOpts = Object.keys(ChipStyles.PATTERN_BG)
+    .map(p => `<option value="${escapeHtml(p)}"${pattern === p ? ' selected' : ''}>${escapeHtml(p)}</option>`).join("");
+
+  return `<div class="tax-look-panel">
+    <div class="tax-look-row">
+      ${caps.color ? `
+        <label class="tax-look-field">
+          <span class="tax-look-label">Sfondo</span>
+          <input type="color" class="tax-look-color" value="${bg}" data-field="bg" />
+        </label>` : ""}
+      ${caps.icon ? `
+        <label class="tax-look-field">
+          <span class="tax-look-label">Emoji</span>
+          <input type="text" class="tax-look-icon" value="${escapeHtml(icon)}" maxlength="2" placeholder="🌟" data-field="icon" />
+        </label>` : ""}
+      ${caps.pattern ? `
+        <label class="tax-look-field tax-look-field-pattern">
+          <span class="tax-look-label">Motivo</span>
+          <select class="tax-look-pattern" data-field="pattern">${patternOpts}</select>
+        </label>` : ""}
+      <button type="button" class="btn-icon tax-look-reset" data-action="look-reset" aria-label="Ripristina">↺</button>
+    </div>
+  </div>`;
+}
+
+function bindLookPanel(value) {
+  const row = document.querySelector(`.tax-row[data-value="${cssEscape(value)}"]`);
+  if (!row) return;
+  const tax = state.currentTax;
+
+  row.querySelectorAll("[data-field]").forEach(input => {
+    input.addEventListener("input", () => {
+      const field = input.dataset.field;
+      const patch = {};
+      if (field === "bg") {
+        patch.bg = input.value;
+        patch.fg = ChipStyles.bestTextFor(input.value);
+      } else if (field === "icon") {
+        patch.icon = input.value.trim();
+      } else if (field === "pattern") {
+        patch.pattern = input.value;
+      }
+      ChipStyles.setChipStyle(tax, value, patch);
+      // Aggiorna SOLO la preview della row, non re-render del pannello (mantiene focus)
+      updateRowPreview(row, tax, value);
+    });
+  });
+
+  const resetBtn = row.querySelector('[data-action="look-reset"]');
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      ChipStyles.resetChipStyle(tax, value);
+      // Re-render della row + pannello (per riportare i picker ai default)
+      render();
+    });
+  }
+}
+
+function updateRowPreview(row, tax, value) {
+  const preview = row.querySelector(".tax-row-preview");
+  if (!preview) return;
+  const st = ChipStyles.getChipStyle(tax, value);
+  const css = ChipStyles.styleToCss(st);
+  preview.setAttribute("style", css);
+  if (st?.icon) preview.textContent = st.icon + " ";
+  else preview.textContent = "";
+}
+
+function toggleLookPanel(value) {
+  state.expanded = (state.expanded === value) ? null : value;
+  render();
+}
+
+// CSS.escape polyfill per attributi quotati
+function cssEscape(s) {
+  if (window.CSS && CSS.escape) return CSS.escape(s);
+  return String(s).replace(/[^a-zA-Z0-9_-]/g, m => "\\" + m);
 }
 
 // =============================================================================
@@ -106,7 +234,6 @@ async function onAdd() {
     toast("Inserisci un valore", "error");
     return;
   }
-
   try {
     const added = await Taxonomies.addValue(state.currentTax, value);
     if (!added) {
@@ -125,7 +252,6 @@ async function onAdd() {
 async function onRename(oldValue) {
   const newValue = prompt("Nuovo nome:", getDisplayValue(oldValue));
   if (!newValue || newValue.trim() === "") return;
-
   try {
     await Taxonomies.renameValue(state.currentTax, oldValue, newValue.trim());
     render();
@@ -136,22 +262,19 @@ async function onRename(oldValue) {
 }
 
 async function onDelete(value) {
-  // Per i built-in chiedo conferma extra
   const tax = state.currentTax;
   let isBuiltIn = false;
   if (STRUCTURED.includes(tax)) {
     const item = Taxonomies.listValues(tax).find(x => x.value === value);
     isBuiltIn = item?.builtIn;
   }
-
   const msg = isBuiltIn
     ? `"${getDisplayValue(value)}" è un valore built-in. Eliminandolo non potrà più essere selezionato in nuovi capi (i capi esistenti restano col tag). Procedere?`
     : `Eliminare "${getDisplayValue(value)}"?`;
-
   if (!confirm(msg)) return;
-
   try {
     await Taxonomies.removeValue(tax, value);
+    if (state.expanded === value) state.expanded = null;
     render();
     toast("Eliminato", "success");
   } catch (err) {
@@ -176,6 +299,7 @@ function initTabs() {
       document.querySelectorAll(".settings-tabs .tab").forEach(t => t.classList.remove("is-active"));
       tab.classList.add("is-active");
       state.currentTax = tab.dataset.tax;
+      state.expanded = null;
       render();
     });
   });

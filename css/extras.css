@@ -2408,3 +2408,118 @@ body.editor-page {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ============================================================================
+   Taxonomies — preview look inline + pannello editor on-demand
+   ============================================================================ */
+.tax-row {
+  display: flex;
+  flex-direction: column;
+}
+.tax-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+}
+.tax-row-preview {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background-repeat: repeat;
+  background-size: 8px 8px;
+}
+.tax-row-look {
+  font-size: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tax-row-look.is-active {
+  background: rgba(167,139,250,0.18);
+  border-color: rgba(167,139,250,0.5);
+}
+
+.tax-row-expanded { background: var(--color-surface-alt, rgba(0,0,0,0.04)); }
+.tax-look-panel {
+  padding: 0 12px 12px 50px;
+  border-top: 1px dashed var(--color-border);
+  margin-top: -2px;
+}
+.tax-look-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+}
+.tax-look-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tax-look-field-pattern { flex: 1; min-width: 140px; }
+.tax-look-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+}
+.tax-look-color {
+  width: 44px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+.tax-look-icon {
+  width: 48px;
+  height: 32px;
+  padding: 2px 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 16px;
+  text-align: center;
+  font-family: inherit;
+}
+.tax-look-pattern {
+  height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: inherit;
+  width: 100%;
+}
+.tax-look-reset {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

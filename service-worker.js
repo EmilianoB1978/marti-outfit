@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v101-chip-styles';
+const CACHE_VERSION = 'v102-tax-look';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -142,7 +142,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🎨 Chip personalizzabili! Colori, pattern e occasioni ora hanno look propri (sfondo + motivo + emoji). Modificali in Aspetto → 🎨 Chip. Default belli pre-popolati.";
+const WHATS_NEW = "🎨 Look delle chip integrato in Categorie e tag: tap su 🎨 accanto a una voce per scegliere sfondo, motivo o emoji. Categorie, Colori, Pattern, Occasioni: tutte personalizzabili.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

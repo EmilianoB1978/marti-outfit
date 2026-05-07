@@ -18,6 +18,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   $("#btn-today").addEventListener("click", () => {
     location.href = `./diary-detail.html?date=${todayId()}`;
   });
+  const btnWrapped = $("#btn-wrapped");
+  if (btnWrapped) {
+    btnWrapped.addEventListener("click", async () => {
+      const { openDiaryWrapped } = await import("./diary-wrapped.js");
+      await openDiaryWrapped();
+    });
+  }
   $("#search-input").addEventListener("input", (e) => {
     state.filter = e.target.value.trim().toLowerCase();
     renderTimeline();

@@ -351,7 +351,7 @@ export const defaultPreferences = {
   // Bottom nav (5 slot personalizzabili. Slot 2 = centrale ingrandito.)
   bottomNav: ["wardrobe", "calendar", "add_item", "capsules", "outfits"],
   // Menu drawer (icona ⋯ in header): ordine + voci nascoste
-  menuOrder: ["diary", "reminders", "notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"],
+  menuOrder: ["diary", "outfit_history", "reminders", "notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"],
   menuHidden: [],
   // Override visivi per le chip multi-select (colors, patterns, occasions).
   // Dict piatto "taxonomy:value" -> { bg, fg, pattern, icon }. I default

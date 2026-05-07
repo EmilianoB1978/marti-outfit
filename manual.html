@@ -1169,6 +1169,32 @@ jeans: https://...
       </div>
     </div>
 
+    <!-- ===== Sezione: Storico outfit ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📍 Storico outfit (timeline)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Una <strong>timeline verticale a scroll infinito</strong> con tutti gli outfit indossati e pianificati nel tempo. Stesso concept della timeline del +, ma con le date e gli outfit alternati a sx e dx.</p>
+        <p>Cosa vedi per ogni giorno:</p>
+        <ul class="manual-list">
+          <li><strong>Data prominente</strong> (giorno + abbreviazione settimana)</li>
+          <li><strong>Mood emoji</strong> dal Diario di quel giorno (se hai scritto)</li>
+          <li><strong>Mini-collage</strong> dei primi 3 capi indossati + badge "+N" se più di 3</li>
+          <li><strong>Titolo outfit</strong> + occasion (es. "Aperitivo")</li>
+          <li><strong>Badge stato</strong>: ✓ Indossato (verde) o 📅 Pianificato (oro)</li>
+        </ul>
+        <p>Tap su una card → apre il calendario al giorno corrispondente per modificare/registrare.</p>
+        <p>In cima 3 statistiche live: <strong>Outfit totali</strong>, <strong>Giorni tracciati</strong>, <strong>Mesi tracciati</strong>.</p>
+        <p>Bottone <strong>🔎</strong> in topbar apre i filtri:</p>
+        <ul class="manual-list">
+          <li>Tipo: tutti / solo indossati / solo pianificati</li>
+          <li>Mood: filtra per emoji del diario</li>
+        </ul>
+        <p class="manual-tip">📍 <strong>Pattern coerente</strong>: stessa estetica della Timeline del + (cerchi alternati, connector tratteggiato, mese pill centrato sulla linea). Le card scendono in cascata, lazy load 30 alla volta via IntersectionObserver — niente lag anche con anni di storico.</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Look chip in Categorie e tag ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Storico outfit · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/outfit-history.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>📍 Storico outfit</h1>
+    <button class="btn-icon" id="btn-filter" type="button" aria-label="Filtri" title="Filtri">🔎</button>
+  </header>
+
+  <main class="settings-main">
+    <!-- Stats riepilogo in cima -->
+    <section class="oh-stats" id="oh-stats">
+      <div class="oh-stat"><div class="oh-stat-value" id="oh-total">0</div><div class="oh-stat-label">Outfit</div></div>
+      <div class="oh-stat"><div class="oh-stat-value" id="oh-days">0</div><div class="oh-stat-label">Giorni</div></div>
+      <div class="oh-stat"><div class="oh-stat-value" id="oh-months">0</div><div class="oh-stat-label">Mesi tracciati</div></div>
+    </section>
+
+    <!-- Filtri (collapsible) -->
+    <div class="oh-filters hidden" id="oh-filters">
+      <select id="oh-filter-type">
+        <option value="all">Tutti</option>
+        <option value="worn">Indossati</option>
+        <option value="planned">Pianificati</option>
+      </select>
+      <select id="oh-filter-mood">
+        <option value="all">Tutti i mood</option>
+      </select>
+    </div>
+
+    <!-- Timeline -->
+    <div class="oh-timeline" id="oh-timeline">
+      <div class="oh-loading">⏳ Carico lo storico...</div>
+    </div>
+
+    <!-- Sentinel per lazy load -->
+    <div id="oh-sentinel" style="height: 60px;"></div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/outfit-history-page.js"></script>
+</body>
+</html>

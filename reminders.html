@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1f3a">
+  <title>Promemoria · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/extras.css">
+  <link rel="stylesheet" href="./css/notes.css">
+  <link rel="stylesheet" href="./css/reminders.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button class="topbar-back" onclick="history.back()" aria-label="Indietro">‹</button>
+      <h1 class="topbar-title">⏰ Promemoria</h1>
+      <button class="topbar-action" id="btn-perm" type="button" aria-label="Notifiche">🔔</button>
+    </header>
+
+    <main class="main-content">
+      <div class="reminders-tabs" id="reminders-tabs" role="tablist">
+        <button class="reminder-tab is-active" data-bucket="all">Tutti</button>
+        <button class="reminder-tab" data-bucket="today">Oggi <span class="rt-badge" data-count="today">0</span></button>
+        <button class="reminder-tab" data-bucket="week">Settimana <span class="rt-badge" data-count="week">0</span></button>
+        <button class="reminder-tab" data-bucket="overdue">Scaduti <span class="rt-badge" data-count="overdue">0</span></button>
+        <button class="reminder-tab" data-bucket="done">Fatti</button>
+      </div>
+
+      <div class="reminders-suggest" id="reminders-suggest" hidden>
+        <h3 class="reminders-suggest-title">💡 Suggerimenti dall'armadio</h3>
+        <div class="reminders-suggest-list" id="suggest-list"></div>
+      </div>
+
+      <div class="reminders-list" id="reminders-list">
+        <div class="empty-state">
+          <div class="empty-icon">⏰</div>
+          <p class="empty-text">Nessun promemoria</p>
+          <p class="empty-hint">Tocca + per creare il primo</p>
+        </div>
+      </div>
+    </main>
+
+    <button class="fab" id="fab-add" aria-label="Nuovo promemoria">+</button>
+
+    <!-- Bottom sheet creazione -->
+    <div class="sheet-overlay" id="sheet-overlay" hidden></div>
+    <div class="sheet" id="sheet-create" hidden>
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">Nuovo promemoria</h2>
+      <form id="reminder-form" class="reminder-form">
+        <label class="form-field">
+          <span class="form-label">Tipo</span>
+          <div class="rem-types" id="rem-types"></div>
+        </label>
+        <label class="form-field">
+          <span class="form-label">Titolo</span>
+          <input type="text" id="rem-title" required maxlength="120" placeholder="Es. Ritira gonna da sarta">
+        </label>
+        <label class="form-field">
+          <span class="form-label">Quando</span>
+          <input type="datetime-local" id="rem-due" required>
+        </label>
+        <label class="form-field">
+          <span class="form-label">Priorità</span>
+          <select id="rem-priority">
+            <option value="low">Bassa</option>
+            <option value="medium" selected>Media</option>
+            <option value="high">Alta</option>
+          </select>
+        </label>
+        <label class="form-field">
+          <span class="form-label">Ripetizione</span>
+          <select id="rem-repeat">
+            <option value="none" selected>Nessuna</option>
+            <option value="daily">Giornaliera</option>
+            <option value="weekly">Settimanale</option>
+            <option value="monthly">Mensile</option>
+            <option value="yearly">Annuale</option>
+          </select>
+        </label>
+        <label class="form-field">
+          <span class="form-label">Note (opzionale)</span>
+          <textarea id="rem-notes" rows="3" maxlength="500"></textarea>
+        </label>
+        <input type="hidden" id="rem-id">
+        <input type="hidden" id="rem-garment-id">
+        <input type="hidden" id="rem-note-id">
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancel">Annulla</button>
+          <button type="submit" class="btn btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="./js/reminders-page.js"></script>
+</body>
+</html>

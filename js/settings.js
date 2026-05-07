@@ -623,7 +623,7 @@ function initMenu() {
   const btnReset = document.getElementById("btn-reset-menu");
   if (!root) return;
 
-  const ALL_KEYS = ["calendar", "trips", "budget", "notes", "capsules",
+  const ALL_KEYS = ["calendar", "trips", "budget", "notes", "reminders", "capsules",
     "analytics", "live", "palette", "dormant", "taxonomies", "settings", "system", "manual"];
 
   function getList() {
@@ -677,7 +677,7 @@ function initMenu() {
   });
 
   btnReset.addEventListener("click", () => {
-    Theme.set("menuOrder", ["notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"]);
+    Theme.set("menuOrder", ["reminders", "notes", "budget", "trips", "live", "palette", "dormant", "analytics", "capsules", "calendar", "taxonomies", "settings", "manual", "system"]);
     Theme.set("menuHidden", []);
     render();
     toast("Menu ripristinato al default", "success");

@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v86-menu-grid';
+const CACHE_VERSION = 'v87-reminders';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -78,12 +78,16 @@ const SHELL_FILES = [
   './js/notes-data.js',
   './js/notes-page.js',
   './js/note-detail.js',
+  './js/reminders-data.js',
+  './js/reminders-page.js',
   './css/trips.css',
   './css/budget.css',
   './css/notes.css',
+  './css/reminders.css',
   './budget.html',
   './notes.html',
   './note-detail.html',
+  './reminders.html',
   './trips.html',
   './trip-detail.html',
   './dormant.html',
@@ -127,7 +131,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📋 Menu rinnovato! Card 3-col al posto della lista, più compatto e bello. Personalizzabile in Aspetto → 📋 Menu (riordina + nascondi voci).";
+const WHATS_NEW = "⏰ Promemoria intelligenti! Sarta, regali, lavaggi, capi dimenticati: l'unico promemoria che sa cos'hai nell'armadio. Suggerimenti automatici dai tuoi capi e note.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

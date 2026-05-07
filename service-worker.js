@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v106-tree-migration';
+const CACHE_VERSION = 'v107-tree-redesign';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -144,7 +144,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🌳 Hotfix Action Tree: migrazione automatica del + centrale (chi aveva già personalizzato la barra ora vede il nuovo albero al primo refresh).";
+const WHATS_NEW = "🌳 Albero ridisegnato! Frutti grandi colorati con gradient, chioma di foglie morbida che respira, particelle 🌸✨ sullo sfondo. Etichette leggibili, animazione fluida.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

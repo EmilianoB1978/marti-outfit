@@ -2,7 +2,7 @@
 // Carica i dati in parallelo, mostra solo i tile rilevanti, fail-soft.
 
 import { listReminders, bucketOf, REMINDER_TYPES } from "./reminders-data.js";
-import { listEntries, todayId, computeStreak } from "./diary-data.js";
+import { listEntries, todayId, computeStreak, MOODS, getOrCreateEntry, updateEntry } from "./diary-data.js";
 import { listNotes } from "./notes-data.js";
 
 let mounted = false;
@@ -57,19 +57,28 @@ export async function renderHomeHubCard() {
   }
 
   // Tile Diario
-  if (!hasToday || streak > 0) {
-    const cta = hasToday
-      ? `Streak ${streak} giorn${streak === 1 ? "o" : "i"} 🔥`
-      : `Scrivi nel diario`;
-    const sub = hasToday
-      ? `Tap per modificare la pagina di oggi`
-      : (streak > 0 ? `Non spezzare lo streak (${streak} 🔥)` : `Inizia il tuo diario`);
+  if (!hasToday) {
+    // Quick mood capture: 1 tap registra entry con mood (no editor)
+    const moodChips = MOODS.map(m =>
+      `<button type="button" class="hub-mood-chip" data-mood="${m.key}" title="${m.label}" aria-label="${m.label}">${m.emoji}</button>`
+    ).join("");
+    tiles.push(`
+      <div class="hub-tile hub-tile-diary hub-tile-mood">
+        <div class="hub-tile-icon hub-tile-icon-diary">📔</div>
+        <div class="hub-tile-body hub-mood-body">
+          <div class="hub-tile-label">Come stai oggi?</div>
+          <div class="hub-mood-row" id="hub-mood-row">${moodChips}</div>
+        </div>
+        <a href="./diary-detail.html?date=${today}" class="hub-tile-arrow" aria-label="Apri editor diario">›</a>
+      </div>
+    `);
+  } else if (streak > 0) {
     tiles.push(`
       <a href="./diary-detail.html?date=${today}" class="hub-tile hub-tile-diary">
         <div class="hub-tile-icon hub-tile-icon-diary">📔</div>
         <div class="hub-tile-body">
-          <div class="hub-tile-label">${cta}</div>
-          <div class="hub-tile-sub">${sub}</div>
+          <div class="hub-tile-label">Streak ${streak} giorn${streak === 1 ? "o" : "i"} 🔥</div>
+          <div class="hub-tile-sub">Tap per modificare la pagina di oggi</div>
         </div>
         <span class="hub-tile-arrow">›</span>
       </a>
@@ -98,6 +107,39 @@ export async function renderHomeHubCard() {
 
   root.innerHTML = tiles.join("");
   root.classList.remove("hidden");
+
+  // Bind quick mood capture
+  const moodRow = root.querySelector("#hub-mood-row");
+  if (moodRow) {
+    moodRow.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".hub-mood-chip");
+      if (!btn) return;
+      const mood = btn.dataset.mood;
+      btn.classList.add("is-selected");
+      btn.disabled = true;
+      try {
+        await getOrCreateEntry(today);
+        await updateEntry(today, { mood });
+        // Sostituisci card con success state
+        const tile = btn.closest(".hub-tile-mood");
+        const moodDef = MOODS.find(m => m.key === mood);
+        if (tile && moodDef) {
+          tile.outerHTML = `<a href="./diary-detail.html?date=${today}" class="hub-tile hub-tile-diary">
+            <div class="hub-tile-icon hub-tile-icon-diary">${moodDef.emoji}</div>
+            <div class="hub-tile-body">
+              <div class="hub-tile-label">Mood salvato: ${moodDef.label}</div>
+              <div class="hub-tile-sub">Tap per scrivere i pensieri</div>
+            </div>
+            <span class="hub-tile-arrow">›</span>
+          </a>`;
+        }
+      } catch (err) {
+        btn.classList.remove("is-selected");
+        btn.disabled = false;
+        console.error("quick mood capture:", err);
+      }
+    });
+  }
 }
 
 function escapeHtml(s) {

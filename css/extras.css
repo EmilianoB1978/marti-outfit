@@ -2043,3 +2043,67 @@ body.editor-page {
   background: rgba(167,139,250,0.85);
   font-size: 0;
 }
+
+/* Reminder dot calendar — angolo top-right con eventuale count */
+.cal-rem-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 11px;
+  line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.cal-rem-count {
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  background: rgba(248,113,113,0.95);
+  color: white;
+  border-radius: 8px;
+  padding: 1px 4px;
+  line-height: 1;
+}
+
+/* Quick mood capture sulla home hub card */
+.hub-tile-mood {
+  align-items: flex-start;
+  padding: 12px 14px;
+}
+.hub-mood-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hub-mood-row {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  margin: 0 -2px;
+}
+.hub-mood-row::-webkit-scrollbar { display: none; }
+.hub-mood-chip {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface-alt);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s, background 0.12s;
+}
+.hub-mood-chip:active { transform: scale(0.88); }
+.hub-mood-chip:hover { background: rgba(167,139,250,0.15); }
+.hub-mood-chip.is-selected {
+  background: rgba(167,139,250,0.3);
+  transform: scale(1.15);
+}
+.hub-mood-chip:disabled { cursor: default; opacity: 0.6; }

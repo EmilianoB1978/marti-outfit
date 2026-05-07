@@ -8,6 +8,7 @@ import * as Outfit from "./outfit.js";
 import * as Cal from "./calendar-data.js";
 import * as Weather from "./weather.js";
 import { listEntries as listDiaryEntries, MOODS as DIARY_MOODS } from "./diary-data.js";
+import { listReminders, REMINDER_TYPES } from "./reminders-data.js";
 
 Theme.init();
 
@@ -18,6 +19,7 @@ const state = {
   items: [],              // all wardrobe items (per render outfit thumbnail)
   outfits: [],            // all saved outfits
   diary: new Map(),       // dateKey YYYY-MM-DD -> diary entry (per mood dot)
+  reminders: new Map(),   // dateKey YYYY-MM-DD -> reminder[] (pending)
   selectedDate: null,
 };
 
@@ -45,17 +47,27 @@ async function init() {
   state.cursorYear = now.getFullYear();
   state.cursorMonth = now.getMonth();
 
-  // Carico in parallelo tutto cio' che mi serve (diary fail-soft)
-  const [items, outfits, entries, diaryEntries] = await Promise.all([
+  // Carico in parallelo tutto cio' che mi serve (diary + reminders fail-soft)
+  const [items, outfits, entries, diaryEntries, reminders] = await Promise.all([
     Wardrobe.listItems(),
     Outfit.listSavedOutfits(),
     Cal.listEntries(),
     listDiaryEntries().catch(() => []),
+    listReminders().catch(() => []),
   ]);
   state.items = items;
   state.outfits = outfits;
   state.entries = Cal.entriesByDate(entries);
   state.diary = new Map(diaryEntries.map(e => [e.id, e]));
+  // Group reminders by dateKey (solo pending con dueAt)
+  state.reminders = new Map();
+  for (const r of reminders) {
+    if (r.status === "done" || !r.dueAt) continue;
+    const due = r.dueAt.toDate ? r.dueAt.toDate() : new Date(r.dueAt);
+    const key = Cal.formatDateKey(due);
+    if (!state.reminders.has(key)) state.reminders.set(key, []);
+    state.reminders.get(key).push(r);
+  }
 
   renderMonth();
   loadWeatherBannerIfAvailable();
@@ -136,10 +148,20 @@ function makeDayCell(day, dateKey, entry, isToday) {
     moodDot = `<span class="cal-mood-dot cal-mood-dot-empty" title="Pagina diario"></span>`;
   }
 
+  // Reminder dot (top-right): emoji del primo reminder pending del giorno
+  const dayReminders = state.reminders.get(dateKey) || [];
+  let reminderDot = "";
+  if (dayReminders.length > 0) {
+    const first = dayReminders[0];
+    const meta = REMINDER_TYPES[first.type] || REMINDER_TYPES.manual;
+    reminderDot = `<span class="cal-rem-dot" title="${dayReminders.length} promemoria">${meta.icon}${dayReminders.length > 1 ? `<span class="cal-rem-count">${dayReminders.length}</span>` : ""}</span>`;
+  }
+
   cell.innerHTML = `
     <span class="cal-day-num">${day}</span>
     ${thumb}
     ${moodDot}
+    ${reminderDot}
     ${entry ? `<span class="cal-marker cal-marker-${entry.type}"></span>` : ""}
   `;
 

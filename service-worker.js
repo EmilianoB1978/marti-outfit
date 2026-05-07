@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v90-memory-mood';
+const CACHE_VERSION = 'v91-quick-mood';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -138,7 +138,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "⏳ 'Un anno fa' nel diario: rivivi quel giorno con foto, mood e capi indossati. Nel calendario emoji mood per ogni giorno con pagina diario. Pure magia.";
+const WHATS_NEW = "😊 Quick mood dalla home: 1 tap registra il mood di oggi senza aprire l'editor. Nel calendario ora vedi anche emoji dei promemoria pending per ogni giorno.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

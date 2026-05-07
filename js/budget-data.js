@@ -211,6 +211,79 @@ export async function reopenMonth(month) {
 // Summary (calcoli derivati)
 // =============================================================================
 
+/**
+ * Statistiche aggregate sui budget storici.
+ * @param {array} allBudgets  - array di budget (da listBudgets)
+ * @param {array} [items]     - capi del guardaroba (per categoria stats)
+ */
+export function computeBudgetStats(allBudgets, items) {
+  const today = new Date();
+  const currentKey = monthKey(today);
+  const currentYear = today.getFullYear();
+
+  // Esclude il mese corrente (in corso) dalle medie storiche.
+  const closed = allBudgets.filter(b => b.closed || b.month < currentKey);
+
+  // Spesa totale per ogni mese
+  const monthly = closed.map(b => {
+    const spent = (b.transactions || []).reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    return { month: b.month, spent: Math.round(spent * 100) / 100, budget: b.budget || 0 };
+  }).sort((a, b) => a.month.localeCompare(b.month));
+
+  // Media ultimi 6 mesi (effettiva, includendo solo mesi con spesa)
+  const last6 = monthly.slice(-6).filter(m => m.spent > 0);
+  const avg6 = last6.length > 0
+    ? last6.reduce((s, m) => s + m.spent, 0) / last6.length
+    : 0;
+
+  // Mese piu' costoso (storico)
+  const topMonths = [...monthly].sort((a, b) => b.spent - a.spent).slice(0, 3);
+
+  // Spesa anno corrente
+  const yearTotal = monthly
+    .filter(m => m.month.startsWith(String(currentYear)))
+    .reduce((s, m) => s + m.spent, 0);
+
+  // % mesi rispettati (chiusi con delta >= 0)
+  const respectedClosed = allBudgets.filter(b => b.closed && b.budget > 0);
+  const respected = respectedClosed.filter(b => {
+    const sum = computeSummary(b);
+    return sum.delta >= 0;
+  }).length;
+  const respectedPct = respectedClosed.length > 0
+    ? Math.round((respected / respectedClosed.length) * 100)
+    : null;
+
+  // Distribuzione per categoria (se i capi sono passati e le tx hanno item_id)
+  let categoryBreakdown = null;
+  if (Array.isArray(items)) {
+    const itemsById = new Map(items.map(i => [i.id, i]));
+    const byCat = new Map();
+    for (const b of allBudgets) {
+      for (const tx of (b.transactions || [])) {
+        if (!tx.item_id) continue;
+        const it = itemsById.get(tx.item_id);
+        if (!it) continue;
+        const cat = String(it.category || "altro").toLowerCase();
+        byCat.set(cat, (byCat.get(cat) || 0) + (Number(tx.amount) || 0));
+      }
+    }
+    categoryBreakdown = [...byCat.entries()]
+      .map(([cat, total]) => ({ cat, total: Math.round(total * 100) / 100 }))
+      .sort((a, b) => b.total - a.total);
+  }
+
+  return {
+    monthly,                     // [{month, spent, budget}]
+    avg6:    Math.round(avg6 * 100) / 100,
+    topMonths,                   // [{month, spent, budget}, ...]
+    yearTotal: Math.round(yearTotal * 100) / 100,
+    respectedPct,                // 0-100 o null
+    respectedCount: respectedClosed.length,
+    categoryBreakdown,           // [{cat, total}]
+  };
+}
+
 export function computeSummary(budget) {
   if (!budget) return { spent: 0, available: 0, delta: 0, pct: 0 };
   const spent = (budget.transactions || []).reduce((s, t) => s + (Number(t.amount) || 0), 0);

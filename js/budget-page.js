@@ -6,8 +6,9 @@ import * as Theme from "./theme/manager.js";
 import {
   monthKey, prevMonthKey, nextMonthKey, formatMonth,
   getBudget, ensureBudget, setMonthlyBudget, addTransaction, deleteTransaction,
-  closeMonth, reopenMonth, computeSummary,
+  closeMonth, reopenMonth, computeSummary, listBudgets, computeBudgetStats,
 } from "./budget-data.js";
+import { listItems } from "./wardrobe.js";
 import { formatNumberIT, parseNumberIT, sanitizeNumericInput } from "./it-format.js";
 
 Theme.init();
@@ -302,6 +303,100 @@ async function onCloseMonth(action) {
   }
 }
 
+// =============================================================================
+// STATS — sezione storica collassabile
+// =============================================================================
+async function loadAndRenderStats() {
+  const body = document.getElementById("bg-stats-body");
+  body.innerHTML = `<div class="bg-summary-loading">⏳</div>`;
+  try {
+    const [allBudgets, items] = await Promise.all([
+      listBudgets(),
+      listItems().catch(() => []),
+    ]);
+    const stats = computeBudgetStats(allBudgets, items);
+    renderStats(stats);
+  } catch (err) {
+    body.innerHTML = `<p class="bg-tx-empty">Errore caricamento statistiche</p>`;
+  }
+}
+
+function renderStats(stats) {
+  const body = document.getElementById("bg-stats-body");
+
+  if (stats.monthly.length === 0) {
+    body.innerHTML = `<p class="bg-tx-empty">Nessuno storico ancora — chiudi qualche mese e torna qui!</p>`;
+    return;
+  }
+
+  // Mini grafico a barre degli ultimi 12 mesi
+  const last12 = stats.monthly.slice(-12);
+  const maxSpent = Math.max(...last12.map(m => m.spent), 1);
+  const barsHtml = last12.map(m => {
+    const h = Math.round((m.spent / maxSpent) * 100);
+    const monthShort = m.month.slice(5) + "/" + m.month.slice(2, 4);
+    return `<div class="bg-bar-col" title="${escapeHtml(m.month + ': ' + formatNumberIT(m.spent, { decimals: 0, euro: true }))}">
+      <div class="bg-bar-track"><div class="bg-bar-fill" style="height:${h}%"></div></div>
+      <span class="bg-bar-label">${escapeHtml(monthShort)}</span>
+    </div>`;
+  }).join("");
+
+  // Top 3 mesi
+  const topHtml = stats.topMonths.slice(0, 3).map((m, i) => {
+    const medal = ["🥇", "🥈", "🥉"][i];
+    return `<li>${medal} ${escapeHtml(formatMonth(m.month))} · <strong>${formatNumberIT(m.spent, { decimals: 0, euro: true })}</strong></li>`;
+  }).join("");
+
+  // Categoria breakdown (se disponibile)
+  let catHtml = "";
+  if (stats.categoryBreakdown && stats.categoryBreakdown.length > 0) {
+    const totalCat = stats.categoryBreakdown.reduce((s, c) => s + c.total, 0);
+    catHtml = `
+      <h4 class="bg-stats-h4">Distribuzione per categoria</h4>
+      <ul class="bg-cat-list">
+        ${stats.categoryBreakdown.slice(0, 6).map(c => {
+          const pct = totalCat > 0 ? Math.round((c.total / totalCat) * 100) : 0;
+          return `<li>
+            <span class="bg-cat-name">${escapeHtml(capitalize(c.cat))}</span>
+            <span class="bg-cat-bar"><span class="bg-cat-fill" style="width:${pct}%"></span></span>
+            <span class="bg-cat-total">${formatNumberIT(c.total, { decimals: 0, euro: true })}</span>
+          </li>`;
+        }).join("")}
+      </ul>
+    `;
+  }
+
+  body.innerHTML = `
+    <div class="bg-stats-grid">
+      <div class="bg-stats-card">
+        <span class="bg-stats-label">Media ultimi 6 mesi</span>
+        <span class="bg-stats-value">${formatNumberIT(stats.avg6, { decimals: 0, euro: true })}</span>
+      </div>
+      <div class="bg-stats-card">
+        <span class="bg-stats-label">Spesa anno ${new Date().getFullYear()}</span>
+        <span class="bg-stats-value">${formatNumberIT(stats.yearTotal, { decimals: 0, euro: true })}</span>
+      </div>
+      <div class="bg-stats-card">
+        <span class="bg-stats-label">Budget rispettato</span>
+        <span class="bg-stats-value">${stats.respectedPct == null ? "—" : stats.respectedPct + "%"}</span>
+        ${stats.respectedCount > 0 ? `<small>${stats.respectedCount} ${stats.respectedCount === 1 ? "mese" : "mesi"} chiusi</small>` : ""}
+      </div>
+    </div>
+
+    <h4 class="bg-stats-h4">Spesa ultimi 12 mesi</h4>
+    <div class="bg-bars">${barsHtml}</div>
+
+    ${stats.topMonths.length > 0 ? `
+      <h4 class="bg-stats-h4">Mesi più costosi</h4>
+      <ul class="bg-top-list">${topHtml}</ul>
+    ` : ""}
+
+    ${catHtml}
+  `;
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
 async function onReopenMonth() {
   if (!confirm("Riaprire questo mese? Eventuali rollover al mese successivo verranno sottratti.")) return;
   try {
@@ -338,5 +433,21 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-cm-rollover").addEventListener("click", () => onCloseMonth("rollover"));
   document.getElementById("btn-cm-reset").addEventListener("click", () => onCloseMonth("reset"));
   document.getElementById("btn-reopen-month").addEventListener("click", onReopenMonth);
+
+  // Stats toggle (lazy: carica solo al primo apri)
+  const statsToggle = document.getElementById("btn-stats-toggle");
+  let statsLoaded = false;
+  statsToggle.addEventListener("click", async () => {
+    const body = document.getElementById("bg-stats-body");
+    const open = !body.classList.contains("hidden");
+    body.classList.toggle("hidden", open);
+    statsToggle.setAttribute("aria-expanded", String(!open));
+    statsToggle.querySelector(".bg-stats-arrow").textContent = open ? "▼" : "▲";
+    if (!open && !statsLoaded) {
+      statsLoaded = true;
+      await loadAndRenderStats();
+    }
+  });
+
   load();
 });

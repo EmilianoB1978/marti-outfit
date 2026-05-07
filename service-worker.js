@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v108-timeline';
+const CACHE_VERSION = 'v109-cleanup-mocks';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -144,7 +144,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📍 Tap sul + apre ora una timeline verticale: 6 step alternati con cerchi colorati, titoli e sub-label. Pulito, leggibile, animato. Personalizzabile in Aspetto → 🌳 Albero.";
+const WHATS_NEW = "📖 Manuale aggiornato con la nuova 'Timeline del +'. Cleanup file mock di sviluppo.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

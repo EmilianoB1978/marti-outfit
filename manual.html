@@ -1197,6 +1197,9 @@ jeans: https://...
           <li>🎨 <strong>Filtro "Solo palette"</strong> nella barra dei filtri del guardaroba (e anche "🚫 Fuori palette" per scoprire i capi che ti spengono)</li>
           <li>📊 <strong>Tile sulla home</strong> con il match: "Estate Soft · 67% in palette" + breakdown perfetti/vicini/fuori</li>
           <li>📋 <strong>Info nel modal capo</strong>: quando apri un capo per modificarlo, vedi il suo match (es. "🟢 In palette — Match 87/100") + il colore della tua palette più vicino + un consiglio su come indossarlo</li>
+          <li>✨ <strong>Score outfit</strong>: ogni outfit salvato mostra una pillola con la % di capi in palette + emoji semantica (✨ Perfetto ≥75% · 👍 Buono ≥55% · 🤔 Medio ≥35% · ⚠️ Migliorabile)</li>
+          <li>🛍️ <strong>Gap analysis "cosa ti manca"</strong>: nella pagina /armocromia.html dopo il test trovi una sezione che identifica le categorie del tuo guardaroba con poche scelte in palette + suggerisce 3 colori da cercare</li>
+          <li>📊 <strong>Armocromia Wrapped</strong>: bottone "📊 Vedi il tuo Wrapped" genera un'immagine 1080×1080 condivisibile con la tua stagione, palette, % match guardaroba e gap. Web Share API + fallback download</li>
         </ul>
         <p class="manual-tip">🧮 <strong>Algoritmo</strong>: ogni colore-capo (italiano, es. "rosso", "denim", "verde salvia") viene tradotto in HEX tramite la mappa colori italiani. Distanza redmean weighted RGB → confronto con la palette della tua stagione. Soglie: distanza &lt;110 = in palette, 110-200 = vicino, &gt;200 = fuori. Match con un colore "avoid" prevale sul punteggio palette.</p>
         <p class="manual-tip">⚠️ <strong>Limiti</strong>: i capi senza colore taggato non hanno badge. Aggiungi il colore (anche secondario) quando crei/modifichi il capo per ricevere l'analisi. I colori non in tassonomia (es. nomi inventati) vengono ignorati silenziosamente.</p>

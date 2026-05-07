@@ -2477,3 +2477,26 @@ body.editor-page {
   line-height: 1.4;
   font-style: italic;
 }
+
+/* Outfit card armocromia badge (in alto a destra del titolo) */
+.outfit-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.outfit-card-head h3 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.outfit-armo-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}

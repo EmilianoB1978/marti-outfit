@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v115-cleanup';
+const CACHE_VERSION = 'v116-armo-fase3';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -96,6 +96,7 @@ const SHELL_FILES = [
   './js/armocromia-data.js',
   './js/armocromia-page.js',
   './js/color-match.js',
+  './js/armocromia-wrapped.js',
   './css/armocromia.css',
   './armocromia.html',
   './css/trips.css',
@@ -152,7 +153,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🧹 Cleanup CSS dead code dopo rimozione badge armocromia dalle card guardaroba.";
+const WHATS_NEW = "🎨 Armocromia Fase 3: score outfit (% in palette), gap analysis 'cosa ti manca' e Wrapped condivisibile in /armocromia.html dopo il test.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

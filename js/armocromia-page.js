@@ -246,7 +246,7 @@ function renderResult(result) {
   $("#btn-redo").addEventListener("click", () => startTest());
 }
 
-function renderSaved(saved) {
+async function renderSaved(saved) {
   const season = SEASONS[saved.seasonKey];
   if (!season) {
     showSection("intro");
@@ -254,6 +254,17 @@ function renderSaved(saved) {
   }
   const date = saved.completedAt ? new Date(saved.completedAt) : null;
   const dateStr = date ? date.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }) : "";
+
+  // Lazy load del guardaroba per gap analysis + stats
+  let items = [];
+  try {
+    const Wardrobe = await import("./wardrobe.js");
+    items = await Wardrobe.listItems();
+  } catch (_) {}
+
+  const ColorMatch = await import("./color-match.js");
+  const stats = ColorMatch.paletteStats(items);
+  const gaps = ColorMatch.shoppingGaps(items, season);
 
   const wrap = $("#ar-saved");
   wrap.innerHTML = `
@@ -264,6 +275,18 @@ function renderSaved(saved) {
       <p class="ar-result-desc">${escapeHtml(season.description)}</p>
       ${dateStr ? `<p class="ar-saved-date">Test completato il ${dateStr}</p>` : ""}
     </div>
+
+    ${stats.applicable >= 3 ? `
+    <div class="ar-section-block">
+      <h3 class="ar-section-title">📊 Il tuo guardaroba</h3>
+      <div class="ar-stats-grid">
+        <div class="ar-stat-card"><div class="ar-stat-num">${stats.percent}%</div><div class="ar-stat-lbl">in palette</div></div>
+        <div class="ar-stat-card"><div class="ar-stat-num" style="color:#10b981">${stats.in}</div><div class="ar-stat-lbl">perfetti</div></div>
+        <div class="ar-stat-card"><div class="ar-stat-num" style="color:#f59e0b">${stats.near}</div><div class="ar-stat-lbl">vicini</div></div>
+        <div class="ar-stat-card"><div class="ar-stat-num" style="color:#ef4444">${stats.out + stats.avoid}</div><div class="ar-stat-lbl">fuori</div></div>
+      </div>
+    </div>
+    ` : ""}
 
     <div class="ar-section-block">
       <h3 class="ar-section-title">🎨 La tua palette</h3>
@@ -285,12 +308,44 @@ function renderSaved(saved) {
       </div>
     </div>
 
+    ${gaps.length > 0 ? `
+    <div class="ar-section-block">
+      <h3 class="ar-section-title">🛍️ Cosa manca al tuo guardaroba</h3>
+      <div class="ar-gap-list">
+        ${gaps.map(g => `
+          <div class="ar-gap-card ar-gap-${g.severity}">
+            <div class="ar-gap-head">
+              <span class="ar-gap-icon">${g.icon}</span>
+              <div class="ar-gap-text">
+                <div class="ar-gap-title">${escapeHtml(g.label)}</div>
+                <div class="ar-gap-msg">${escapeHtml(g.message)}</div>
+              </div>
+            </div>
+            <div class="ar-gap-colors">
+              ${g.suggestedColors.map(hex => `
+                <div class="ar-gap-color" style="background:${hex}" title="${hex}"></div>
+              `).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+    ` : ""}
+
     <div class="ar-actions">
-      <button class="btn btn--ghost btn--block" id="btn-redo-saved">↺ Rifai il test</button>
+      ${stats.applicable >= 3 ? `<button class="btn btn--primary btn--block" id="btn-wrapped">📊 Vedi il tuo Wrapped</button>` : ""}
+      <button class="btn btn--ghost btn--block" id="btn-redo-saved" style="margin-top:8px;">↺ Rifai il test</button>
       <button class="btn btn--ghost btn--block" id="btn-clear-saved" style="margin-top:8px; color:#ef4444;">🗑️ Cancella stagione</button>
     </div>
   `;
 
+  const btnWrapped = $("#btn-wrapped");
+  if (btnWrapped) {
+    btnWrapped.addEventListener("click", async () => {
+      const m = await import("./armocromia-wrapped.js");
+      m.openArmoWrapped({ season, stats, items, gaps });
+    });
+  }
   $("#btn-redo-saved").addEventListener("click", () => startTest());
   $("#btn-clear-saved").addEventListener("click", () => {
     if (!confirm("Cancellare la tua stagione armocromia salvata?")) return;

@@ -170,3 +170,116 @@ export function paletteStats(items) {
     : 0;
   return { ...counts, total, percent };
 }
+
+// =============================================================================
+// Score cromatico di un OUTFIT (insieme di capi).
+// Pesa i capi 'in' (1.0), 'near' (0.6), 'out' (0.0), 'avoid' (-0.3).
+// Ritorna { score 0-100, breakdown, applicable }.
+// Score 100 = outfit perfetto in palette. Score < 50 = piu' capi fuori che dentro.
+// =============================================================================
+export function outfitPaletteScore(itemIds, allItemsById) {
+  const ids = Array.isArray(itemIds) ? itemIds : [];
+  const items = ids.map(id => allItemsById?.get
+    ? allItemsById.get(id)
+    : (Array.isArray(allItemsById) ? allItemsById.find(x => x.id === id) : null)
+  ).filter(Boolean);
+
+  if (items.length === 0) return null;
+
+  const breakdown = { in: 0, near: 0, out: 0, avoid: 0 };
+  let weightedSum = 0;
+  let applicable = 0;
+  for (const it of items) {
+    const m = matchItemColor(it);
+    if (!m) continue;
+    applicable++;
+    if (breakdown[m.status] !== undefined) breakdown[m.status]++;
+    if (m.status === "in")    weightedSum += 1.0;
+    if (m.status === "near")  weightedSum += 0.6;
+    if (m.status === "avoid") weightedSum -= 0.3;
+    // 'out' = 0 contribution
+  }
+  if (applicable === 0) return null;
+  const raw = (weightedSum / applicable) * 100;
+  const score = Math.max(0, Math.min(100, Math.round(raw)));
+  return {
+    score,
+    breakdown,
+    applicable,
+    totalItems: items.length,
+  };
+}
+
+// Status dello score outfit (per badge UI)
+export function outfitScoreStatus(score) {
+  if (score == null) return null;
+  if (score >= 75) return { label: "Perfetto", emoji: "✨", color: "#10b981" };
+  if (score >= 55) return { label: "Buono",    emoji: "👍", color: "#84cc16" };
+  if (score >= 35) return { label: "Medio",    emoji: "🤔", color: "#f59e0b" };
+  return { label: "Migliorabile", emoji: "⚠️", color: "#ef4444" };
+}
+
+// =============================================================================
+// Gap analysis: per ogni categoria base del guardaroba, conta quanti capi
+// in palette ci sono. Restituisce le categorie con poche scelte come
+// "suggerimenti shopping".
+// =============================================================================
+export function shoppingGaps(items, season) {
+  if (!season || !Array.isArray(items)) return [];
+  const CATEGORIES = ["top", "bottom", "vestito", "scarpe", "accessori", "capospalla"];
+  const CATEGORY_LABELS = {
+    top: "Top", bottom: "Bottom", vestito: "Vestiti",
+    scarpe: "Scarpe", accessori: "Accessori", capospalla: "Capispalla",
+  };
+  const CATEGORY_ICONS = {
+    top: "👕", bottom: "👖", vestito: "👗",
+    scarpe: "👟", accessori: "👜", capospalla: "🧥",
+  };
+  const gaps = [];
+  for (const cat of CATEGORIES) {
+    const itemsInCat = items.filter(i => i.category === cat);
+    if (itemsInCat.length === 0) {
+      gaps.push({
+        category: cat,
+        label: CATEGORY_LABELS[cat],
+        icon: CATEGORY_ICONS[cat],
+        total: 0,
+        inPalette: 0,
+        severity: "high",
+        message: `Nessun capo in categoria "${CATEGORY_LABELS[cat]}". Cerca colori della tua palette.`,
+        suggestedColors: season.palette.slice(0, 3),
+      });
+      continue;
+    }
+    const inPalette = itemsInCat.filter(i => {
+      const m = matchItemColor(i);
+      return m && (m.status === "in" || m.status === "near");
+    }).length;
+    const ratio = inPalette / itemsInCat.length;
+    if (inPalette === 0) {
+      gaps.push({
+        category: cat,
+        label: CATEGORY_LABELS[cat],
+        icon: CATEGORY_ICONS[cat],
+        total: itemsInCat.length,
+        inPalette: 0,
+        severity: "high",
+        message: `${itemsInCat.length} capi nella categoria, ma nessuno in palette.`,
+        suggestedColors: season.palette.slice(0, 3),
+      });
+    } else if (ratio < 0.34) {
+      gaps.push({
+        category: cat,
+        label: CATEGORY_LABELS[cat],
+        icon: CATEGORY_ICONS[cat],
+        total: itemsInCat.length,
+        inPalette,
+        severity: "medium",
+        message: `Solo ${inPalette}/${itemsInCat.length} in palette (${Math.round(ratio * 100)}%).`,
+        suggestedColors: season.palette.slice(0, 3),
+      });
+    }
+    // Se ratio >= 0.34: categoria abbastanza coperta, non e' un gap
+  }
+  return gaps;
+}

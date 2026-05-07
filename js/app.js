@@ -2128,9 +2128,19 @@ function renderSavedOutfits() {
       .map(id => state.items.find(it => it.id === id))
       .filter(Boolean);
 
+    // Score armocromia (solo se test fatto)
+    const armoScore = ColorMatch.outfitPaletteScore(outfit.item_ids || [], state.items);
+    const scoreStatus = ColorMatch.outfitScoreStatus(armoScore?.score);
+    const armoBadge = (armoScore && scoreStatus)
+      ? `<span class="outfit-armo-badge" title="${scoreStatus.label}: ${armoScore.score}/100 della tua palette" style="background:${scoreStatus.color}22;color:${scoreStatus.color}">${scoreStatus.emoji} ${armoScore.score}%</span>`
+      : "";
+
     return `
       <div class="outfit-card">
-        <h3>${escapeHtml(outfit.title || "Outfit")}</h3>
+        <div class="outfit-card-head">
+          <h3>${escapeHtml(outfit.title || "Outfit")}</h3>
+          ${armoBadge}
+        </div>
         ${outfit.context ? `<p class="outfit-desc">📍 ${escapeHtml(outfit.context)}</p>` : ""}
         <div class="outfit-items">
           ${items.map(it => `

@@ -790,8 +790,10 @@ function initWeights() {
     }).join("");
   }
 
-  // Salva on change (input testo o numerico)
-  root.addEventListener("change", (e) => {
+  // Salva sia su 'input' (real-time, anti-bug iOS che skippa change su blur)
+  // sia su 'change' (per i numerici dopo blur). Debounce 600ms su input.
+  let _saveTimer = null;
+  function saveFromEvent(e) {
     const isName = e.target.classList.contains("weight-edit-name");
     const isGrams = e.target.classList.contains("weight-edit-grams");
     if (!isName && !isGrams) return;
@@ -804,9 +806,32 @@ function initWeights() {
     } else {
       const g = Math.max(0, Math.min(9999, Number(e.target.value) || 0));
       map[key] = { ...cur, grams: g };
-      e.target.value = g;
     }
     Theme.set("itemWeights", map);
+  }
+  root.addEventListener("input", (e) => {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(() => saveFromEvent(e), 600);
+  });
+  // Flush immediato anche su blur/change (evita perdere ultima modifica
+  // se l'utente naviga via prima dei 600ms)
+  root.addEventListener("change", (e) => {
+    clearTimeout(_saveTimer);
+    saveFromEvent(e);
+    if (e.target.classList.contains("weight-edit-grams")) {
+      const g = Math.max(0, Math.min(9999, Number(e.target.value) || 0));
+      e.target.value = g;
+    }
+  });
+  // Salva anche se l'utente cambia tab/chiude pagina
+  window.addEventListener("beforeunload", () => {
+    if (_saveTimer) {
+      clearTimeout(_saveTimer);
+      const focused = document.activeElement;
+      if (focused && (focused.classList.contains("weight-edit-name") || focused.classList.contains("weight-edit-grams"))) {
+        saveFromEvent({ target: focused });
+      }
+    }
   });
 
   btnReset.addEventListener("click", () => {

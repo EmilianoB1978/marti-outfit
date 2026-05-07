@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v111-armocromia';
+const CACHE_VERSION = 'v112-fix-weights-save';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -151,7 +151,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🎨 Armocromia! Test guidato in 14 domande → la tua stagione tra le 12 (Primavera/Estate/Autunno/Inverno + 3 sotto-tipi). Palette con HEX e colori da evitare. Apri dal menu.";
+const WHATS_NEW = "🔧 Fix tab Pesi: i nomi personalizzati (es. 'Piuma') non si perdono più anche se esci dalla pagina senza confermare con Invio. Salvataggio in tempo reale con debounce.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

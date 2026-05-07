@@ -2683,7 +2683,47 @@ async function runBootChecks() {
     }
   } catch (_) { /* fail-soft */ }
 
-  // 2. Streak warning: se streak attivo, oggi non ho scritto, e sono dopo le 22:00
+  // 2. Cambio stagione (autunno: 1-15 ott / primavera: 1-15 apr): suggest
+  // di creare il reminder se non ne ho gia' uno attivo. One-shot per anno.
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1; // 1-12
+    const day = now.getDate();
+    const inWindow = (month === 10 && day <= 15) || (month === 4 && day <= 15);
+    if (inWindow) {
+      const year = now.getFullYear();
+      const seasonKey = month === 10 ? "autumn" : "spring";
+      const flag = `__seasonReminder_${year}_${seasonKey}`;
+      if (!localStorage.getItem(flag)) {
+        const { listReminders, createReminder } = await import("./reminders-data.js");
+        const items = await listReminders();
+        const hasActiveSeason = items.some(r =>
+          r.type === "season" && r.status !== "done"
+        );
+        if (!hasActiveSeason) {
+          const seasonLabel = seasonKey === "autumn"
+            ? "Cambio armadio: tira fuori l'invernale"
+            : "Cambio armadio: tira fuori il primaverile";
+          const ok = confirm(`🍂 È tempo di cambio stagione! Vuoi creare un promemoria "${seasonLabel}"?`);
+          localStorage.setItem(flag, "1"); // One-shot anche se rifiuta
+          if (ok) {
+            const due = new Date();
+            due.setDate(due.getDate() + 2);
+            due.setHours(10, 0, 0, 0);
+            await createReminder({
+              type: "season",
+              title: seasonLabel,
+              dueAt: due,
+              priority: "medium",
+            });
+            toast("🍂 Promemoria cambio stagione creato", "success");
+          }
+        }
+      }
+    }
+  } catch (_) { /* fail-soft */ }
+
+  // 3. Streak warning: se streak attivo, oggi non ho scritto, e sono dopo le 22:00
   try {
     const { listEntries, computeStreak, todayId } = await import("./diary-data.js");
     const entries = await listEntries();

@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v103-cleanup';
+const CACHE_VERSION = 'v104-layout-fix';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -142,7 +142,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📖 Manuale aggiornato con la nuova sezione 'Look di Categorie, Colori, Pattern, Occasioni'. Cleanup CSS dead code.";
+const WHATS_NEW = "🔧 Hotfix layout Diario e Promemoria: header + FAB allineati al pattern Marty (settings-page). Topbar non più rotta, FAB tondo in basso a destra.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

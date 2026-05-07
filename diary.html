@@ -1,58 +1,64 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#1a1f3a">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Diario · Marty Outfit</title>
-  <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./css/tokens.css">
-  <link rel="stylesheet" href="./css/components.css">
-  <link rel="stylesheet" href="./css/styles.css">
-  <link rel="stylesheet" href="./css/extras.css">
-  <link rel="stylesheet" href="./css/diary.css">
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/diary.css" />
 </head>
-<body>
-  <div id="app">
-    <header class="topbar">
-      <button class="topbar-back" onclick="history.back()" aria-label="Indietro">‹</button>
-      <h1 class="topbar-title">📔 Diario</h1>
-      <button class="topbar-action" id="btn-wrapped" type="button" aria-label="Wrapped" title="Diary Wrapped">📊</button>
-      <button class="topbar-action" id="btn-today" type="button" aria-label="Oggi">📍</button>
-    </header>
+<body class="settings-page">
 
-    <main class="main-content">
-      <section class="diary-stats" id="diary-stats">
-        <div class="diary-stat">
-          <div class="diary-stat-value" id="stat-streak">0</div>
-          <div class="diary-stat-label">Giorni consecutivi 🔥</div>
-        </div>
-        <div class="diary-stat">
-          <div class="diary-stat-value" id="stat-total">0</div>
-          <div class="diary-stat-label">Pagine totali</div>
-        </div>
-        <div class="diary-stat">
-          <div class="diary-stat-value" id="stat-mood">—</div>
-          <div class="diary-stat-label">Mood preferito</div>
-        </div>
-      </section>
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>📔 Diario</h1>
+    <div style="display:flex; gap:4px;">
+      <button class="btn-icon" id="btn-wrapped" type="button" aria-label="Wrapped" title="Diary Wrapped">📊</button>
+      <button class="btn-icon" id="btn-today" type="button" aria-label="Oggi" title="Oggi">📍</button>
+    </div>
+  </header>
 
-      <div class="diary-search">
-        <input type="search" id="search-input" placeholder="🔍 Cerca per titolo, testo, tag...">
+  <main class="settings-main">
+    <section class="diary-stats" id="diary-stats">
+      <div class="diary-stat">
+        <div class="diary-stat-value" id="stat-streak">0</div>
+        <div class="diary-stat-label">Giorni consecutivi 🔥</div>
       </div>
-
-      <div class="diary-timeline" id="diary-timeline">
-        <div class="empty-state">
-          <div class="empty-icon">📔</div>
-          <p class="empty-text">Nessuna pagina ancora</p>
-          <p class="empty-hint">Tocca + per scrivere oggi</p>
-        </div>
+      <div class="diary-stat">
+        <div class="diary-stat-value" id="stat-total">0</div>
+        <div class="diary-stat-label">Pagine totali</div>
       </div>
-    </main>
+      <div class="diary-stat">
+        <div class="diary-stat-value" id="stat-mood">—</div>
+        <div class="diary-stat-label">Mood preferito</div>
+      </div>
+    </section>
 
-    <button class="fab" id="fab-add" aria-label="Nuova pagina">+</button>
-  </div>
+    <div class="diary-search">
+      <input type="search" id="search-input" placeholder="🔍 Cerca per titolo, testo, tag...">
+    </div>
+
+    <div class="diary-timeline" id="diary-timeline">
+      <div class="empty-state">
+        <div class="empty-icon">📔</div>
+        <p class="empty-text">Nessuna pagina ancora</p>
+        <p class="empty-hint">Tocca + per scrivere oggi</p>
+      </div>
+    </div>
+  </main>
+
+  <button class="notes-fab" id="fab-add" aria-label="Nuova pagina">＋</button>
+
+  <div id="toast" class="toast hidden"></div>
 
   <script type="module" src="./js/diary-page.js"></script>
 </body>

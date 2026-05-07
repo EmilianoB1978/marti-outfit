@@ -7,6 +7,7 @@ import * as Wardrobe from "./wardrobe.js";
 import * as Outfit from "./outfit.js";
 import * as Cal from "./calendar-data.js";
 import * as Weather from "./weather.js";
+import { listEntries as listDiaryEntries, MOODS as DIARY_MOODS } from "./diary-data.js";
 
 Theme.init();
 
@@ -16,6 +17,7 @@ const state = {
   entries: new Map(),     // dateKey -> entry
   items: [],              // all wardrobe items (per render outfit thumbnail)
   outfits: [],            // all saved outfits
+  diary: new Map(),       // dateKey YYYY-MM-DD -> diary entry (per mood dot)
   selectedDate: null,
 };
 
@@ -43,15 +45,17 @@ async function init() {
   state.cursorYear = now.getFullYear();
   state.cursorMonth = now.getMonth();
 
-  // Carico in parallelo tutto cio' che mi serve
-  const [items, outfits, entries] = await Promise.all([
+  // Carico in parallelo tutto cio' che mi serve (diary fail-soft)
+  const [items, outfits, entries, diaryEntries] = await Promise.all([
     Wardrobe.listItems(),
     Outfit.listSavedOutfits(),
     Cal.listEntries(),
+    listDiaryEntries().catch(() => []),
   ]);
   state.items = items;
   state.outfits = outfits;
   state.entries = Cal.entriesByDate(entries);
+  state.diary = new Map(diaryEntries.map(e => [e.id, e]));
 
   renderMonth();
   loadWeatherBannerIfAvailable();
@@ -119,9 +123,23 @@ function makeDayCell(day, dateKey, entry, isToday) {
     }
   }
 
+  // Mood dot dal diary entry (se presente)
+  const diaryEntry = state.diary.get(dateKey);
+  let moodDot = "";
+  if (diaryEntry?.mood) {
+    const moodDef = DIARY_MOODS.find(m => m.key === diaryEntry.mood);
+    if (moodDef) {
+      moodDot = `<span class="cal-mood-dot" title="${moodDef.label}">${moodDef.emoji}</span>`;
+    }
+  } else if (diaryEntry) {
+    // Entry diary senza mood -> dot generico viola
+    moodDot = `<span class="cal-mood-dot cal-mood-dot-empty" title="Pagina diario"></span>`;
+  }
+
   cell.innerHTML = `
     <span class="cal-day-num">${day}</span>
     ${thumb}
+    ${moodDot}
     ${entry ? `<span class="cal-marker cal-marker-${entry.type}"></span>` : ""}
   `;
 
@@ -163,6 +181,10 @@ function openAssignModal(dateKey) {
 
   // Render lista outfit (escluso eventuale corrente)
   renderOutfitList(entry?.outfit_id);
+
+  // Aggiorna link "Apri diario" con la data selezionata
+  const diaryLink = document.getElementById("btn-open-diary");
+  if (diaryLink) diaryLink.href = `./diary-detail.html?date=${dateKey}`;
 
   document.getElementById("modal-assign").classList.remove("hidden");
 }

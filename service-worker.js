@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v89-hub';
+const CACHE_VERSION = 'v90-memory-mood';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -138,7 +138,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✨ Hub Oggi sulla home! Promemoria di oggi, streak diario e nota pinnata in un colpo d'occhio. Badge dinamici sulle card del menu (count reminders + streak 🔥).";
+const WHATS_NEW = "⏳ 'Un anno fa' nel diario: rivivi quel giorno con foto, mood e capi indossati. Nel calendario emoji mood per ogni giorno con pagina diario. Pure magia.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

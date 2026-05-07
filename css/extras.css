@@ -2025,3 +2025,21 @@ body.editor-page {
   background: rgba(167,139,250,0.9);
   color: white;
 }
+
+/* Mood dot calendar (dal Diary) — angolo in alto a sinistra */
+.cal-mood-dot {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 11px;
+  line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+}
+.cal-mood-dot.cal-mood-dot-empty {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(167,139,250,0.85);
+  font-size: 0;
+}

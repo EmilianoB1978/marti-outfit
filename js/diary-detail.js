@@ -1,7 +1,8 @@
 // Diary detail: editor entry singola + outfit del giorno + auto-save
 import {
   getOrCreateEntry, updateEntry, deleteEntry, formatItalianDate,
-  uploadDiaryPhoto, removeDiaryPhoto, MOODS, idToDate, findWornGarments,
+  uploadDiaryPhoto, removeDiaryPhoto, MOODS, idToDate, dateToId,
+  findWornGarments, listEntries,
 } from "./diary-data.js";
 import { listItems as listGarments } from "./wardrobe.js";
 
@@ -98,6 +99,53 @@ async function load() {
 
   renderPhotos();
   renderOutfit();
+  renderMemoryLane();
+}
+
+// "Un tempo fa": mostra entry diary e capi indossati esattamente 1, 2, 5
+// anni fa (in base alla data corrente). Forte impatto emotivo, riusa
+// dati gia' presenti senza schema aggiuntivo.
+async function renderMemoryLane() {
+  const sec = document.getElementById("diary-memory-section");
+  const list = document.getElementById("diary-memory-list");
+  if (!sec || !list) return;
+  const todayDate = idToDate(state.id);
+  const allEntries = await listEntries().catch(() => []);
+  const memories = [];
+  for (const yearsAgo of [1, 2, 5, 10]) {
+    const target = new Date(todayDate);
+    target.setFullYear(target.getFullYear() - yearsAgo);
+    const targetId = dateToId(target);
+    if (targetId === state.id) continue;
+    const oldEntry = allEntries.find(e => e.id === targetId);
+    const wornThen = findWornGarments(state.garments, targetId);
+    if (!oldEntry && wornThen.length === 0) continue;
+    memories.push({ yearsAgo, targetId, oldEntry, wornThen });
+  }
+  if (memories.length === 0) { sec.hidden = true; return; }
+  sec.hidden = false;
+  list.innerHTML = memories.map(m => {
+    const moodEmoji = m.oldEntry?.mood
+      ? (MOODS.find(x => x.key === m.oldEntry.mood)?.emoji || "")
+      : "";
+    const cover = m.oldEntry?.photos?.[0]?.url
+      || m.wornThen[0]?.photo_url
+      || null;
+    const title = m.oldEntry?.title || "(senza titolo)";
+    const wornCount = m.wornThen.length;
+    const yLabel = m.yearsAgo === 1 ? "Un anno fa" :
+                   m.yearsAgo === 2 ? "2 anni fa" :
+                   `${m.yearsAgo} anni fa`;
+    return `<a href="./diary-detail.html?date=${m.targetId}" class="diary-memory-card">
+      ${cover ? `<div class="diary-memory-cover" style="background-image:url('${cover}')"></div>` :
+                `<div class="diary-memory-cover diary-memory-cover-empty">${moodEmoji || "📔"}</div>`}
+      <div class="diary-memory-body">
+        <div class="diary-memory-years">${yLabel}</div>
+        ${m.oldEntry ? `<div class="diary-memory-title">${moodEmoji} ${escapeHtml(title)}</div>` : ""}
+        ${wornCount > 0 ? `<div class="diary-memory-worn">👗 ${wornCount} cap${wornCount === 1 ? "o" : "i"}</div>` : ""}
+      </div>
+    </a>`;
+  }).join("");
 }
 
 function renderPhotos() {

@@ -280,6 +280,47 @@
       </div>
     </div>
 
+    <!-- ===== Sezione: Note ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📝 Note (5 tipi: libera, wishlist, sarta, mood board, regali)</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Le note di Marty Outfit non sono note "qualsiasi": sono pensate per il guardaroba e lo stile. Apri da: <strong>Menu ⋯ → 📝 Note</strong>, oppure metti <strong>📝 Note</strong> in barra (Aspetto → Barra). USP: <em>"Le tue note di stile, vestite per il tuo guardaroba"</em>.</p>
+
+        <p><strong>Lista note (pagina principale)</strong></p>
+        <ul class="manual-list">
+          <li>Griglia 2 colonne (3 desktop) con cover foto, titolo, preview, tag</li>
+          <li>📌 <strong>Pin</strong> in cima (bordo gold + badge)</li>
+          <li>🔍 <strong>Search</strong> full-text che ignora accenti</li>
+          <li>🏷️ <strong>Filtro tag</strong> chip orizzontali scrollabili (auto-popolati dai tag esistenti)</li>
+          <li><strong>FAB ＋</strong> in basso destra apre bottom sheet con i 5 tipi</li>
+        </ul>
+
+        <p><strong>Editor full-screen (apri una nota)</strong></p>
+        <ul class="manual-list">
+          <li>Titolo Georgia + body con placeholder "Scrivi qui..."</li>
+          <li>Toolbar: <strong>B</strong> grassetto · <strong>I</strong> corsivo · • Lista · ☐ Checklist · 📷 Foto</li>
+          <li>Foto in griglia 3-col (compresse a max 1600px)</li>
+          <li>Tag editor: scrivi e premi Enter / virgola / spazio per aggiungere</li>
+          <li><strong>Auto-save</strong> debounced 800ms con indicatore: "Salvato" / "Salvataggio…" / "Errore"</li>
+          <li>Save anche al beforeunload (chiudi la pagina, non perdi nulla)</li>
+        </ul>
+
+        <p><strong>I 4 template verticali (campi specifici)</strong></p>
+        <ol class="manual-list">
+          <li>🛍️ <strong>Wishlist capo</strong>: nome, link prodotto, negozio, prezzo target, prezzo attuale, stato (💭 Lo desidero / 👀 Aspetto saldo / ✓ Comprato). Insight automatico: "🎉 È sotto il target!" o "📈 Costa il 30% sopra il target". Quando "Comprato", CTA <em>📦 Aggiungi al guardaroba</em>.</li>
+          <li>✂️ <strong>Sarta / Ritocchi</strong>: nome capo, cosa modificare, preventivo, data ritiro, sarta/lavanderia, stato (🧵 In lavorazione / ✓ Pronto / 📦 Ritirato). Banner automatici: "🔔 In ritardo di 3 giorni", "🎉 Pronto da ritirare!", "⏱ Ritiro tra 2 giorni".</li>
+          <li>💄 <strong>Mood board look</strong>: foto multiple di ispirazione (Pinterest, Instagram), tag stagione, tag occasione, note di stile. Per palette + idee outfit.</li>
+          <li>🎁 <strong>Regali</strong>: persona, occasione (compleanno/Natale/anniversario/matrimonio/altro), budget, deadline, idee, stato (💭 Idea / 🛍️ Comprato / ✓ Regalato). Banner countdown: "🎁 È oggi!" / "⏱ Mancano 5 giorni" / "🔔 Deadline superata!".</li>
+        </ol>
+
+        <p class="manual-tip">💡 <strong>Status badge nella lista</strong>: ogni nota dei 4 template mostra lo stato corrente in card (es. "✓ Ritirato", "🔔 In ritardo", "🎯 € 80"), così scorri la lista e capisci a colpo d'occhio cosa serve attenzione.</p>
+
+        <p class="manual-tip">⚙️ <strong>Niente AI</strong>: tutti gli insight sono calcoli deterministici (confronti prezzi, differenze date, regole sui campi). Costo zero per uso.</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Calendario ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

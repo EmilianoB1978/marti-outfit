@@ -182,18 +182,304 @@ function onTagInputKeydown(e) {
 }
 
 // =============================================================================
-// Typed section (placeholder; i 4 template verticali arriveranno in step B)
+// Typed section: 4 template verticali (wishlist, sarta, mood board, regali)
 // =============================================================================
 function renderTypedSection() {
   const box = document.getElementById("nd-typed-section");
-  if (state.note.type === "free") { box.innerHTML = ""; return; }
-  // Per ora hint informativo: i campi specifici per tipo arrivano dopo
-  const meta = NOTE_TYPES.find(t => t.key === state.note.type);
-  if (!meta) { box.innerHTML = ""; return; }
-  box.innerHTML = `<div class="nd-typed-hint">
-    ${meta.icon} <strong>${escapeHtml(meta.label)}</strong> · ${escapeHtml(meta.desc)}
-    <small>I campi specifici per questo tipo arrivano nel prossimo update.</small>
-  </div>`;
+  const t = state.note.type;
+  if (t === "free") { box.innerHTML = ""; return; }
+  const data = state.note.data || {};
+
+  if (t === "wishlist") box.innerHTML = renderWishlistTpl(data);
+  else if (t === "tailor") box.innerHTML = renderTailorTpl(data);
+  else if (t === "moodboard") box.innerHTML = renderMoodboardTpl(data);
+  else if (t === "gift") box.innerHTML = renderGiftTpl(data);
+  else { box.innerHTML = ""; return; }
+
+  // Bind input listeners su tutti i campi del template
+  box.querySelectorAll("[data-field]").forEach(el => {
+    el.addEventListener("input", onTypedFieldChange);
+    el.addEventListener("change", onTypedFieldChange);
+  });
+  // Bind chip selector (status / occasion / season)
+  box.querySelectorAll(".typed-chip").forEach(c => {
+    c.addEventListener("click", () => {
+      const group = c.dataset.chipGroup;
+      const value = c.dataset.chipValue;
+      box.querySelectorAll(`[data-chip-group="${group}"]`).forEach(x => x.classList.toggle("is-active", x === c));
+      ensureData()[group] = value;
+      scheduleSave();
+      // Re-render in caso di cambi che impattano il banner (es. status sarta)
+      if (t === "tailor" && group === "status") {
+        renderTypedSection();
+      }
+    });
+  });
+
+  // CTA specifiche
+  if (t === "wishlist") {
+    const ctaBuy = box.querySelector("[data-action='wish-bought']");
+    if (ctaBuy) ctaBuy.addEventListener("click", onWishlistMarkBought);
+  }
+}
+
+function ensureData() {
+  if (!state.note.data) state.note.data = {};
+  return state.note.data;
+}
+
+function onTypedFieldChange(e) {
+  const field = e.target.dataset.field;
+  if (!field) return;
+  let val = e.target.value;
+  if (e.target.type === "number") val = val === "" ? null : Number(val);
+  ensureData()[field] = val;
+  scheduleSave();
+}
+
+// =============================================================================
+// 1. WISHLIST capo
+// =============================================================================
+function renderWishlistTpl(d) {
+  const status = d.status || "wanted";
+  const isBought = status === "bought";
+  return `
+    <h4 class="nd-typed-h4">🛍️ Wishlist capo</h4>
+    <div class="typed-grid">
+      <label class="typed-row">
+        <span>Cosa stai desiderando</span>
+        <input type="text" data-field="item_name" value="${escAttr(d.item_name)}" placeholder="es. Stivali Marsell neri" maxlength="80" />
+      </label>
+      <label class="typed-row">
+        <span>Link prodotto</span>
+        <input type="url" data-field="link_url" value="${escAttr(d.link_url)}" placeholder="https://..." />
+      </label>
+      <label class="typed-row">
+        <span>Negozio</span>
+        <input type="text" data-field="store" value="${escAttr(d.store)}" placeholder="es. Zalando, Vinted, da Lucia..." maxlength="40" />
+      </label>
+      <div class="typed-row-pair">
+        <label class="typed-row">
+          <span>Prezzo target (€)</span>
+          <input type="number" inputmode="decimal" step="1" min="0" data-field="target_price" value="${d.target_price ?? ""}" placeholder="100" />
+        </label>
+        <label class="typed-row">
+          <span>Prezzo attuale (€)</span>
+          <input type="number" inputmode="decimal" step="1" min="0" data-field="current_price" value="${d.current_price ?? ""}" placeholder="—" />
+        </label>
+      </div>
+      <div class="typed-row">
+        <span>Stato</span>
+        <div class="typed-chips">
+          <button type="button" class="typed-chip${status === 'wanted' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="wanted">💭 Lo desidero</button>
+          <button type="button" class="typed-chip${status === 'watching' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="watching">👀 Aspetto saldo</button>
+          <button type="button" class="typed-chip${status === 'bought' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="bought">✓ Comprato</button>
+        </div>
+      </div>
+      ${renderWishlistInsight(d)}
+      ${isBought ? `<button type="button" class="btn btn--gold btn--block" data-action="wish-bought">📦 Aggiungi al guardaroba</button>` : ""}
+    </div>
+  `;
+}
+
+function renderWishlistInsight(d) {
+  const target = Number(d.target_price);
+  const current = Number(d.current_price);
+  if (!target || !current || isNaN(target) || isNaN(current)) return "";
+  if (current <= target) {
+    return `<div class="typed-insight typed-insight--success">🎉 È sotto il tuo prezzo target! (${formatEur(current)} ≤ ${formatEur(target)})</div>`;
+  }
+  const diff = current - target;
+  const pct = Math.round((diff / target) * 100);
+  return `<div class="typed-insight typed-insight--warn">📈 Costa ${formatEur(diff)} (${pct}%) sopra il target. Aspetta un saldo.</div>`;
+}
+
+async function onWishlistMarkBought() {
+  // Apre la home con query string per pre-popolare il modal "Nuovo capo"
+  // con i dati della wishlist. Per ora salva un flag e naviga: index.html
+  // potrebbe leggerli al boot in futuro. Per adesso fornisce un toast con
+  // istruzioni semplici.
+  toast("Apri 'Nuovo capo' e ri-incolla i dati della wishlist", "default");
+  setTimeout(() => location.href = "./index.html", 800);
+}
+
+// =============================================================================
+// 2. SARTA / RITOCCHI
+// =============================================================================
+function renderTailorTpl(d) {
+  const status = d.status || "in_progress";
+  return `
+    <h4 class="nd-typed-h4">✂️ Sarta / Ritocchi</h4>
+    ${renderTailorBanner(d)}
+    <div class="typed-grid">
+      <label class="typed-row">
+        <span>Capo</span>
+        <input type="text" data-field="garment_label" value="${escAttr(d.garment_label)}" placeholder="es. Pantaloni grigi Zara" maxlength="80" />
+      </label>
+      <label class="typed-row">
+        <span>Cosa modificare</span>
+        <textarea data-field="what_to_modify" rows="3" placeholder="es. Accorciare orlo di 4cm, stringere fianchi...">${escapeHtml(d.what_to_modify || "")}</textarea>
+      </label>
+      <div class="typed-row-pair">
+        <label class="typed-row">
+          <span>Preventivo (€)</span>
+          <input type="number" inputmode="decimal" step="1" min="0" data-field="estimate" value="${d.estimate ?? ""}" placeholder="20" />
+        </label>
+        <label class="typed-row">
+          <span>Data ritiro</span>
+          <input type="date" data-field="due_date" value="${escAttr(d.due_date)}" />
+        </label>
+      </div>
+      <label class="typed-row">
+        <span>Sarta / Lavanderia</span>
+        <input type="text" data-field="provider" value="${escAttr(d.provider)}" placeholder="es. Sarta Anna, Ratti..." maxlength="40" />
+      </label>
+      <div class="typed-row">
+        <span>Stato</span>
+        <div class="typed-chips">
+          <button type="button" class="typed-chip${status === 'in_progress' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="in_progress">🧵 In lavorazione</button>
+          <button type="button" class="typed-chip${status === 'ready' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="ready">✓ Pronto</button>
+          <button type="button" class="typed-chip${status === 'picked_up' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="picked_up">📦 Ritirato</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTailorBanner(d) {
+  if (d.status === "picked_up") {
+    return `<div class="typed-insight typed-insight--success">✓ Lavoro concluso e ritirato</div>`;
+  }
+  if (!d.due_date) return "";
+  const today = new Date().toISOString().slice(0, 10);
+  if (d.status === "ready") {
+    return `<div class="typed-insight typed-insight--info">🎉 Pronto da ritirare!</div>`;
+  }
+  if (d.due_date < today) {
+    const overdue = Math.round((new Date(today + "T00:00:00") - new Date(d.due_date + "T00:00:00")) / 86400000);
+    return `<div class="typed-insight typed-insight--danger">🔔 In ritardo di ${overdue} ${overdue === 1 ? "giorno" : "giorni"}</div>`;
+  }
+  const days = Math.round((new Date(d.due_date + "T00:00:00") - new Date(today + "T00:00:00")) / 86400000);
+  if (days <= 3) {
+    return `<div class="typed-insight typed-insight--warn">⏱ Ritiro tra ${days} ${days === 1 ? "giorno" : "giorni"}</div>`;
+  }
+  return "";
+}
+
+// =============================================================================
+// 3. MOOD BOARD
+// =============================================================================
+function renderMoodboardTpl(d) {
+  const seasons = ["primavera", "estate", "autunno", "inverno"];
+  const occasions = ["casual", "elegante", "lavoro", "cerimonia", "mare", "città"];
+  const curSeason = d.season || "";
+  const curOccasion = d.occasion || "";
+  return `
+    <h4 class="nd-typed-h4">💄 Mood board look</h4>
+    <p class="typed-hint">Carica foto di ispirazione (Pinterest, Instagram, riviste) usando il bottone 📷 sopra. Tag la stagione e l'occasione per ritrovare la nota più tardi.</p>
+    <div class="typed-grid">
+      <div class="typed-row">
+        <span>Stagione</span>
+        <div class="typed-chips">
+          ${seasons.map(s =>
+            `<button type="button" class="typed-chip${curSeason === s ? ' is-active' : ''}" data-chip-group="season" data-chip-value="${s}">${capitalize(s)}</button>`
+          ).join("")}
+        </div>
+      </div>
+      <div class="typed-row">
+        <span>Occasione</span>
+        <div class="typed-chips">
+          ${occasions.map(o =>
+            `<button type="button" class="typed-chip${curOccasion === o ? ' is-active' : ''}" data-chip-group="occasion" data-chip-value="${o}">${capitalize(o)}</button>`
+          ).join("")}
+        </div>
+      </div>
+      <label class="typed-row">
+        <span>Note di stile</span>
+        <textarea data-field="style_notes" rows="3" placeholder="es. Palette terra + senape, accessori oro, layering...">${escapeHtml(d.style_notes || "")}</textarea>
+      </label>
+    </div>
+  `;
+}
+
+// =============================================================================
+// 4. REGALI
+// =============================================================================
+function renderGiftTpl(d) {
+  const status = d.status || "idea";
+  const occasions = [
+    { key: "compleanno", icon: "🎂", label: "Compleanno" },
+    { key: "natale",     icon: "🎄", label: "Natale" },
+    { key: "anniversario", icon: "💕", label: "Anniversario" },
+    { key: "matrimonio", icon: "💒", label: "Matrimonio" },
+    { key: "altro",      icon: "🎁", label: "Altro" },
+  ];
+  const curOcc = d.occasion || "";
+  return `
+    <h4 class="nd-typed-h4">🎁 Regalo</h4>
+    ${renderGiftBanner(d)}
+    <div class="typed-grid">
+      <label class="typed-row">
+        <span>Per chi</span>
+        <input type="text" data-field="recipient" value="${escAttr(d.recipient)}" placeholder="es. Lucia, Mamma..." maxlength="40" />
+      </label>
+      <div class="typed-row">
+        <span>Occasione</span>
+        <div class="typed-chips">
+          ${occasions.map(o =>
+            `<button type="button" class="typed-chip${curOcc === o.key ? ' is-active' : ''}" data-chip-group="occasion" data-chip-value="${o.key}">${o.icon} ${o.label}</button>`
+          ).join("")}
+        </div>
+      </div>
+      <div class="typed-row-pair">
+        <label class="typed-row">
+          <span>Budget (€)</span>
+          <input type="number" inputmode="decimal" step="1" min="0" data-field="budget" value="${d.budget ?? ""}" placeholder="50" />
+        </label>
+        <label class="typed-row">
+          <span>Deadline</span>
+          <input type="date" data-field="deadline" value="${escAttr(d.deadline)}" />
+        </label>
+      </div>
+      <label class="typed-row">
+        <span>Idee</span>
+        <textarea data-field="ideas" rows="4" placeholder="es. Profumo Diptyque, Libro 'Atomic Habits', Kit ricamo...">${escapeHtml(d.ideas || "")}</textarea>
+      </label>
+      <div class="typed-row">
+        <span>Stato</span>
+        <div class="typed-chips">
+          <button type="button" class="typed-chip${status === 'idea' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="idea">💭 Idea</button>
+          <button type="button" class="typed-chip${status === 'bought' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="bought">🛍️ Comprato</button>
+          <button type="button" class="typed-chip${status === 'gifted' ? ' is-active' : ''}" data-chip-group="status" data-chip-value="gifted">✓ Regalato</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderGiftBanner(d) {
+  if (d.status === "gifted") {
+    return `<div class="typed-insight typed-insight--success">✓ Regalo consegnato</div>`;
+  }
+  if (!d.deadline) return "";
+  const today = new Date().toISOString().slice(0, 10);
+  if (d.deadline < today) {
+    return `<div class="typed-insight typed-insight--danger">🔔 Deadline superata!</div>`;
+  }
+  const days = Math.round((new Date(d.deadline + "T00:00:00") - new Date(today + "T00:00:00")) / 86400000);
+  if (days === 0) return `<div class="typed-insight typed-insight--warn">🎁 È oggi!</div>`;
+  if (days <= 7) return `<div class="typed-insight typed-insight--warn">⏱ Mancano ${days} ${days === 1 ? "giorno" : "giorni"}</div>`;
+  return "";
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+function escAttr(v) { return String(v ?? "").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+function formatEur(n) {
+  const num = Number(n) || 0;
+  return "€ " + num.toLocaleString("it-IT", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 // =============================================================================

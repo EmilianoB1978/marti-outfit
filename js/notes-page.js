@@ -102,14 +102,41 @@ function renderCard(n) {
     `<span class="note-tag">${escapeHtml(t)}</span>`
   ).join("");
 
-  // Per wishlist: mostra prezzo target / sarta: data ritiro / gift: deadline
+  // Meta extra contestuale per tipo (con badge stato)
   let extraMeta = "";
-  if (n.type === "wishlist" && n.data?.target_price) {
-    extraMeta = `<div class="note-extra-meta">🎯 ${formatEur(n.data.target_price)}</div>`;
-  } else if (n.type === "tailor" && n.data?.due_date) {
-    extraMeta = `<div class="note-extra-meta">⏱ ${formatDate(n.data.due_date)}</div>`;
-  } else if (n.type === "gift" && n.data?.deadline) {
-    extraMeta = `<div class="note-extra-meta">🎁 ${formatDate(n.data.deadline)}</div>`;
+  if (n.type === "wishlist") {
+    const d = n.data || {};
+    const stat = d.status || "wanted";
+    const statBadge = stat === "bought" ? "✓ Comprato"
+                    : stat === "watching" ? "👀 Aspetto saldo"
+                    : "💭 Lo desidero";
+    const price = d.target_price ? `🎯 ${formatEur(d.target_price)}` : "";
+    extraMeta = `<div class="note-extra-meta">${statBadge}${price ? " · " + price : ""}</div>`;
+  } else if (n.type === "tailor") {
+    const d = n.data || {};
+    const stat = d.status || "in_progress";
+    const today = new Date().toISOString().slice(0, 10);
+    const isLate = d.due_date && d.due_date < today && stat !== "picked_up";
+    const statBadge = stat === "picked_up" ? "✓ Ritirato"
+                    : stat === "ready" ? "🎉 Pronto"
+                    : isLate ? "🔔 In ritardo"
+                    : "🧵 In lavorazione";
+    const date = d.due_date ? `⏱ ${formatDate(d.due_date)}` : "";
+    extraMeta = `<div class="note-extra-meta${isLate ? ' is-danger' : ''}">${statBadge}${date ? " · " + date : ""}</div>`;
+  } else if (n.type === "gift") {
+    const d = n.data || {};
+    const stat = d.status || "idea";
+    const today = new Date().toISOString().slice(0, 10);
+    const isLate = d.deadline && d.deadline < today && stat !== "gifted";
+    const statBadge = stat === "gifted" ? "✓ Regalato"
+                    : stat === "bought" ? "🛍️ Comprato"
+                    : "💭 Idea";
+    const date = d.deadline ? `🎁 ${formatDate(d.deadline)}` : "";
+    extraMeta = `<div class="note-extra-meta${isLate ? ' is-danger' : ''}">${statBadge}${date ? " · " + date : ""}</div>`;
+  } else if (n.type === "moodboard") {
+    const d = n.data || {};
+    const tags = [d.season, d.occasion].filter(Boolean).join(" · ");
+    if (tags) extraMeta = `<div class="note-extra-meta">${escapeHtml(tags)}</div>`;
   }
 
   return `<article class="note-card${n.pinned ? ' is-pinned' : ''}" data-id="${escapeHtml(n.id)}">

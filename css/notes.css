@@ -361,18 +361,129 @@
   justify-content: center;
 }
 
-/* Sezione tipo-specifica (placeholder ora) */
+/* Sezione tipo-specifica (template verticali) */
 .nd-typed-section:empty { display: none; }
-.nd-typed-hint {
+.nd-typed-section {
   padding: var(--space-3);
-  background: var(--color-surface-alt);
-  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+.nd-typed-h4 {
+  font-family: var(--font-family-heading);
+  font-size: 16px;
+  margin: 0 0 var(--space-3);
+  color: var(--color-text);
+}
+.typed-hint {
   font-size: 12px;
   color: var(--color-text-muted);
-  text-align: center;
-  border: 1px dashed var(--color-border);
+  margin: 0 0 var(--space-3);
+  line-height: 1.4;
 }
-.nd-typed-hint small { display: block; margin-top: 4px; opacity: 0.85; }
+
+.typed-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.typed-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.typed-row > span {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+}
+.typed-row input,
+.typed-row textarea {
+  padding: 10px 12px;
+  font-size: 15px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+  width: 100%;
+}
+.typed-row input:focus,
+.typed-row textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+.typed-row textarea { resize: vertical; min-height: 60px; }
+
+.typed-row-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Chip selector (status, occasion, season) */
+.typed-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.typed-chip {
+  padding: 8px 12px;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  font-family: var(--font-family-base);
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color var(--animation-speed) var(--animation-easing),
+              background var(--animation-speed) var(--animation-easing);
+  white-space: nowrap;
+}
+.typed-chip:active { transform: scale(0.96); }
+.typed-chip.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Insight banner (success / warn / danger / info) */
+.typed-insight {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  border: 1px solid transparent;
+}
+.typed-insight--success {
+  background: rgba(39, 174, 96, 0.12);
+  color: #1e7e3c;
+  border-color: rgba(39, 174, 96, 0.3);
+}
+.typed-insight--warn {
+  background: rgba(231, 126, 34, 0.12);
+  color: #8a4a10;
+  border-color: rgba(231, 126, 34, 0.35);
+}
+.typed-insight--danger {
+  background: rgba(192, 57, 43, 0.12);
+  color: #8a2818;
+  border-color: rgba(192, 57, 43, 0.4);
+}
+.typed-insight--info {
+  background: rgba(33, 150, 243, 0.1);
+  color: #1a4a73;
+  border-color: rgba(33, 150, 243, 0.3);
+}
+
+/* Meta in card lista: badge in_ritardo */
+.note-extra-meta.is-danger { color: var(--color-error); }
 
 /* Tag editor */
 .nd-tags-editor { display: flex; flex-direction: column; gap: 8px; }

@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v84-notes-foundation';
+const CACHE_VERSION = 'v85-notes-templates';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -127,7 +127,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📝 Note! Lista, editor full-screen, foto, checklist, tag, pin, search. Foundation pronta — i 4 template verticali (wishlist, sarta, mood board, regali) arrivano nel prossimo update.";
+const WHATS_NEW = "🛍️✂️💄🎁 I 4 template Note sono arrivati: wishlist con alert prezzo, sarta tracker, mood board look e regali con countdown. Niente più dimenticanze.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

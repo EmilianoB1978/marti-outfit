@@ -1,0 +1,338 @@
+/* =============================================================================
+   Action Tree — overlay full-screen con albero SVG che cresce dal +
+   ============================================================================= */
+
+.action-tree-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease-out;
+}
+.action-tree-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.action-tree-overlay.is-closing { opacity: 0; }
+
+.at-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 70%, rgba(255, 235, 180, 0.18), transparent 55%),
+    rgba(15, 12, 8, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* SVG full-stage */
+.at-svg {
+  position: relative;
+  width: min(100%, 460px);
+  height: auto;
+  max-height: 86vh;
+  z-index: 1;
+  margin-bottom: 64px;  /* spazio per il bottone × in basso e per la bottom-nav */
+  overflow: visible;
+}
+
+/* Glow di sfondo dietro la chioma */
+.at-glow {
+  opacity: 0;
+  animation: at-glow-fade 1.4s ease-out forwards;
+  animation-delay: 400ms;
+}
+@keyframes at-glow-fade {
+  to { opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------------
+   Tronco — cresce dal basso verso l'alto via stroke-dashoffset
+   --------------------------------------------------------------------------- */
+.at-trunk {
+  stroke-dasharray: 700;
+  stroke-dashoffset: 700;
+  animation: at-grow-trunk 0.85s cubic-bezier(0.5, 0, 0.4, 1) forwards;
+  animation-delay: 50ms;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+}
+@keyframes at-grow-trunk {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Texture corteccia — appare dopo il tronco */
+.at-bark {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: at-grow-trunk 0.7s cubic-bezier(0.5, 0, 0.4, 1) forwards;
+  animation-delay: 350ms;
+}
+
+/* ---------------------------------------------------------------------------
+   Rami — crescono dopo il tronco, in cascata
+   --------------------------------------------------------------------------- */
+.at-branch {
+  stroke: url(#at-trunk-grad);
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: at-grow-branch 0.45s cubic-bezier(0.4, 0, 0.4, 1) forwards;
+  animation-delay: var(--delay, 700ms);
+  filter: drop-shadow(0 1.5px 2px rgba(0,0,0,0.2));
+}
+@keyframes at-grow-branch {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ---------------------------------------------------------------------------
+   Foglioline decorative — pop con leggero ondeggio
+   --------------------------------------------------------------------------- */
+.at-leaf {
+  fill: url(#at-leaf-grad);
+  transform-origin: center;
+  transform: scale(0);
+  opacity: 0;
+  transform-box: fill-box;
+  animation: at-leaf-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             at-leaf-sway 3s ease-in-out infinite;
+  animation-delay: var(--delay, 1000ms), calc(var(--delay, 1000ms) + 600ms);
+  filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.18));
+}
+@keyframes at-leaf-pop {
+  0%   { transform: scale(0)   rotate(-30deg); opacity: 0; }
+  60%  { transform: scale(1.2) rotate(5deg);   opacity: 1; }
+  100% { transform: scale(1)   rotate(0);      opacity: 1; }
+}
+@keyframes at-leaf-sway {
+  0%, 100% { transform: scale(1) rotate(0); }
+  50%      { transform: scale(1) rotate(6deg); }
+}
+
+/* Le 3 foglie in cima all'albero (chioma centrale) */
+.at-top-leaf {
+  transform-origin: center;
+  transform: scale(0);
+  opacity: 0;
+  animation: at-leaf-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 1500ms;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.22));
+}
+.at-top-leaf:nth-of-type(2) { animation-delay: 1580ms; }
+.at-top-leaf:nth-of-type(3) { animation-delay: 1620ms; }
+
+/* ---------------------------------------------------------------------------
+   Frutti — cerchi colorati con icona, pop con bounce dopo il ramo
+   --------------------------------------------------------------------------- */
+.at-fruit {
+  cursor: pointer;
+  transform-origin: center;
+  transform: scale(0);
+  opacity: 0;
+  animation: at-fruit-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             at-fruit-float 3.6s ease-in-out infinite;
+  animation-delay: var(--fruit-delay, 1100ms),
+                   calc(var(--fruit-delay, 1100ms) + 800ms);
+  -webkit-tap-highlight-color: transparent;
+}
+@keyframes at-fruit-pop {
+  0%   { transform: scale(0)    translateY(-10px); opacity: 0; }
+  60%  { transform: scale(1.18) translateY(2px);  opacity: 1; }
+  100% { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+@keyframes at-fruit-float {
+  0%, 100% { transform: translateY(0)   scale(1); }
+  50%      { transform: translateY(-4px) scale(1.02); }
+}
+
+.at-fruit-circle {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  stroke: rgba(255,255,255,0.55);
+  stroke-width: 2;
+}
+.at-fruit-shadow {
+  fill: rgba(0,0,0,0.18);
+  filter: blur(3px);
+}
+.at-fruit-highlight {
+  fill: rgba(255,255,255,0.55);
+  pointer-events: none;
+}
+.at-fruit-icon {
+  font-size: 30px;
+  pointer-events: none;
+}
+
+/* Effetto tap: scale up + glow */
+.at-fruit:active .at-fruit-circle {
+  filter: drop-shadow(0 0 18px var(--fruit-glow, rgba(255,255,255,0.7)));
+  transform: scale(1.08);
+  transform-origin: center;
+}
+
+/* Effetto "raccolta": il frutto vola via dopo il tap */
+.at-fruit-picked {
+  animation: at-fruit-pick 0.3s ease-in forwards !important;
+}
+@keyframes at-fruit-pick {
+  0%   { transform: scale(1)    translateY(0); opacity: 1; }
+  100% { transform: scale(1.45) translateY(-30px); opacity: 0; }
+}
+
+/* ---------------------------------------------------------------------------
+   Etichette sotto i frutti — pop dopo il frutto
+   --------------------------------------------------------------------------- */
+.at-fruit-label {
+  opacity: 0;
+  transform-origin: center;
+  transform: translateY(-6px);
+  animation: at-label-fade 0.4s ease-out forwards;
+  animation-delay: var(--label-delay, 1300ms);
+  pointer-events: none;
+}
+@keyframes at-label-fade {
+  to { opacity: 1; transform: translateY(0); }
+}
+.at-fruit-label-bg {
+  fill: rgba(20, 14, 8, 0.85);
+  stroke: rgba(255,255,255,0.12);
+  stroke-width: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+}
+.at-fruit-label-text {
+  fill: #fffaf0;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: -apple-system, system-ui, "DM Sans", sans-serif;
+  letter-spacing: 0.2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Bottone × in basso (è il + che si trasforma)
+   --------------------------------------------------------------------------- */
+.at-close {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 50%),
+    var(--fab-bg, #d4af37);
+  color: var(--fab-icon, #1a1a1a);
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45), 0 0 0 4px rgba(0,0,0,0.25);
+  transform: translateX(-50%) scale(0);
+  animation: at-close-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 50ms;
+}
+@keyframes at-close-in {
+  to { transform: translateX(-50%) scale(1); }
+}
+.at-close-x {
+  display: inline-block;
+  transform: rotate(45deg);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.at-close:active { transform: translateX(-50%) scale(0.9); }
+
+.action-tree-overlay.is-closing .at-close {
+  animation: at-close-out 0.3s ease-in forwards;
+}
+@keyframes at-close-out {
+  to { transform: translateX(-50%) scale(0); opacity: 0; }
+}
+
+/* Hint testo in basso */
+.at-hint {
+  position: fixed;
+  bottom: 96px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,250,240,0.6);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  animation: at-hint-fade 0.6s ease-out forwards;
+  animation-delay: 1900ms;
+  font-family: -apple-system, system-ui, sans-serif;
+  z-index: 2;
+}
+@keyframes at-hint-fade {
+  to { opacity: 1; }
+}
+
+/* No scroll body quando aperto */
+body.at-noscroll {
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Editor Albero in Settings
+   --------------------------------------------------------------------------- */
+.tree-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tree-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.tree-edit-pos {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.tree-edit-icon {
+  font-size: 22px;
+  flex: 0 0 auto;
+  width: 32px;
+  text-align: center;
+}
+.tree-edit-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.tree-edit-select {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: inherit;
+}

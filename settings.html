@@ -18,6 +18,8 @@
   <link rel="stylesheet" href="./css/components.css" />
   <link rel="stylesheet" href="./css/styles.css" />
   <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/action-tree.css" />
 </head>
 <body class="settings-page">
 
@@ -37,6 +39,7 @@
     <button class="tab" data-tab="layout">📱 Layout</button>
     <button class="tab" data-tab="bar">⚙️ Barra</button>
     <button class="tab" data-tab="menu">📋 Menu</button>
+    <button class="tab" data-tab="tree">🌳 Albero</button>
     <button class="tab" data-tab="seasons">🌍 Stagioni</button>
     <button class="tab" data-tab="weights">⚖️ Pesi</button>
     <button class="tab" data-tab="weather">🌤️ Meteo</button>
@@ -352,6 +355,26 @@
 
       <button class="btn btn--ghost btn--block" id="btn-reset-menu" style="margin-top: var(--space-3);">
         ↺ Ripristina ordine e voci di default
+      </button>
+    </section>
+
+    <!-- ==================================================================
+         TAB: ALBERO (6 frutti del + centrale che crescono cliccando il +)
+         ================================================================== -->
+    <section id="tab-tree" class="settings-tab-panel">
+      <h2 class="settings-section-title" style="margin-top:0">🌳 Albero del +</h2>
+      <p class="settings-hint">
+        Quando tappi il <strong>+</strong> al centro della barra, cresce un albero
+        con 6 frutti per le creazioni rapide. Scegli cosa associare a ognuno.
+      </p>
+      <div id="tree-editor" class="tree-editor">
+        <!-- popolato da settings.js -->
+      </div>
+      <button class="btn btn--ghost btn--block" id="btn-tree-preview" style="margin-top: var(--space-3);">
+        👁️ Anteprima albero
+      </button>
+      <button class="btn btn--ghost btn--block" id="btn-reset-tree" style="margin-top: var(--space-2);">
+        ↺ Ripristina default
       </button>
     </section>
 

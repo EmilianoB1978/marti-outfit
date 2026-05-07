@@ -613,7 +613,75 @@ document.addEventListener("DOMContentLoaded", () => {
   initSeasons();
   initWeights();
   initMenu();
+  initTree();
 });
+
+// =============================================================================
+// Tab "🌳 Albero": personalizza i 6 frutti del + centrale.
+// =============================================================================
+async function initTree() {
+  const root = document.getElementById("tree-editor");
+  const btnPreview = document.getElementById("btn-tree-preview");
+  const btnReset = document.getElementById("btn-reset-tree");
+  if (!root) return;
+
+  // Lazy import per non appesantire boot
+  const ActionTree = await import("./action-tree.js");
+  const DEST = ActionTree.TREE_DESTINATIONS;
+  const DEFAULT = ActionTree.DEFAULT_TREE_MENU;
+
+  function getMenu() {
+    const arr = (Theme.getPreferences().treeMenu || DEFAULT).slice(0, 6);
+    while (arr.length < 6) arr.push(DEFAULT[arr.length] || DEFAULT[0]);
+    return arr.slice(0, 6);
+  }
+
+  function render() {
+    const menu = getMenu();
+    root.innerHTML = menu.map((key, idx) => {
+      const dest = DEST[key] || DEST[DEFAULT[idx]];
+      const opts = Object.entries(DEST).map(([k, d]) =>
+        `<option value="${k}"${k === key ? " selected" : ""}>${d.icon} ${d.label}</option>`
+      ).join("");
+      return `<div class="tree-edit-row" data-idx="${idx}">
+        <span class="tree-edit-pos">${idx + 1}</span>
+        <span class="tree-edit-icon">${dest?.icon || "🌟"}</span>
+        <select class="tree-edit-select">${opts}</select>
+      </div>`;
+    }).join("");
+    bind();
+  }
+
+  function bind() {
+    root.querySelectorAll(".tree-edit-select").forEach(sel => {
+      sel.addEventListener("change", () => {
+        const idx = Number(sel.closest(".tree-edit-row").dataset.idx);
+        const menu = getMenu();
+        menu[idx] = sel.value;
+        Theme.set("treeMenu", menu);
+        // Aggiorna l'icona della row senza re-render full
+        const newDest = DEST[sel.value];
+        sel.closest(".tree-edit-row").querySelector(".tree-edit-icon").textContent = newDest?.icon || "🌟";
+      });
+    });
+  }
+
+  if (btnPreview) {
+    btnPreview.addEventListener("click", () => {
+      ActionTree.openActionTree();
+    });
+  }
+  if (btnReset) {
+    btnReset.addEventListener("click", () => {
+      if (!confirm("Ripristinare i 6 frutti di default?")) return;
+      Theme.set("treeMenu", [...DEFAULT]);
+      render();
+      toast("Albero ripristinato", "success");
+    });
+  }
+
+  render();
+}
 
 // =============================================================================
 // Menu drawer editor (riordina + nascondi voci)

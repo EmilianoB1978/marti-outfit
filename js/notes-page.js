@@ -233,4 +233,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   load();
+
+  // Auto-apri sheet tipi se URL ?new=1 (es. da action tree)
+  if (new URLSearchParams(location.search).get("new") === "1") {
+    setTimeout(openTypeSheet, 200);
+  }
 });

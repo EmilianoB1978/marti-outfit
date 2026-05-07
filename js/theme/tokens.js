@@ -357,6 +357,9 @@ export const defaultPreferences = {
   // Dict piatto "taxonomy:value" -> { bg, fg, pattern, icon }. I default
   // arrivano da chip-styles.js (zero override = look default).
   chipStyles: {},
+  // Albero del + centrale (bottom-nav). 6 chiavi da TREE_DESTINATIONS in
+  // ordine bottom-up alternato sx/dx.
+  treeMenu: ["add_item", "add_outfit", "add_note", "add_reminder", "diary_today", "add_capsule"],
   // 8 stagioni in ordine cronologico annuale (4 reali + 4 mezze stagioni di
   // transizione). Ogni stagione: { label, icon, enabled, kind }.
   // kind="full" -> sempre attiva (non disabilitabile), nome editabile.

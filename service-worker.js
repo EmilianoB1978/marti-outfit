@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v104-layout-fix';
+const CACHE_VERSION = 'v105-action-tree';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -88,6 +88,8 @@ const SHELL_FILES = [
   './js/top-month-banner.js',
   './js/item-quick-actions.js',
   './js/chip-styles.js',
+  './js/action-tree.js',
+  './css/action-tree.css',
   './css/trips.css',
   './css/budget.css',
   './css/notes.css',
@@ -142,7 +144,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🔧 Hotfix layout Diario e Promemoria: header + FAB allineati al pattern Marty (settings-page). Topbar non più rotta, FAB tondo in basso a destra.";
+const WHATS_NEW = "🌳 Tap sul + cresce un albero! 6 frutti animati per le creazioni rapide (capo, outfit, nota, promemoria, diario, capsule). Personalizzabile in Aspetto → 🌳 Albero.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

@@ -42,6 +42,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   if ("Notification" in window && Notification.permission === "granted") {
     tryNotifyDue(state.items);
   }
+  // Auto-apri sheet creazione se URL ?new=1 (es. da action tree)
+  if (new URLSearchParams(location.search).get("new") === "1") {
+    setTimeout(() => openSheet(), 200);
+  }
 });
 
 function bindUI() {

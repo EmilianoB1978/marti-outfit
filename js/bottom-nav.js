@@ -16,6 +16,7 @@ import * as Theme from "./theme/manager.js";
 // type "link" = href esterno (altra pagina HTML).
 export const NAV_DESTINATIONS = {
   add_item:    { icon: "🛍️",  label: "Aggiungi",     type: "fab" },
+  tree:        { icon: "+",    label: "Crea",         type: "tree" },
   wardrobe:    { icon: "👕",  label: "Guardaroba",   type: "section", page: "wardrobe" },
   outfits:     { icon: "✨",  label: "Outfit",       type: "section", page: "outfits" },
   calendar:    { icon: "📅",  label: "Calendario",   type: "link",    href: "./calendar.html" },
@@ -46,7 +47,7 @@ export const MENU_DRAWER_KEYS = [
   "dormant", "taxonomies", "settings", "system", "manual",
 ];
 
-export const DEFAULT_BOTTOM_NAV = ["wardrobe", "calendar", "add_item", "capsules", "outfits"];
+export const DEFAULT_BOTTOM_NAV = ["wardrobe", "calendar", "tree", "capsules", "outfits"];
 
 /**
  * Rende la <nav class="bottom-nav"> in base alla configurazione utente.
@@ -86,13 +87,13 @@ export function renderBottomNav(onSection, onFab) {
 
     if (isCenter) {
       // Slot centrale: render FAB grande con icona dest (o logo personale).
-      // Per type="fab" applico anche custom bg/icon color da prefs.fab.
-      const customStyle = dest.type === "fab" ? fabStyle : "";
-      const content = (dest.type === "fab" && fab.logoUrl)
+      // Per type="fab"/"tree" applico anche custom bg/icon color da prefs.fab.
+      const isFabLike = (dest.type === "fab" || dest.type === "tree");
+      const customStyle = isFabLike ? fabStyle : "";
+      const content = (isFabLike && fab.logoUrl)
         ? `<img class="nav-fab-logo" src="${fab.logoUrl}" alt="" />`
-        : `<span class="nav-icon-fab">${dest.icon}</span>`;
-      // Tag: button per fab/section, anchor per link
-      if (dest.type === "fab") {
+        : `<span class="nav-icon-fab${dest.type === "tree" ? " nav-icon-tree" : ""}">${dest.icon}</span>`;
+      if (dest.type === "fab" || dest.type === "tree") {
         return `<button class="nav-btn fab" data-key="${key}" ${customStyle} aria-label="${dest.label}">${content}</button>`;
       } else if (dest.type === "section") {
         return `<button class="nav-btn fab" data-key="${key}" data-page="${dest.page}" aria-label="${dest.label}">${content}</button>`;
@@ -126,13 +127,20 @@ export function renderBottomNav(onSection, onFab) {
 
   nav.innerHTML = keys.map((k, i) => buildSlot(k, i === 2)).join("");
 
-  // Bind click: section -> onSection(page); fab -> onFab(); link -> default browser
+  // Bind click: section -> onSection(page); fab -> onFab(); tree -> openActionTree;
+  // link -> default browser
   nav.querySelectorAll(".nav-btn").forEach(btn => {
     const key = btn.dataset.key;
     const dest = NAV_DESTINATIONS[key];
     if (!dest) return;
     if (dest.type === "fab") {
       btn.addEventListener("click", (e) => { e.preventDefault(); onFab(); });
+    } else if (dest.type === "tree") {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const m = await import("./action-tree.js");
+        m.openActionTree({ onAction: typeof onFab === "function" ? null : null });
+      });
     } else if (dest.type === "section") {
       btn.addEventListener("click", () => onSection(btn.dataset.page));
     }

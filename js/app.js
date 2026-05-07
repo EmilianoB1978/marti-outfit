@@ -2605,6 +2605,14 @@ document.addEventListener("DOMContentLoaded", () => {
     openEditItem(e.detail.id);
   });
 
+  // Evento dall'action-tree (+ centrale): azioni che richiedono callback locali
+  window.addEventListener("marty:tree-action", (e) => {
+    const action = e.detail?.action;
+    if (action === "open_add_item") {
+      openAddItem();
+    }
+  });
+
   // Pull-to-refresh sulla home
   setupPullToRefresh();
 

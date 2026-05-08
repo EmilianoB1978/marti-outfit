@@ -6,7 +6,7 @@ import * as Theme from "./theme/manager.js";
 import {
   listProfiles, addProfile, deleteProfile, reorderProfiles,
   listPosts, addPost, deletePost, updatePostTags, updatePostProfile,
-  parseInstagramUrl,
+  parseInstagramUrl, fetchPostAuthor,
 } from "./inspirations-data.js";
 
 Theme.init();
@@ -144,19 +144,30 @@ async function onAddPost() {
   }
   const btn = $("#btn-add-post");
   btn.disabled = true;
-  btn.textContent = "...";
+  btn.textContent = "🔍 Cerco autore...";
   try {
-    // Se l'URL non contiene username MA l'utente sta filtrando per
-    // un'influencer, auto-associa il post a quella.
+    // Priorità 1: username già nell'URL (raro)
     let profileUsername = parsed?.username || null;
+    let detectedAuto = false;
+
+    // Priorità 2: best-effort fetch della pagina post via CORS proxy
+    if (!profileUsername && parsed?.postId && parsed?.url) {
+      const meta = await fetchPostAuthor(parsed.url);
+      if (meta?.username) {
+        profileUsername = meta.username;
+        detectedAuto = true;
+      }
+    }
+
+    // Priorità 3: filtro influencer attivo nel feed
     if (!profileUsername && state.filterUsername) {
       profileUsername = state.filterUsername;
     }
-    // Se ancora nessun username e ho almeno una influencer salvata,
-    // chiedi all'utente di scegliere (opzionale).
+
+    // Priorità 4: prompt manuale
     if (!profileUsername && state.profiles.length > 0) {
+      btn.textContent = "...";
       profileUsername = await pickProfileForPost(state.profiles);
-      // null = utente ha scelto "Nessuna", undefined = ha annullato
       if (profileUsername === undefined) {
         btn.disabled = false;
         btn.textContent = "+ Aggiungi";
@@ -164,6 +175,7 @@ async function onAddPost() {
       }
     }
 
+    btn.textContent = "Salvo...";
     const post = await addPost(value, { profileUsername });
     input.value = "";
     state.posts = [post, ...state.posts];
@@ -173,7 +185,11 @@ async function onAddPost() {
       renderStories();
     }
     renderPosts();
-    toast("✓ Post salvato", "success");
+    if (detectedAuto && profileUsername) {
+      toast(`✓ Post salvato · @${profileUsername} rilevata automaticamente`, "success");
+    } else {
+      toast("✓ Post salvato", "success");
+    }
   } catch (err) {
     console.error("[inspirations] addPost error:", err, "input:", value);
     toast(humanizeError(err), "error");

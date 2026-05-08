@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v122-insp-link';
+const CACHE_VERSION = 'v123-insp-auto-detect';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -157,7 +157,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🔗 Ispirazioni: ora puoi associare i post alle tue influencer. Auto-associazione se filtri per un'influencer + bottone 🔗 sulla card del post per cambiarla dopo.";
+const WHATS_NEW = "🔍 Ispirazioni: rilevamento automatico dell'autore del post! Quando incolli un URL Instagram, l'app lo riconosce e associa il post all'influencer giusta da solo. Se fallisce, prompt manuale.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

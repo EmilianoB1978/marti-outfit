@@ -239,3 +239,59 @@ export async function updatePostProfile(id, profileUsername) {
     profileUsername: profileUsername || null,
   });
 }
+
+// =============================================================================
+// Auto-detect username dell'autore di un post Instagram via meta tag
+// =============================================================================
+// Strategia: fetch via CORS proxy pubblico (allorigins.win) → estrai
+// l'username dal meta og:url canonical (o dal pattern URL nell'HTML).
+//
+// Tradeoff: dipende da un servizio terzo + Instagram può tornare login wall
+// in alcuni casi. Best-effort, fallisce graciously con null.
+// =============================================================================
+const CORS_PROXY = "https://api.allorigins.win/get?url=";
+
+export async function fetchPostAuthor(postUrl, timeoutMs = 6000) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const proxyUrl = CORS_PROXY + encodeURIComponent(postUrl);
+    const res = await fetch(proxyUrl, { signal: controller.signal });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const html = data?.contents;
+    if (!html || typeof html !== "string") return null;
+
+    // Strategia 1: og:url canonical → contiene USER/p/POSTID
+    let m = html.match(/<meta[^>]+property=["']og:url["'][^>]+content=["']([^"']+)["']/i);
+    if (m) {
+      const og = m[1];
+      const userMatch = og.match(/instagram\.com\/([a-zA-Z0-9._]{1,30})\/(?:p|reel|tv)\//i);
+      if (userMatch && !["p", "reel", "tv", "share", "explore"].includes(userMatch[1].toLowerCase())) {
+        return { username: userMatch[1].toLowerCase(), source: "og:url" };
+      }
+    }
+
+    // Strategia 2: pattern @username nel testo della pagina
+    m = html.match(/instagram\.com\/([a-zA-Z0-9._]{1,30})\/(?:p|reel|tv)\//);
+    if (m && !["p", "reel", "tv", "share", "explore"].includes(m[1].toLowerCase())) {
+      return { username: m[1].toLowerCase(), source: "html-pattern" };
+    }
+
+    // Strategia 3: og:title "Username on Instagram"
+    m = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i);
+    if (m) {
+      const titleMatch = m[1].match(/(?:^|\s)([a-zA-Z0-9._]{1,30})\s+on\s+Instagram/i);
+      if (titleMatch) return { username: titleMatch[1].toLowerCase(), source: "og:title" };
+    }
+
+    return null;
+  } catch (err) {
+    clearTimeout(t);
+    if (err.name !== "AbortError") {
+      console.warn("[inspirations] fetchPostAuthor failed:", err.message);
+    }
+    return null;
+  }
+}

@@ -5,7 +5,7 @@
 import * as Theme from "./theme/manager.js";
 import {
   listProfiles, addProfile, deleteProfile, reorderProfiles,
-  listPosts, addPost, deletePost, updatePostTags,
+  listPosts, addPost, deletePost, updatePostTags, updatePostProfile,
   parseInstagramUrl,
 } from "./inspirations-data.js";
 
@@ -146,7 +146,25 @@ async function onAddPost() {
   btn.disabled = true;
   btn.textContent = "...";
   try {
-    const post = await addPost(value);
+    // Se l'URL non contiene username MA l'utente sta filtrando per
+    // un'influencer, auto-associa il post a quella.
+    let profileUsername = parsed?.username || null;
+    if (!profileUsername && state.filterUsername) {
+      profileUsername = state.filterUsername;
+    }
+    // Se ancora nessun username e ho almeno una influencer salvata,
+    // chiedi all'utente di scegliere (opzionale).
+    if (!profileUsername && state.profiles.length > 0) {
+      profileUsername = await pickProfileForPost(state.profiles);
+      // null = utente ha scelto "Nessuna", undefined = ha annullato
+      if (profileUsername === undefined) {
+        btn.disabled = false;
+        btn.textContent = "+ Aggiungi";
+        return;
+      }
+    }
+
+    const post = await addPost(value, { profileUsername });
     input.value = "";
     state.posts = [post, ...state.posts];
     if (post.profileUsername && !state.profiles.some(p => p.username === post.profileUsername)) {
@@ -163,6 +181,30 @@ async function onAddPost() {
     btn.disabled = false;
     btn.textContent = "+ Aggiungi";
   }
+}
+
+/**
+ * Mostra un select con le influencer salvate per scegliere a chi associare
+ * un post. Ritorna username | null (nessuna) | undefined (annullato).
+ */
+function pickProfileForPost(profiles) {
+  return new Promise(resolve => {
+    const options = profiles
+      .map((p, i) => `${i + 1}. @${p.username}`)
+      .join("\n");
+    const answer = prompt(
+      `A quale influencer associo questo post?\n\n${options}\n\n` +
+      `Scrivi il numero, oppure 0 per nessuna.`,
+      "1"
+    );
+    if (answer === null) return resolve(undefined);  // annullato
+    const n = parseInt(answer, 10);
+    if (n === 0) return resolve(null);
+    if (n >= 1 && n <= profiles.length) {
+      return resolve(profiles[n - 1].username);
+    }
+    resolve(null);
+  });
 }
 
 function humanizeError(err) {
@@ -331,10 +373,13 @@ function renderPosts() {
         data-instgrm-version="14"
         style="background:#fff; border:0; margin:0; max-width:540px; min-width:280px; padding:0; width:100%;"></blockquote>
       <div class="insp-post-actions">
-        ${p.profileUsername ? `<span class="insp-post-username">@${escapeHtml(p.profileUsername)}</span>` : ""}
+        ${p.profileUsername
+          ? `<span class="insp-post-username">@${escapeHtml(p.profileUsername)}</span>`
+          : `<span class="insp-post-username insp-post-username-none">⚠ Nessuna influencer</span>`}
         <div class="insp-post-tags">
           ${(p.tags || []).map(t => `<span class="insp-tag-mini">#${escapeHtml(t)}</span>`).join("")}
         </div>
+        <button class="insp-post-action" data-action="link" data-id="${p.id}" aria-label="Associa influencer" title="Associa influencer">🔗</button>
         <button class="insp-post-action" data-action="open" data-id="${p.id}" aria-label="Apri">↗</button>
         <button class="insp-post-action" data-action="tags" data-id="${p.id}" aria-label="Tag">🏷️</button>
         <button class="insp-post-action" data-action="del" data-id="${p.id}" aria-label="Rimuovi">🗑️</button>
@@ -360,6 +405,22 @@ async function onPostAction(action, id) {
   if (!post) return;
   if (action === "open") {
     window.open(post.url, "_blank", "noopener");
+  } else if (action === "link") {
+    if (state.profiles.length === 0) {
+      toast("Aggiungi prima un'influencer dalla tab '👤 Influencer'", "warn");
+      return;
+    }
+    const username = await pickProfileForPost(state.profiles);
+    if (username === undefined) return;
+    try {
+      await updatePostProfile(id, username);
+      post.profileUsername = username || null;
+      renderStories();
+      renderPosts();
+      toast(username ? `Associato a @${username}` : "Influencer rimossa dal post", "success");
+    } catch (err) {
+      toast("Errore: " + err.message, "error");
+    }
   } else if (action === "del") {
     if (!confirm("Rimuovere questo post dalle ispirazioni?")) return;
     try {

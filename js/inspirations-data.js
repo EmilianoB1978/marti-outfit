@@ -233,3 +233,9 @@ export async function deletePost(id) {
 export async function updatePostTags(id, tags) {
   await updateDoc(doc(db, COL_POSTS, id), { tags: Array.isArray(tags) ? tags : [] });
 }
+
+export async function updatePostProfile(id, profileUsername) {
+  await updateDoc(doc(db, COL_POSTS, id), {
+    profileUsername: profileUsername || null,
+  });
+}

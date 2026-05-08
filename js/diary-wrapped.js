@@ -4,6 +4,7 @@
 
 import { listEntries, MOODS, idToDate, dateToId, computeStreak } from "./diary-data.js";
 import { listItems as listGarments } from "./wardrobe.js";
+import { shareToInstagramStories, isInstagramSupported } from "./instagram-share.js";
 
 // =============================================================================
 // Stats
@@ -281,13 +282,26 @@ export async function openDiaryWrapped(year) {
     }
     const blob = await buildWrappedImageBlob(stats);
     const url = URL.createObjectURL(blob);
+    const igBtnHtml = isInstagramSupported()
+      ? `<button class="btn btn-primary btn--block" id="diary-wrapped-instagram" style="margin-bottom:8px; background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:#fff; border:none;">📸 Pubblica su Instagram Stories</button>`
+      : "";
     overlay.querySelector(".diary-wrapped-body").innerHTML = `
       <img class="diary-wrapped-image" src="${url}" alt="Diary Wrapped" />
       <div class="diary-wrapped-actions">
+        ${igBtnHtml}
         <button class="btn btn-gold btn--block" id="diary-wrapped-share">📤 Condividi</button>
         <button class="btn btn-ghost btn--block" id="diary-wrapped-download">💾 Salva immagine</button>
       </div>
     `;
+    overlay.querySelector("#diary-wrapped-instagram")?.addEventListener("click", async () => {
+      try {
+        const ok = await shareToInstagramStories(blob, {
+          backgroundTop: "#2d1b48",
+          backgroundBottom: "#3d1735",
+        });
+        if (!ok) downloadBlob(blob, `diary-wrapped-${targetYear}.png`);
+      } catch (err) { console.error(err); }
+    });
     overlay.querySelector("#diary-wrapped-share").addEventListener("click", async () => {
       try {
         const file = new File([blob], `diary-wrapped-${targetYear}.png`, { type: "image/png" });

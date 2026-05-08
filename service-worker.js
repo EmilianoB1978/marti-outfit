@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v117-armo-import';
+const CACHE_VERSION = 'v118-instagram';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -153,7 +153,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📋 Hai già fatto l'armocromia con un consulente? Tap '📋 Ho già la mia stagione, scegline una' nell'intro: salti il test e scegli direttamente tra le 12 stagioni con preview palette.";
+const WHATS_NEW = "📸 Pubblica su Instagram Stories direttamente! Bottone con gradient IG su outfit share + Diary Wrapped + Armocromia Wrapped (solo iOS, deep link instagram-stories).";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

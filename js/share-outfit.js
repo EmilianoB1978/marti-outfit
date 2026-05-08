@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { renderWithTemplate, DEFAULT_TEMPLATE } from "./share-templates.js";
+import { shareToInstagramStories, isInstagramSupported } from "./instagram-share.js";
 
 const CANVAS_SIZE = 1080;
 
@@ -127,6 +128,68 @@ export async function shareOutfit(outfit, allItems, options = {}) {
 
   return downloadAndCopyFallback(blob, caption);
 }
+
+/**
+ * Genera l'immagine outfit e lancia direttamente Instagram Stories
+ * via deep link iOS. Fallback al Web Share API se non supportato.
+ *
+ * @param {object} outfit
+ * @param {Array} allItems
+ * @param {object} options
+ * @returns {Promise<{method: 'instagram'|'share'|'fallback'|'cancelled'}>}
+ */
+export async function shareOutfitToInstagramStories(outfit, allItems, options = {}) {
+  const items = (outfit.item_ids || [])
+    .map(id => allItems.find(it => it.id === id))
+    .filter(Boolean);
+  if (items.length === 0) throw new Error("Nessun capo valido nell'outfit");
+
+  const itemsWithPhotos = items.filter(it => it.photo_url).slice(0, 6);
+  const images = await Promise.all(
+    itemsWithPhotos.map(it => loadImage(it.photo_url).catch(() => null))
+  );
+
+  const canvas = document.createElement("canvas");
+  canvas.width = CANVAS_SIZE;
+  canvas.height = CANVAS_SIZE;
+  await renderWithTemplate(
+    options.template || DEFAULT_TEMPLATE,
+    canvas,
+    { outfit, items, images },
+    options
+  );
+
+  // PNG per Stories (qualita' migliore + niente compressione lossy)
+  const blob = await new Promise(resolve =>
+    canvas.toBlob(resolve, "image/png")
+  );
+  if (!blob) throw new Error("Generazione immagine fallita");
+
+  if (isInstagramSupported()) {
+    const ok = await shareToInstagramStories(blob, {
+      backgroundTop: "#1a1a1a",
+      backgroundBottom: "#d4af37",
+    });
+    if (ok) return { method: "instagram" };
+  }
+
+  // Fallback: Web Share API standard (caption inclusa)
+  const caption = buildCaption(outfit, items, options);
+  const file = new File([blob], `outfit-${Date.now()}.png`, { type: "image/png" });
+  const shareData = { title: outfit.title || "Outfit", text: caption, files: [file] };
+  if (navigator.canShare && navigator.canShare(shareData) && navigator.share) {
+    try {
+      await navigator.share(shareData);
+      return { method: "share" };
+    } catch (err) {
+      if (err.name === "AbortError") return { method: "cancelled" };
+    }
+  }
+  return downloadAndCopyFallback(blob, caption);
+}
+
+/** Esposto dal modulo per chi vuole testare la disponibilita' IG */
+export { isInstagramSupported };
 
 /**
  * Genera SOLO la preview (ritorna dataURL) per la modale di scelta template.

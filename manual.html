@@ -1169,6 +1169,25 @@ jeans: https://...
       </div>
     </div>
 
+    <!-- ===== Sezione: Instagram Stories ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>📸 Pubblica direttamente su Instagram Stories</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p>Su iPhone/iPad, ogni immagine condivisibile dell'app può essere <strong>pubblicata direttamente come Story Instagram</strong> con un solo tap, senza passare dal sistema di share generico.</p>
+        <p>Dove trovi il bottone <strong>"📸 Pubblica su Instagram Stories"</strong> (gradient arancione-fucsia tipico IG):</p>
+        <ul class="manual-list">
+          <li><strong>📸 Condividi outfit</strong>: nella modale share, accanto al bottone Condividi standard, c'è "📸 Stories" che lancia direttamente Instagram</li>
+          <li><strong>📊 Diary Wrapped</strong>: bottone IG sopra Condividi/Salva</li>
+          <li><strong>📊 Armocromia Wrapped</strong>: idem</li>
+          <li><strong>✈️ Trip Wrapped</strong>: bottone IG già presente da v0.x</li>
+        </ul>
+        <p class="manual-tip">📱 <strong>Come funziona</strong>: l'app genera l'immagine 1080×1080 (PNG), la passa come <code>backgroundImage</code> al deep link <code>instagram-stories://share</code>. Instagram apre la sua schermata Stories con l'immagine già pre-caricata come sfondo. Tu aggiungi adesivi/testo/musica e tappi "Condividi" come faresti normalmente.</p>
+        <p class="manual-tip">⚠️ <strong>Limiti</strong>: il deep link Instagram funziona <strong>solo su iOS</strong> (la PWA installata). Su Android e desktop il bottone non appare e si usa il flusso "Condividi" standard. Se Instagram non è installato sul telefono, il deep link non fa nulla; puoi sempre usare il fallback "📤 Condividi" standard. <strong>Pubblicare al feed</strong> Instagram (non Stories) non è possibile dal browser: serve l'API Graph + account Business — feature non implementata.</p>
+      </div>
+    </div>
+
     <!-- ===== Sezione: Armocromia ===== -->
     <div class="accordion-item">
       <button class="accordion-header" aria-expanded="false">

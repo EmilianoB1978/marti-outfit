@@ -3,6 +3,8 @@
 // + statistiche guardaroba + palette. Pattern Trip/Diary Wrapped.
 // =============================================================================
 
+import { shareToInstagramStories, isInstagramSupported } from "./instagram-share.js";
+
 export async function openArmoWrapped({ season, stats, items, gaps }) {
   const overlay = document.createElement("div");
   overlay.id = "armo-wrapped-overlay";
@@ -28,13 +30,26 @@ export async function openArmoWrapped({ season, stats, items, gaps }) {
   try {
     const blob = await buildWrappedBlob(season, stats, items, gaps);
     const url = URL.createObjectURL(blob);
+    const igBtnHtml = isInstagramSupported()
+      ? `<button class="btn btn-primary btn--block" id="armo-wrapped-instagram" style="margin-bottom:8px; background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:#fff; border:none;">📸 Pubblica su Instagram Stories</button>`
+      : "";
     overlay.querySelector(".armo-wrapped-body").innerHTML = `
       <img class="armo-wrapped-image" src="${url}" alt="Armocromia Wrapped" />
       <div class="armo-wrapped-actions">
+        ${igBtnHtml}
         <button class="btn btn-gold btn--block" id="armo-wrapped-share">📤 Condividi</button>
         <button class="btn btn-ghost btn--block" id="armo-wrapped-download" style="margin-top:8px;">💾 Salva immagine</button>
       </div>
     `;
+    overlay.querySelector("#armo-wrapped-instagram")?.addEventListener("click", async () => {
+      try {
+        const ok = await shareToInstagramStories(blob, {
+          backgroundTop: season.palette[0] || "#1a1a1a",
+          backgroundBottom: season.palette[2] || season.palette[0] || "#0a0a0a",
+        });
+        if (!ok) downloadBlob(blob, "armocromia-wrapped.png");
+      } catch (err) { console.error(err); }
+    });
     overlay.querySelector("#armo-wrapped-share").addEventListener("click", async () => {
       try {
         const file = new File([blob], `armocromia-wrapped.png`, { type: "image/png" });

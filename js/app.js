@@ -234,6 +234,10 @@ async function openShareModal(outfit) {
   titleInput.removeEventListener("input", schedulePreviewRefresh);
   titleInput.addEventListener("input", schedulePreviewRefresh);
 
+  // Mostra il bottone "Stories" solo su iOS (deep link supportato)
+  const igBtn = document.getElementById("btn-share-instagram");
+  if (igBtn) igBtn.hidden = !ShareOutfit.isInstagramSupported();
+
   document.getElementById("modal-share").classList.remove("hidden");
   schedulePreviewRefresh();
 }
@@ -414,7 +418,37 @@ async function confirmShare() {
     toast("Errore: " + err.message, "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "📸 Condividi";
+    btn.textContent = "📤 Condividi";
+  }
+}
+
+async function confirmShareToInstagram() {
+  if (!_shareCurrentOutfit) return;
+  const btn = document.getElementById("btn-share-instagram");
+  btn.disabled = true;
+  btn.textContent = "...";
+  try {
+    const opts = collectShareOptions();
+    const result = await ShareOutfit.shareOutfitToInstagramStories(
+      _shareCurrentOutfit, state.items, opts
+    );
+    if (result.method === "instagram") {
+      toast("Aperto in Instagram Stories ✨", "success");
+      closeShareModal();
+    } else if (result.method === "share") {
+      toast("Condiviso", "success");
+      closeShareModal();
+    } else if (result.method === "fallback") {
+      toast("Instagram non disponibile — immagine scaricata", "warn");
+      closeShareModal();
+    }
+    // 'cancelled' = lasciamo aperto
+  } catch (err) {
+    console.error(err);
+    toast("Errore: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "📸 Stories";
   }
 }
 
@@ -2518,6 +2552,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Share modal binding
   document.getElementById("btn-cancel-share").addEventListener("click", closeShareModal);
   document.getElementById("btn-confirm-share").addEventListener("click", confirmShare);
+  document.getElementById("btn-share-instagram")?.addEventListener("click", confirmShareToInstagram);
   document.getElementById("share-include-links").addEventListener("change", () => {
     // Le opzioni link/hashtag NON ri-generano la preview perché sono solo nella caption
   });

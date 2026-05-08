@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Ispirazioni · Marty Outfit</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/settings.css" />
+  <link rel="stylesheet" href="./css/extras.css" />
+  <link rel="stylesheet" href="./css/inspirations.css" />
+</head>
+<body class="settings-page">
+
+  <header class="settings-header">
+    <a href="./index.html" class="btn-icon" aria-label="Torna all'app">←</a>
+    <h1>✨ Ispirazioni</h1>
+    <button class="btn-icon" id="btn-info" type="button" aria-label="Info" title="Come funziona">ℹ️</button>
+  </header>
+
+  <main class="settings-main">
+    <nav class="tabs settings-tabs" role="tablist">
+      <button class="tab is-active" data-tab="feed">📸 Feed</button>
+      <button class="tab" data-tab="profiles">👤 Influencer</button>
+    </nav>
+
+    <!-- ====== TAB FEED ====== -->
+    <section id="tab-feed" class="settings-tab-panel is-active">
+      <!-- Story circles in alto -->
+      <div class="insp-stories" id="insp-stories"></div>
+
+      <!-- Filtri tag -->
+      <div class="insp-filters" id="insp-filters" hidden></div>
+
+      <!-- Bottone aggiungi post -->
+      <div class="insp-add-row">
+        <input type="text" id="insp-post-input" placeholder="Incolla URL post Instagram..." />
+        <button class="btn btn--primary" id="btn-add-post">+ Aggiungi</button>
+      </div>
+
+      <!-- Griglia post -->
+      <div class="insp-posts" id="insp-posts">
+        <div class="insp-loading">⏳ Carico le tue ispirazioni...</div>
+      </div>
+    </section>
+
+    <!-- ====== TAB INFLUENCER ====== -->
+    <section id="tab-profiles" class="settings-tab-panel">
+      <p class="settings-hint">
+        Salva qui le tue influencer preferite. Quando trovi un post che ti
+        ispira, copialo nel <strong>Feed</strong> per ritrovarlo sempre.
+      </p>
+
+      <div class="insp-add-row">
+        <input type="text" id="insp-profile-input" placeholder="@username o URL profilo Instagram" />
+        <button class="btn btn--primary" id="btn-add-profile">+ Aggiungi</button>
+      </div>
+
+      <div class="insp-profiles" id="insp-profiles">
+        <div class="insp-loading">⏳ Carico le tue influencer...</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal post fullscreen -->
+  <div id="insp-modal" class="modal hidden">
+    <div class="modal-content insp-modal-content">
+      <header class="modal-header">
+        <button class="btn-icon" id="insp-modal-close">✕</button>
+        <h2 id="insp-modal-title">Post Instagram</h2>
+        <span></span>
+      </header>
+      <div class="modal-body" id="insp-modal-body">
+        <!-- popolato da JS: embed Instagram + actions -->
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Script ufficiale Instagram per gli embed -->
+  <script async src="https://www.instagram.com/embed.js"></script>
+
+  <script type="module" src="./js/inspirations-page.js"></script>
+</body>
+</html>

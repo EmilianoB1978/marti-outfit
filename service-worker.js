@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v118-instagram';
+const CACHE_VERSION = 'v119-inspirations';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -99,6 +99,10 @@ const SHELL_FILES = [
   './js/armocromia-wrapped.js',
   './css/armocromia.css',
   './armocromia.html',
+  './js/inspirations-data.js',
+  './js/inspirations-page.js',
+  './css/inspirations.css',
+  './inspirations.html',
   './css/trips.css',
   './css/budget.css',
   './css/notes.css',
@@ -153,7 +157,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📸 Pubblica su Instagram Stories direttamente! Bottone con gradient IG su outfit share + Diary Wrapped + Armocromia Wrapped (solo iOS, deep link instagram-stories).";
+const WHATS_NEW = "✨ Sezione Ispirazioni: salva i tuoi post Instagram preferiti dalle influencer. Tab Feed con stories circles + post embed + tag, tab Influencer con profili. Tutto curato manualmente da te.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

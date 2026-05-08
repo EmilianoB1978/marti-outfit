@@ -63,6 +63,11 @@ export const TREE_DESTINATIONS = {
     accent: "#fcd34d", soft: "#fef3c7",
     href: "./calendar.html",
   },
+  add_inspiration: {
+    icon: "✨", label: "Ispirazione", sub: "Salva post Instagram",
+    accent: "#dc2743", soft: "#ffe4e6",
+    href: "./inspirations.html",
+  },
 };
 
 export const DEFAULT_TREE_MENU = [

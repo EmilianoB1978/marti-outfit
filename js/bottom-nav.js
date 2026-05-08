@@ -27,6 +27,7 @@ export const NAV_DESTINATIONS = {
   diary:       { icon: "📔",  label: "Diario",       type: "link",    href: "./diary.html" },
   outfit_history: { icon: "📍", label: "Storico outfit", type: "link", href: "./outfit-history.html" },
   armocromia:  { icon: "🎨",  label: "Armocromia",   type: "link",    href: "./armocromia.html" },
+  inspirations:{ icon: "✨",  label: "Ispirazioni",  type: "link",    href: "./inspirations.html" },
   capsules:    { icon: "🎒",  label: "Capsule",      type: "link",    href: "./capsules.html" },
   analytics:   { icon: "📊",  label: "Statistiche",  type: "link",    href: "./analytics.html" },
   settings:    { icon: "🎨",  label: "Aspetto",      type: "link",    href: "./settings.html" },
@@ -44,7 +45,7 @@ export const NAV_DESTINATIONS = {
  * della griglia card del menu drawer.
  */
 export const MENU_DRAWER_KEYS = [
-  "armocromia", "calendar", "trips", "budget", "notes", "reminders", "diary", "outfit_history",
+  "armocromia", "inspirations", "calendar", "trips", "budget", "notes", "reminders", "diary", "outfit_history",
   "capsules", "analytics", "live", "palette",
   "dormant", "taxonomies", "settings", "system", "manual",
 ];

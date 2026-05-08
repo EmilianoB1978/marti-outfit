@@ -42,6 +42,24 @@
       <button class="btn btn--primary btn--block ar-start-btn" id="btn-start">
         ✨ Inizia il test
       </button>
+      <button class="btn btn--ghost btn--block" id="btn-import" style="margin-top:8px;">
+        📋 Ho già la mia stagione, scegline una
+      </button>
+    </section>
+
+    <!-- ============== IMPORT (selettore 12 stagioni manuale) ============== -->
+    <section id="ar-import" class="ar-section hidden">
+      <h2 class="ar-intro-title" style="text-align:center;">Scegli la tua stagione</h2>
+      <p class="ar-intro-text" style="text-align:center;">
+        Se hai già fatto un'analisi armocromia con un consulente professionista,
+        seleziona qui la tua stagione. Salterai il test.
+      </p>
+      <div id="ar-season-grid" class="ar-season-grid">
+        <!-- popolato da JS -->
+      </div>
+      <button class="btn btn--ghost btn--block" id="btn-import-cancel" style="margin-top:16px;">
+        ← Torna indietro
+      </button>
     </section>
 
     <!-- ============== TEST (stepper) ============== -->

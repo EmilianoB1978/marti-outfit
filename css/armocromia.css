@@ -460,3 +460,59 @@
 .armo-wrapped-actions {
   margin-top: 16px;
 }
+
+/* ============== IMPORT — selettore 12 stagioni ============== */
+.ar-season-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+@media (min-width: 480px) {
+  .ar-season-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.ar-season-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.ar-season-card:hover {
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 4px 14px rgba(167, 139, 250, 0.18);
+}
+.ar-season-card:active { transform: scale(0.96); }
+.ar-season-emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+.ar-season-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+.ar-season-mini-palette {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+  height: 12px;
+  width: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ar-season-mini-palette span {
+  flex: 1;
+  height: 100%;
+}

@@ -34,7 +34,7 @@ function escapeHtml(s) {
 
 function showSection(name) {
   state.sectionVisible = name;
-  for (const s of ["intro", "test", "result", "saved"]) {
+  for (const s of ["intro", "test", "result", "saved", "import"]) {
     const el = document.getElementById(`ar-${s}`);
     if (!el) continue;
     el.classList.toggle("hidden", s !== name);
@@ -61,6 +61,44 @@ function bindUI() {
   $("#btn-back").addEventListener("click", () => goBack());
   $("#btn-cancel").addEventListener("click", () => cancelTest());
   $("#btn-info").addEventListener("click", () => showInfo());
+  $("#btn-import").addEventListener("click", () => openImport());
+  $("#btn-import-cancel").addEventListener("click", () => showSection("intro"));
+}
+
+function openImport() {
+  const grid = $("#ar-season-grid");
+  grid.innerHTML = Object.values(SEASONS).map(s => `
+    <button type="button" class="ar-season-card" data-key="${s.key}">
+      <div class="ar-season-emoji">${s.emoji}</div>
+      <div class="ar-season-name">${s.name}</div>
+      <div class="ar-season-mini-palette">
+        ${s.palette.slice(0, 6).map(hex => `<span style="background:${hex}"></span>`).join("")}
+      </div>
+    </button>
+  `).join("");
+  grid.querySelectorAll(".ar-season-card").forEach(btn => {
+    btn.addEventListener("click", () => importSeason(btn.dataset.key));
+  });
+  showSection("import");
+}
+
+function importSeason(key) {
+  const season = SEASONS[key];
+  if (!season) return;
+  if (!confirm(`Confermi "${season.name}" come tua stagione?`)) return;
+  const data = {
+    seasonKey: key,
+    scores: null,           // null = non da test
+    confidence: 1,          // import manuale = certezza piena
+    completedAt: new Date().toISOString(),
+    imported: true,         // flag per distinguere da test
+  };
+  Theme.set("armocromia", data);
+  toast(`✓ ${season.name} salvata come tua stagione`, "success");
+  setTimeout(() => {
+    renderSaved(data);
+    showSection("saved");
+  }, 600);
 }
 
 function showInfo() {
@@ -273,7 +311,7 @@ async function renderSaved(saved) {
       <div class="ar-result-family">La tua stagione · ${escapeHtml(season.family)}</div>
       <h2 class="ar-result-name">${escapeHtml(season.name)}</h2>
       <p class="ar-result-desc">${escapeHtml(season.description)}</p>
-      ${dateStr ? `<p class="ar-saved-date">Test completato il ${dateStr}</p>` : ""}
+      ${dateStr ? `<p class="ar-saved-date">${saved.imported ? "Importata" : "Test completato"} il ${dateStr}</p>` : ""}
     </div>
 
     ${stats.applicable >= 3 ? `

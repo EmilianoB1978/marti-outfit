@@ -120,6 +120,28 @@ async function onAddPost() {
     toast("Incolla un URL post Instagram", "warn");
     return;
   }
+  // Smart fallback: se incolla un URL profilo nella tab Feed, propone di
+  // salvarlo come influencer al posto che dare errore.
+  const parsed = parseInstagramUrl(value);
+  if (parsed?.type === "profile") {
+    const ok = confirm(
+      `Hai incollato il profilo @${parsed.username}, non un singolo post.\n\n` +
+      `Vuoi aggiungerlo alle tue Influencer?`
+    );
+    if (ok) {
+      try {
+        const profile = await addProfile(value);
+        input.value = "";
+        state.profiles = [...state.profiles, profile];
+        renderProfiles();
+        renderStories();
+        toast(`✓ @${profile.username} aggiunta alle Influencer`, "success");
+      } catch (err) {
+        toast(humanizeError(err), "error");
+      }
+    }
+    return;
+  }
   const btn = $("#btn-add-post");
   btn.disabled = true;
   btn.textContent = "...";

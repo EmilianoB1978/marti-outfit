@@ -1,7 +1,7 @@
 // Service Worker per PWA Marty Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v120-insp-fix';
+const CACHE_VERSION = 'v121-insp-smart';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -157,7 +157,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🔧 Fix Ispirazioni: parser URL Instagram supporta ora link share/, ⋯Copia link e URL alternativi. Errori chiari (link Condividi vs vero URL, permessi Firebase con istruzioni).";
+const WHATS_NEW = "💡 Ispirazioni smart: se incolli un URL profilo nella tab Feed, l'app ti chiede automaticamente se aggiungerlo alle Influencer. Niente più errori secchi.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

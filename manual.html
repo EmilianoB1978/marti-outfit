@@ -1206,6 +1206,15 @@ jeans: https://...
 
         <p class="manual-tip">⚠️ <strong>Onestà tecnica</strong>: Instagram non permette di leggere automaticamente il feed di account altrui (lo bloccano per ToS dal 2022). Ho implementato la versione realistica e sostenibile: <strong>aggregatore curato manualmente</strong>. Tu salvi gli URL dei post che ti piacciono, l'app li mostra con embed ufficiale Meta. Nessun rischio di rate-limit, IP ban, ToS violation. Funziona uguale per anni.</p>
 
+        <p class="manual-tip">🛠️ <strong>Setup Firebase iniziale</strong>: la sezione usa 2 collezioni nuove (<code>inspirationProfiles</code> e <code>inspirationPosts</code>). Se al primo salvataggio compare l'errore "Permessi Firebase", aggiungi queste righe nelle Firestore Rules dalla console Firebase:</p>
+        <pre style="background:var(--color-surface); padding:12px; border-radius:8px; font-size:11px; overflow-x:auto; margin:8px 0;">match /inspirationProfiles/{document=**} {
+  allow read, write: if true;
+}
+match /inspirationPosts/{document=**} {
+  allow read, write: if true;
+}</pre>
+        <p class="manual-tip">⚠️ <strong>Errore "Hai incollato un link Condividi"</strong>: succede se in Instagram tappi "Condividi → Copia link" invece di "⋯ → Copia link". Il primo crea un URL <code>share/...</code> con un codice offuscato; il secondo crea il vero URL <code>p/...</code> che l'app può embeddare.</p>
+
         <p class="manual-tip">💡 <strong>Vantaggi</strong>: scegli tu cosa vedere (zero algoritmo), niente distrazioni dal feed Instagram normale, archivio permanente anche se l'influencer cancella il post (l'embed mostra "post non disponibile"), tag personalizzati impossibili da fare su Instagram nativo.</p>
       </div>
     </div>

@@ -18,15 +18,20 @@ const COL_PROFILES = "inspirationProfiles";
 const COL_POSTS    = "inspirationPosts";
 
 // =============================================================================
-// PARSER URL Instagram → { username, postId, type }
+// PARSER URL Instagram → { username, postId, type } | null
+//                       o { type: 'share', shareCode } per i link share/
 // =============================================================================
 // Accetta:
-//   https://www.instagram.com/chiaraferragni/  → profilo
-//   https://www.instagram.com/p/ABC123/         → post
-//   https://www.instagram.com/reel/ABC123/      → reel
-//   https://www.instagram.com/tv/ABC123/        → IGTV
-//   chiaraferragni                              → username puro
-//   @chiaraferragni                             → username con @
+//   https://www.instagram.com/chiaraferragni/                → profilo
+//   https://www.instagram.com/p/ABC123/                       → post
+//   https://www.instagram.com/reel/ABC123/                    → reel
+//   https://www.instagram.com/tv/ABC123/                      → IGTV
+//   https://www.instagram.com/USER/p/ABC123/                  → post alt
+//   https://www.instagram.com/USER/reel/ABC123/               → reel alt
+//   https://www.instagram.com/share/ABC123/                   → share link
+//   https://www.instagram.com/share/p/ABC123/                 → share link post
+//   https://www.instagram.com/share/reel/ABC123/              → share link reel
+//   chiaraferragni  /  @chiaraferragni                        → username
 // =============================================================================
 export function parseInstagramUrl(input) {
   if (!input) return null;
@@ -43,7 +48,6 @@ export function parseInstagramUrl(input) {
   try {
     url = new URL(s.startsWith("http") ? s : `https://${s}`);
   } catch (_) {
-    // Non valido come URL
     if (userMatch) return { type: "profile", username: userMatch[1].toLowerCase(), postId: null };
     return null;
   }
@@ -55,21 +59,41 @@ export function parseInstagramUrl(input) {
 
   // /p/POSTID, /reel/POSTID, /tv/POSTID
   if (parts[0] === "p" || parts[0] === "reel" || parts[0] === "tv") {
+    if (!parts[1]) return null;
     return {
       type: parts[0] === "p" ? "post" : parts[0],
-      postId: parts[1] || null,
-      username: null,  // username non e' nell'URL del post
+      postId: parts[1],
+      username: null,
       url: cleanUrl(url),
     };
   }
 
-  // /USERNAME or /USERNAME/p/POSTID (URL alternativo)
+  // /share/p/POSTID, /share/reel/POSTID — versione esplicita
+  if (parts[0] === "share" && (parts[1] === "p" || parts[1] === "reel" || parts[1] === "tv")) {
+    if (!parts[2]) return null;
+    return {
+      type: parts[1] === "p" ? "post" : parts[1],
+      postId: parts[2],
+      username: null,
+      url: `https://www.instagram.com/${parts[1]}/${parts[2]}/`,
+    };
+  }
+
+  // /share/SHORTCODE — link offuscato Instagram (richiede redirect server-side
+  // per ottenere il vero URL). Non gestibile lato client. Restituisco un tipo
+  // dedicato per dare un errore chiaro all'utente.
+  if (parts[0] === "share" && parts[1]) {
+    return { type: "share", shareCode: parts[1], url: cleanUrl(url) };
+  }
+
+  // /USERNAME (profilo)
   if (parts.length === 1) {
     return { type: "profile", username: parts[0].toLowerCase(), postId: null };
   }
-  if (parts.length >= 3 && (parts[1] === "p" || parts[1] === "reel")) {
+  // /USERNAME/p/POSTID
+  if (parts.length >= 3 && (parts[1] === "p" || parts[1] === "reel" || parts[1] === "tv")) {
     return {
-      type: parts[1] === "p" ? "post" : "reel",
+      type: parts[1] === "p" ? "post" : parts[1],
       username: parts[0].toLowerCase(),
       postId: parts[2],
       url: cleanUrl(url),
@@ -155,11 +179,22 @@ export async function listPosts() {
 
 export async function addPost(input, opts = {}) {
   const parsed = parseInstagramUrl(input);
-  if (!parsed) throw new Error("URL non valido");
-  if (parsed.type !== "post" && parsed.type !== "reel" && parsed.type !== "tv") {
-    throw new Error("Incolla l'URL di un POST o REEL Instagram (es. https://www.instagram.com/p/ABC123/)");
+  if (!parsed) {
+    console.warn("[inspirations] URL non parsabile:", input);
+    throw new Error("URL non valido. Deve essere un link Instagram.");
   }
-  if (!parsed.postId) throw new Error("Impossibile estrarre l'ID del post");
+  if (parsed.type === "share") {
+    throw new Error(
+      "Hai incollato un link 'Condividi'. Apri il post in Instagram, tap sui ⋯ in alto a destra → 'Copia link', poi torna qui."
+    );
+  }
+  if (parsed.type === "profile") {
+    throw new Error("Hai incollato un URL profilo. Per i profili usa la tab '👤 Influencer'.");
+  }
+  if (parsed.type !== "post" && parsed.type !== "reel" && parsed.type !== "tv") {
+    throw new Error("Tipo di link non supportato. Usa l'URL di un post o reel.");
+  }
+  if (!parsed.postId) throw new Error("Impossibile estrarre l'ID del post dall'URL");
 
   // Check duplicati per postId
   const existing = await listPosts();

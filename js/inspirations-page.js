@@ -135,11 +135,24 @@ async function onAddPost() {
     renderPosts();
     toast("✓ Post salvato", "success");
   } catch (err) {
-    toast(err.message, "error");
+    console.error("[inspirations] addPost error:", err, "input:", value);
+    toast(humanizeError(err), "error");
   } finally {
     btn.disabled = false;
     btn.textContent = "+ Aggiungi";
   }
+}
+
+function humanizeError(err) {
+  const msg = err?.message || String(err);
+  // Errori Firestore comuni
+  if (/permission|insufficient|denied/i.test(msg)) {
+    return "Permessi Firebase: aggiungi le regole 'inspirationProfiles' e 'inspirationPosts' nella console Firebase.";
+  }
+  if (/network|offline|failed to fetch/i.test(msg)) {
+    return "Sei offline o la connessione è instabile. Riprova tra poco.";
+  }
+  return msg;
 }
 
 async function onAddProfile() {
@@ -160,7 +173,8 @@ async function onAddProfile() {
     renderStories();
     toast(`✓ @${profile.username} aggiunta`, "success");
   } catch (err) {
-    toast(err.message, "error");
+    console.error("[inspirations] addProfile error:", err, "input:", value);
+    toast(humanizeError(err), "error");
   } finally {
     btn.disabled = false;
     btn.textContent = "+ Aggiungi";

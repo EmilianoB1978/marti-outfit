@@ -219,11 +219,25 @@ export async function addPost(input, opts = {}) {
     type: parsed.type,
     profileUsername: profileUsername || null,
     notes: opts.notes || "",
-    tags: Array.isArray(opts.tags) ? opts.tags : [],
+    tags:      Array.isArray(opts.tags)      ? opts.tags      : [],
+    styles:    Array.isArray(opts.styles)    ? opts.styles    : [],
+    seasons:   Array.isArray(opts.seasons)   ? opts.seasons   : [],
+    occasions: Array.isArray(opts.occasions) ? opts.occasions : [],
     savedAt: serverTimestamp(),
   };
   const ref = await addDoc(collection(db, COL_POSTS), data);
   return { id: ref.id, ...data };
+}
+
+/** Update generico di un post (influencer + tassonomie + tag + note) */
+export async function updatePost(id, patch) {
+  const allowed = ["profileUsername", "notes", "tags", "styles", "seasons", "occasions"];
+  const data = {};
+  for (const k of allowed) {
+    if (k in patch) data[k] = patch[k];
+  }
+  if (Object.keys(data).length === 0) return;
+  await updateDoc(doc(db, COL_POSTS, id), data);
 }
 
 export async function deletePost(id) {

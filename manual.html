@@ -1201,8 +1201,18 @@ jeans: https://...
           <li>L'app estrae username + post ID dall'URL e (se non c'è già) crea automaticamente l'influencer associata</li>
         </ol>
 
-        <h4>Tag personali</h4>
-        <p>Tappa 🏷️ su un post per aggiungere tag separati da virgola (es. <em>minimal, lavoro, primavera</em>). I tag diventano filtri rapidi sopra la griglia.</p>
+        <h4>Modifica post (modal grafico)</h4>
+        <p>Tappa <strong>✏️</strong> su un post per aprire un modal completo dove scegli:</p>
+        <ul class="manual-list">
+          <li><strong>👤 Influencer</strong>: griglia card con avatar — tap per associare/cambiare. Opzione "Nessuna" se vuoi.</li>
+          <li><strong>✨ Stile</strong>: chip multi-select dai tuoi <em>styles</em> (Categorie e tag → Stili). I look chip personalizzati sono applicati automaticamente.</li>
+          <li><strong>🌍 Stagioni</strong>: chip multi-select dalle tue 8 stagioni Marty.</li>
+          <li><strong>📅 Occasioni</strong>: chip multi-select dalle tue <em>occasions</em> con i look chip applicati.</li>
+          <li><strong>🏷️ Tag personali</strong>: liberi, separati da virgola.</li>
+          <li><strong>📝 Note</strong>: appunti tuoi sul look.</li>
+        </ul>
+        <p class="manual-tip">🔄 <strong>Sincronizzati automaticamente</strong>: se in Categorie e tag aggiungi una nuova occasione (es. "matrimonio") o stile (es. "y2k"), compare subito anche nel modal post Ispirazioni. Stesso per il look chip personalizzato (sfondo + emoji + pattern) — viene applicato sui chip in Ispirazioni se l'hai impostato in Categorie e tag.</p>
+        <p>I tag scelti compaiono anche come <strong>chip colorate</strong> sotto il post nel feed e creano automaticamente i <strong>filtri Stili / Stagioni / Occasioni</strong> in cima al feed (1 chip attivo per gruppo, click di nuovo per disattivare).</p>
 
         <p class="manual-tip">⚠️ <strong>Onestà tecnica</strong>: Instagram non permette di leggere automaticamente il feed di account altrui (lo bloccano per ToS dal 2022). Ho implementato la versione realistica e sostenibile: <strong>aggregatore curato manualmente</strong>. Tu salvi gli URL dei post che ti piacciono, l'app li mostra con embed ufficiale Meta. Nessun rischio di rate-limit, IP ban, ToS violation. Funziona uguale per anni.</p>
 

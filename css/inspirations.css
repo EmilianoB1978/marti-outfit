@@ -281,3 +281,147 @@
   font-style: italic;
   font-weight: 600;
 }
+
+/* ============== Filter groups ============== */
+.insp-filter-group {
+  margin-bottom: 8px;
+}
+.insp-filter-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* ============== Chip styled (sotto i post) ============== */
+.insp-post-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 10px 10px;
+}
+.insp-chip-styled {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(0, 0, 0, 0.18);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+/* ============== Modal grafico (add/edit) ============== */
+.insp-modal-section {
+  margin-bottom: 18px;
+}
+.insp-modal-section-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.insp-modal-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+  font-style: italic;
+}
+.insp-modal-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.insp-modal-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--color-text);
+  transition: border-color 0.15s, transform 0.12s;
+}
+.insp-modal-profile:hover { border-color: rgba(167, 139, 250, 0.4); }
+.insp-modal-profile:active { transform: scale(0.96); }
+.insp-modal-profile.is-active {
+  border-color: rgba(167, 139, 250, 0.85);
+  background: rgba(167, 139, 250, 0.1);
+}
+.insp-modal-profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c4b5fd, #f9a8d4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+.insp-modal-profile-avatar-none {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+.insp-modal-profile-name {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.insp-modal-profile-none .insp-modal-profile-name {
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+.insp-modal-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.insp-modal-chip {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: inherit;
+}
+.insp-modal-chip.is-active {
+  border-color: rgba(167, 139, 250, 0.85);
+  outline: 2px solid rgba(167, 139, 250, 0.3);
+  outline-offset: 1px;
+  transform: scale(1.04);
+}
+#insp-modal-tags, #insp-modal-notes {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+}
+.insp-modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+.insp-modal-actions .btn { flex: 1; }

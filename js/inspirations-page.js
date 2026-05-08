@@ -3,10 +3,12 @@
 // =============================================================================
 
 import * as Theme from "./theme/manager.js";
+import * as Taxonomies from "./taxonomies.js";
+import * as ChipStyles from "./chip-styles.js";
 import {
   listProfiles, addProfile, deleteProfile, reorderProfiles,
-  listPosts, addPost, deletePost, updatePostTags, updatePostProfile,
-  parseInstagramUrl, fetchPostAuthor,
+  listPosts, addPost, deletePost, updatePost,
+  parseInstagramUrl,
 } from "./inspirations-data.js";
 
 Theme.init();
@@ -15,8 +17,14 @@ const state = {
   profiles: [],
   posts: [],
   currentTab: "feed",
-  filterUsername: null,  // null = tutti
+  filterUsername: null,
+  filterStyle: null,
+  filterSeason: null,
+  filterOccasion: null,
   filterTag: null,
+  // Modal stato (add o edit)
+  modalEditingId: null,
+  modalDraft: null,
 };
 
 const $ = (s) => document.querySelector(s);
@@ -36,11 +44,25 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
 }
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+function humanizeError(err) {
+  const msg = err?.message || String(err);
+  if (/permission|insufficient|denied/i.test(msg)) {
+    return "Permessi Firebase: aggiungi le regole 'inspirationProfiles' e 'inspirationPosts' nella console Firebase.";
+  }
+  if (/network|offline|failed to fetch/i.test(msg)) {
+    return "Sei offline o la connessione è instabile. Riprova tra poco.";
+  }
+  return msg;
+}
 
 // =============================================================================
 // Boot
 // =============================================================================
 async function boot() {
+  // Carica tassonomie (per il modal con stili/stagioni/occasioni)
+  try { await Taxonomies.load(); } catch (_) {}
   await refreshAll();
   bindUI();
 }
@@ -64,7 +86,6 @@ async function refreshAll() {
 }
 
 function bindUI() {
-  // Tabs
   document.querySelectorAll(".settings-tabs .tab").forEach(t => {
     t.addEventListener("click", () => {
       document.querySelectorAll(".settings-tabs .tab").forEach(x => x.classList.remove("is-active"));
@@ -76,17 +97,14 @@ function bindUI() {
     });
   });
 
-  // Add post
   $("#btn-add-post").addEventListener("click", onAddPost);
   $("#insp-post-input").addEventListener("keydown", e => {
     if (e.key === "Enter") onAddPost();
   });
-  // Add profile
   $("#btn-add-profile").addEventListener("click", onAddProfile);
   $("#insp-profile-input").addEventListener("keydown", e => {
     if (e.key === "Enter") onAddProfile();
   });
-  // Modal close
   $("#insp-modal-close").addEventListener("click", closeModal);
   $("#insp-modal").addEventListener("click", e => {
     if (e.target === $("#insp-modal")) closeModal();
@@ -97,17 +115,19 @@ function bindUI() {
 function showInfo() {
   alert(`Come funziona la sezione Ispirazioni:
 
-1. Salva le tue influencer preferite nella tab "👤 Influencer" (incolla URL profilo o @username).
+1. Salva le tue influencer preferite nella tab "👤 Influencer".
 
 2. Quando vedi un post Instagram che ti ispira:
-   • Tap sui "..." in Instagram → "Copia link"
+   • Tap sui ⋯ (in alto a destra del post) → "Copia link"
    • Torna qui → Feed → "+ Aggiungi" e incolla l'URL
 
-3. I post vengono mostrati con l'embed ufficiale Instagram (immagine + caption + autore live).
+3. Si apre un modal dove:
+   • Scegli a quale influencer associare il post
+   • Aggiungi tag di stile, stagioni e occasioni (sincronizzati con
+     "Categorie e tag")
+   • Aggiungi tag personali e note
 
-4. Tap su un post per vederlo grande, salvarlo come ispirazione outfit, o aprirlo direttamente in Instagram.
-
-Nota: Instagram non permette di leggere automaticamente il feed di un account altrui. Quindi i post vanno aggiunti uno per uno (è veloce).`);
+4. Filtri il feed per influencer, stile, stagione, occasione o tag.`);
 }
 
 // =============================================================================
@@ -120,8 +140,7 @@ async function onAddPost() {
     toast("Incolla un URL post Instagram", "warn");
     return;
   }
-  // Smart fallback: se incolla un URL profilo nella tab Feed, propone di
-  // salvarlo come influencer al posto che dare errore.
+  // Smart fallback: URL profilo nella tab Feed -> chiede di salvarlo come influencer
   const parsed = parseInstagramUrl(value);
   if (parsed?.type === "profile") {
     const ok = confirm(
@@ -142,97 +161,26 @@ async function onAddPost() {
     }
     return;
   }
-  const btn = $("#btn-add-post");
-  btn.disabled = true;
-  btn.textContent = "🔍 Cerco autore...";
-  try {
-    // Priorità 1: username già nell'URL (raro)
-    let profileUsername = parsed?.username || null;
-    let detectedAuto = false;
-
-    // Priorità 2: best-effort fetch della pagina post via CORS proxy
-    if (!profileUsername && parsed?.postId && parsed?.url) {
-      const meta = await fetchPostAuthor(parsed.url);
-      if (meta?.username) {
-        profileUsername = meta.username;
-        detectedAuto = true;
-      }
-    }
-
-    // Priorità 3: filtro influencer attivo nel feed
-    if (!profileUsername && state.filterUsername) {
-      profileUsername = state.filterUsername;
-    }
-
-    // Priorità 4: prompt manuale
-    if (!profileUsername && state.profiles.length > 0) {
-      btn.textContent = "...";
-      profileUsername = await pickProfileForPost(state.profiles);
-      if (profileUsername === undefined) {
-        btn.disabled = false;
-        btn.textContent = "+ Aggiungi";
-        return;
-      }
-    }
-
-    btn.textContent = "Salvo...";
-    const post = await addPost(value, { profileUsername });
-    input.value = "";
-    state.posts = [post, ...state.posts];
-    if (post.profileUsername && !state.profiles.some(p => p.username === post.profileUsername)) {
-      state.profiles = await listProfiles();
-      renderProfiles();
-      renderStories();
-    }
-    renderPosts();
-    if (detectedAuto && profileUsername) {
-      toast(`✓ Post salvato · @${profileUsername} rilevata automaticamente`, "success");
-    } else {
-      toast("✓ Post salvato", "success");
-    }
-  } catch (err) {
-    console.error("[inspirations] addPost error:", err, "input:", value);
-    toast(humanizeError(err), "error");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "+ Aggiungi";
+  if (parsed?.type === "share") {
+    toast("Hai incollato un link 'Condividi'. Usa ⋯ → 'Copia link' su Instagram.", "warn");
+    return;
   }
-}
+  if (!parsed || !parsed.postId) {
+    toast("URL non valido. Deve essere un post o reel Instagram.", "error");
+    return;
+  }
 
-/**
- * Mostra un select con le influencer salvate per scegliere a chi associare
- * un post. Ritorna username | null (nessuna) | undefined (annullato).
- */
-function pickProfileForPost(profiles) {
-  return new Promise(resolve => {
-    const options = profiles
-      .map((p, i) => `${i + 1}. @${p.username}`)
-      .join("\n");
-    const answer = prompt(
-      `A quale influencer associo questo post?\n\n${options}\n\n` +
-      `Scrivi il numero, oppure 0 per nessuna.`,
-      "1"
-    );
-    if (answer === null) return resolve(undefined);  // annullato
-    const n = parseInt(answer, 10);
-    if (n === 0) return resolve(null);
-    if (n >= 1 && n <= profiles.length) {
-      return resolve(profiles[n - 1].username);
-    }
-    resolve(null);
+  // Apri modal di editing per scegliere influencer + tassonomie + note
+  openEditModal(null, {
+    sourceUrl: value,
+    parsed,
+    profileUsername: parsed.username || state.filterUsername || null,
+    styles: [],
+    seasons: [],
+    occasions: [],
+    tags: [],
+    notes: "",
   });
-}
-
-function humanizeError(err) {
-  const msg = err?.message || String(err);
-  // Errori Firestore comuni
-  if (/permission|insufficient|denied/i.test(msg)) {
-    return "Permessi Firebase: aggiungi le regole 'inspirationProfiles' e 'inspirationPosts' nella console Firebase.";
-  }
-  if (/network|offline|failed to fetch/i.test(msg)) {
-    return "Sei offline o la connessione è instabile. Riprova tra poco.";
-  }
-  return msg;
 }
 
 async function onAddProfile() {
@@ -253,7 +201,7 @@ async function onAddProfile() {
     renderStories();
     toast(`✓ @${profile.username} aggiunta`, "success");
   } catch (err) {
-    console.error("[inspirations] addProfile error:", err, "input:", value);
+    console.error("[inspirations] addProfile error:", err);
     toast(humanizeError(err), "error");
   } finally {
     btn.disabled = false;
@@ -262,7 +210,7 @@ async function onAddProfile() {
 }
 
 // =============================================================================
-// Render PROFILES (lista profili)
+// Render PROFILES
 // =============================================================================
 function renderProfiles() {
   const wrap = $("#insp-profiles");
@@ -278,7 +226,7 @@ function renderProfiles() {
   wrap.innerHTML = sorted.map(p => {
     const postCount = state.posts.filter(x => x.profileUsername === p.username).length;
     return `<div class="insp-profile-row" data-id="${p.id}" data-username="${p.username}">
-      <div class="insp-avatar" data-username="${p.username}">${p.username.charAt(0).toUpperCase()}</div>
+      <div class="insp-avatar">${p.username.charAt(0).toUpperCase()}</div>
       <div class="insp-profile-info">
         <div class="insp-profile-name">@${escapeHtml(p.username)}</div>
         <div class="insp-profile-count">${postCount} post salvat${postCount === 1 ? "o" : "i"}</div>
@@ -289,8 +237,7 @@ function renderProfiles() {
   }).join("");
 
   wrap.querySelectorAll(".insp-profile-del").forEach(b => {
-    b.addEventListener("click", async (e) => {
-      e.stopPropagation();
+    b.addEventListener("click", async () => {
       const id = b.dataset.id;
       if (!confirm("Rimuovere questa influencer? I post salvati restano.")) return;
       try {
@@ -300,14 +247,14 @@ function renderProfiles() {
         renderStories();
         toast("Rimossa", "success");
       } catch (err) {
-        toast("Errore: " + err.message, "error");
+        toast(humanizeError(err), "error");
       }
     });
   });
 }
 
 // =============================================================================
-// Render STORIES (cerchi avatar in cima al feed)
+// Render STORIES
 // =============================================================================
 function renderStories() {
   const wrap = $("#insp-stories");
@@ -340,49 +287,90 @@ function renderStories() {
 }
 
 // =============================================================================
-// Render FILTERS (tag)
+// Render FILTERS (stili/stagioni/occasioni/tag) — solo se hanno valori
 // =============================================================================
 function renderFilters() {
   const wrap = $("#insp-filters");
-  const allTags = new Set();
+  const allTags      = new Set();
+  const allStyles    = new Set();
+  const allSeasons   = new Set();
+  const allOccasions = new Set();
   for (const p of state.posts) {
-    for (const t of (p.tags || [])) allTags.add(t);
+    for (const t of (p.tags      || [])) allTags.add(t);
+    for (const t of (p.styles    || [])) allStyles.add(t);
+    for (const t of (p.seasons   || [])) allSeasons.add(t);
+    for (const t of (p.occasions || [])) allOccasions.add(t);
   }
-  if (allTags.size === 0) { wrap.hidden = true; wrap.innerHTML = ""; return; }
+  const total = allTags.size + allStyles.size + allSeasons.size + allOccasions.size;
+  if (total === 0) { wrap.hidden = true; wrap.innerHTML = ""; return; }
   wrap.hidden = false;
-  const tagsArr = Array.from(allTags).sort();
-  wrap.innerHTML = `<div class="insp-tag-row">
-    ${tagsArr.map(t => `<button class="insp-tag${state.filterTag === t ? " is-active" : ""}" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`).join("")}
-  </div>`;
-  wrap.querySelectorAll(".insp-tag").forEach(b => {
+  const groups = [];
+  if (allStyles.size > 0) {
+    groups.push(renderFilterGroup("Stili",     "filterStyle",    allStyles,    "styles"));
+  }
+  if (allSeasons.size > 0) {
+    groups.push(renderFilterGroup("Stagioni",  "filterSeason",   allSeasons,   null));
+  }
+  if (allOccasions.size > 0) {
+    groups.push(renderFilterGroup("Occasioni", "filterOccasion", allOccasions, "occasions"));
+  }
+  if (allTags.size > 0) {
+    groups.push(renderFilterGroup("Tag",       "filterTag",      allTags,      null));
+  }
+  wrap.innerHTML = groups.join("");
+  wrap.querySelectorAll("[data-filter-key]").forEach(b => {
     b.addEventListener("click", () => {
-      state.filterTag = state.filterTag === b.dataset.tag ? null : b.dataset.tag;
+      const k = b.dataset.filterKey;
+      const v = b.dataset.filterValue;
+      state[k] = state[k] === v ? null : v;
       renderFilters();
       renderPosts();
     });
   });
 }
+function renderFilterGroup(label, stateKey, valuesSet, taxonomyKey) {
+  const arr = Array.from(valuesSet).sort();
+  const chips = arr.map(v => {
+    let css = "";
+    if (taxonomyKey) {
+      const st = ChipStyles.getChipStyle(taxonomyKey, v);
+      const inline = ChipStyles.styleToCss(st);
+      if (inline) css = ` style="${inline}"`;
+    }
+    const active = state[stateKey] === v ? " is-active" : "";
+    return `<button class="insp-tag${active}" data-filter-key="${stateKey}" data-filter-value="${escapeHtml(v)}"${css}>${escapeHtml(v)}</button>`;
+  }).join("");
+  return `<div class="insp-filter-group">
+    <div class="insp-filter-label">${label}</div>
+    <div class="insp-tag-row">${chips}</div>
+  </div>`;
+}
 
 // =============================================================================
-// Render POSTS (griglia con embed Instagram)
+// Render POSTS
 // =============================================================================
 function renderPosts() {
   const wrap = $("#insp-posts");
   let posts = state.posts;
   if (state.filterUsername) posts = posts.filter(p => p.profileUsername === state.filterUsername);
-  if (state.filterTag)      posts = posts.filter(p => (p.tags || []).includes(state.filterTag));
+  if (state.filterStyle)    posts = posts.filter(p => (p.styles    || []).includes(state.filterStyle));
+  if (state.filterSeason)   posts = posts.filter(p => (p.seasons   || []).includes(state.filterSeason));
+  if (state.filterOccasion) posts = posts.filter(p => (p.occasions || []).includes(state.filterOccasion));
+  if (state.filterTag)      posts = posts.filter(p => (p.tags      || []).includes(state.filterTag));
 
   if (posts.length === 0) {
+    const filtersActive = state.filterUsername || state.filterStyle || state.filterSeason || state.filterOccasion || state.filterTag;
     wrap.innerHTML = `<div class="insp-empty">
       <div class="insp-empty-icon">📸</div>
-      <p>${state.filterUsername || state.filterTag ? "Nessun post per questo filtro" : "Nessun post salvato"}</p>
-      ${(state.filterUsername || state.filterTag) ? "" : `<p class="insp-empty-hint">Incolla l'URL di un post Instagram qui sopra. Aprilo in Instagram, "..." → "Copia link" → torna qui e incolla.</p>`}
+      <p>${filtersActive ? "Nessun post per questo filtro" : "Nessun post salvato"}</p>
+      ${filtersActive ? "" : `<p class="insp-empty-hint">Incolla l'URL di un post Instagram qui sopra.</p>`}
     </div>`;
     return;
   }
 
-  wrap.innerHTML = posts.map(p => `
-    <div class="insp-post-card" data-id="${p.id}">
+  wrap.innerHTML = posts.map(p => {
+    const chipsHtml = renderPostChips(p);
+    return `<div class="insp-post-card" data-id="${p.id}">
       <blockquote class="instagram-media"
         data-instgrm-captioned
         data-instgrm-permalink="${escapeHtml(p.url)}"
@@ -392,18 +380,14 @@ function renderPosts() {
         ${p.profileUsername
           ? `<span class="insp-post-username">@${escapeHtml(p.profileUsername)}</span>`
           : `<span class="insp-post-username insp-post-username-none">⚠ Nessuna influencer</span>`}
-        <div class="insp-post-tags">
-          ${(p.tags || []).map(t => `<span class="insp-tag-mini">#${escapeHtml(t)}</span>`).join("")}
-        </div>
-        <button class="insp-post-action" data-action="link" data-id="${p.id}" aria-label="Associa influencer" title="Associa influencer">🔗</button>
+        <button class="insp-post-action" data-action="edit" data-id="${p.id}" aria-label="Modifica">✏️</button>
         <button class="insp-post-action" data-action="open" data-id="${p.id}" aria-label="Apri">↗</button>
-        <button class="insp-post-action" data-action="tags" data-id="${p.id}" aria-label="Tag">🏷️</button>
-        <button class="insp-post-action" data-action="del" data-id="${p.id}" aria-label="Rimuovi">🗑️</button>
+        <button class="insp-post-action" data-action="del"  data-id="${p.id}" aria-label="Rimuovi">🗑️</button>
       </div>
-    </div>
-  `).join("");
+      ${chipsHtml ? `<div class="insp-post-chips">${chipsHtml}</div>` : ""}
+    </div>`;
+  }).join("");
 
-  // Re-process embed Instagram (lo script.embed.js espone window.instgrm.Embeds.process)
   if (window.instgrm?.Embeds?.process) {
     try { window.instgrm.Embeds.process(); } catch (_) {}
   }
@@ -416,27 +400,39 @@ function renderPosts() {
   });
 }
 
+function renderPostChips(post) {
+  const groups = [
+    { key: "styles",    taxonomy: "styles",    values: post.styles    || [] },
+    { key: "seasons",   taxonomy: null,        values: post.seasons   || [] },  // seasons no chip-style
+    { key: "occasions", taxonomy: "occasions", values: post.occasions || [] },
+  ];
+  const tagChips = (post.tags || []).map(t => `<span class="insp-tag-mini">#${escapeHtml(t)}</span>`).join("");
+  const taxoChips = groups.flatMap(g => g.values.map(v => {
+    let css = "";
+    if (g.taxonomy) {
+      const st = ChipStyles.getChipStyle(g.taxonomy, v);
+      const inline = ChipStyles.styleToCss(st);
+      if (inline) css = ` style="${inline}"`;
+    }
+    return `<span class="insp-chip-styled"${css}>${escapeHtml(v)}</span>`;
+  })).join("");
+  return taxoChips + tagChips;
+}
+
 async function onPostAction(action, id) {
   const post = state.posts.find(p => p.id === id);
   if (!post) return;
   if (action === "open") {
     window.open(post.url, "_blank", "noopener");
-  } else if (action === "link") {
-    if (state.profiles.length === 0) {
-      toast("Aggiungi prima un'influencer dalla tab '👤 Influencer'", "warn");
-      return;
-    }
-    const username = await pickProfileForPost(state.profiles);
-    if (username === undefined) return;
-    try {
-      await updatePostProfile(id, username);
-      post.profileUsername = username || null;
-      renderStories();
-      renderPosts();
-      toast(username ? `Associato a @${username}` : "Influencer rimossa dal post", "success");
-    } catch (err) {
-      toast("Errore: " + err.message, "error");
-    }
+  } else if (action === "edit") {
+    openEditModal(id, {
+      profileUsername: post.profileUsername || null,
+      styles:    Array.isArray(post.styles)    ? [...post.styles]    : [],
+      seasons:   Array.isArray(post.seasons)   ? [...post.seasons]   : [],
+      occasions: Array.isArray(post.occasions) ? [...post.occasions] : [],
+      tags:      Array.isArray(post.tags)      ? [...post.tags]      : [],
+      notes:     post.notes || "",
+    });
   } else if (action === "del") {
     if (!confirm("Rimuovere questo post dalle ispirazioni?")) return;
     try {
@@ -447,27 +443,194 @@ async function onPostAction(action, id) {
       renderPosts();
       toast("Rimosso", "success");
     } catch (err) {
-      toast("Errore: " + err.message, "error");
-    }
-  } else if (action === "tags") {
-    const current = (post.tags || []).join(", ");
-    const newTags = prompt("Tag (separati da virgola). Es: minimal, lavoro, primavera", current);
-    if (newTags === null) return;
-    const arr = newTags.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
-    try {
-      await updatePostTags(id, arr);
-      post.tags = arr;
-      renderFilters();
-      renderPosts();
-      toast("Tag aggiornati", "success");
-    } catch (err) {
-      toast("Errore: " + err.message, "error");
+      toast(humanizeError(err), "error");
     }
   }
 }
 
+// =============================================================================
+// Modal grafico add/edit post (influencer + stili + stagioni + occasioni + tag)
+// =============================================================================
+function openEditModal(id, draft) {
+  state.modalEditingId = id;
+  state.modalDraft = draft;
+  $("#insp-modal-title").textContent = id ? "Modifica post" : "Salva post";
+  renderModalBody();
+  $("#insp-modal").classList.remove("hidden");
+}
+
 function closeModal() {
   $("#insp-modal").classList.add("hidden");
+  state.modalEditingId = null;
+  state.modalDraft = null;
+}
+
+function renderModalBody() {
+  const d = state.modalDraft || {};
+  const stylesOpts    = Taxonomies.listSimpleValues("styles");
+  const seasonsOpts   = Taxonomies.listSimpleValues("seasons");
+  const occasionsOpts = Taxonomies.listSimpleValues("occasions");
+
+  const profilePicker = state.profiles.length > 0
+    ? `<div class="insp-modal-profile-grid">
+        ${state.profiles.map(p => `
+          <button type="button" class="insp-modal-profile${d.profileUsername === p.username ? " is-active" : ""}" data-username="${escapeHtml(p.username)}">
+            <span class="insp-modal-profile-avatar">${p.username.charAt(0).toUpperCase()}</span>
+            <span class="insp-modal-profile-name">@${escapeHtml(p.username)}</span>
+          </button>
+        `).join("")}
+        <button type="button" class="insp-modal-profile insp-modal-profile-none${!d.profileUsername ? " is-active" : ""}" data-username="">
+          <span class="insp-modal-profile-avatar insp-modal-profile-avatar-none">—</span>
+          <span class="insp-modal-profile-name">Nessuna</span>
+        </button>
+      </div>`
+    : `<p class="insp-modal-hint">Nessuna influencer salvata. Aggiungile dalla tab "👤 Influencer".</p>`;
+
+  $("#insp-modal-body").innerHTML = `
+    <div class="insp-modal-section">
+      <h3 class="insp-modal-section-title">👤 Influencer</h3>
+      ${profilePicker}
+    </div>
+
+    ${stylesOpts.length > 0 ? `
+    <div class="insp-modal-section">
+      <h3 class="insp-modal-section-title">✨ Stile</h3>
+      ${renderModalChipPicker("styles", stylesOpts, d.styles, "styles")}
+    </div>` : ""}
+
+    ${seasonsOpts.length > 0 ? `
+    <div class="insp-modal-section">
+      <h3 class="insp-modal-section-title">🌍 Stagioni</h3>
+      ${renderModalChipPicker("seasons", seasonsOpts, d.seasons, null)}
+    </div>` : ""}
+
+    ${occasionsOpts.length > 0 ? `
+    <div class="insp-modal-section">
+      <h3 class="insp-modal-section-title">📅 Occasioni</h3>
+      ${renderModalChipPicker("occasions", occasionsOpts, d.occasions, "occasions")}
+    </div>` : ""}
+
+    <div class="insp-modal-section">
+      <h3 class="insp-modal-section-title">🏷️ Tag personali</h3>
+      <input type="text" id="insp-modal-tags" placeholder="separati da virgola: minimal, lavoro..." value="${escapeHtml((d.tags || []).join(", "))}" />
+    </div>
+
+    <div class="insp-modal-section">
+      <h3 class="insp-modal-section-title">📝 Note</h3>
+      <textarea id="insp-modal-notes" rows="2" placeholder="Note personali sul look...">${escapeHtml(d.notes || "")}</textarea>
+    </div>
+
+    <div class="insp-modal-actions">
+      <button type="button" class="btn btn--ghost" id="insp-modal-cancel">Annulla</button>
+      <button type="button" class="btn btn--primary" id="insp-modal-save">${state.modalEditingId ? "Salva modifiche" : "Salva post"}</button>
+    </div>
+  `;
+
+  // Bind profile picker
+  $("#insp-modal-body").querySelectorAll(".insp-modal-profile").forEach(b => {
+    b.addEventListener("click", () => {
+      const u = b.dataset.username;
+      state.modalDraft.profileUsername = u || null;
+      $("#insp-modal-body").querySelectorAll(".insp-modal-profile").forEach(x => x.classList.remove("is-active"));
+      b.classList.add("is-active");
+    });
+  });
+  // Bind chip multi-select
+  $("#insp-modal-body").querySelectorAll(".insp-modal-chip").forEach(b => {
+    b.addEventListener("click", () => {
+      const group = b.dataset.group;
+      const value = b.dataset.value;
+      const arr = state.modalDraft[group] || [];
+      const idx = arr.indexOf(value);
+      if (idx === -1) arr.push(value); else arr.splice(idx, 1);
+      state.modalDraft[group] = arr;
+      b.classList.toggle("is-active");
+    });
+  });
+  // Save / Cancel
+  $("#insp-modal-cancel").addEventListener("click", closeModal);
+  $("#insp-modal-save").addEventListener("click", saveModal);
+}
+
+function renderModalChipPicker(group, options, selected, taxonomyKey) {
+  const sel = new Set(selected || []);
+  return `<div class="insp-modal-chip-row">
+    ${options.map(v => {
+      let css = "";
+      if (taxonomyKey) {
+        const st = ChipStyles.getChipStyle(taxonomyKey, v);
+        const inline = ChipStyles.styleToCss(st);
+        if (inline) css = ` style="${inline}"`;
+      }
+      const active = sel.has(v) ? " is-active" : "";
+      return `<button type="button" class="insp-modal-chip${active}" data-group="${group}" data-value="${escapeHtml(v)}"${css}>${escapeHtml(capitalize(v))}</button>`;
+    }).join("")}
+  </div>`;
+}
+
+async function saveModal() {
+  const d = state.modalDraft;
+  if (!d) return;
+  // Read inputs
+  d.tags = ($("#insp-modal-tags").value || "")
+    .split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
+  d.notes = ($("#insp-modal-notes").value || "").trim();
+
+  const btn = $("#insp-modal-save");
+  btn.disabled = true;
+  btn.textContent = "...";
+  try {
+    if (state.modalEditingId) {
+      // Edit esistente
+      await updatePost(state.modalEditingId, {
+        profileUsername: d.profileUsername || null,
+        styles: d.styles || [],
+        seasons: d.seasons || [],
+        occasions: d.occasions || [],
+        tags: d.tags || [],
+        notes: d.notes || "",
+      });
+      // Aggiorna in-memory
+      const post = state.posts.find(p => p.id === state.modalEditingId);
+      if (post) {
+        post.profileUsername = d.profileUsername || null;
+        post.styles = d.styles || [];
+        post.seasons = d.seasons || [];
+        post.occasions = d.occasions || [];
+        post.tags = d.tags || [];
+        post.notes = d.notes || "";
+      }
+      toast("✓ Post aggiornato", "success");
+    } else {
+      // Nuovo post
+      const post = await addPost(d.sourceUrl, {
+        profileUsername: d.profileUsername || null,
+        styles: d.styles || [],
+        seasons: d.seasons || [],
+        occasions: d.occasions || [],
+        tags: d.tags || [],
+        notes: d.notes || "",
+      });
+      state.posts = [post, ...state.posts];
+      $("#insp-post-input").value = "";
+      // Auto-create profile se username mancante in lista
+      if (post.profileUsername && !state.profiles.some(p => p.username === post.profileUsername)) {
+        state.profiles = await listProfiles();
+        renderProfiles();
+      }
+      toast("✓ Post salvato", "success");
+    }
+    renderStories();
+    renderFilters();
+    renderPosts();
+    closeModal();
+  } catch (err) {
+    console.error("[inspirations] save modal:", err);
+    toast(humanizeError(err), "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = state.modalEditingId ? "Salva modifiche" : "Salva post";
+  }
 }
 
 // =============================================================================

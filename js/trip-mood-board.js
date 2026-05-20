@@ -97,7 +97,7 @@ export async function buildMoodBoardBlob(trip, items) {
   ctx.fillStyle = "#8a6520";
   ctx.font = "bold 28px Georgia, serif";
   ctx.textAlign = "center";
-  ctx.fillText("✨ Marty Outfit", W / 2, H - 50);
+  ctx.fillText("✨ Marti Outfit", W / 2, H - 50);
 
   return new Promise(resolve => canvas.toBlob(b => resolve(b), "image/png", 0.92));
 }

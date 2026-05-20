@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#1a1a1a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Marty Outfit" />
+  <meta name="apple-mobile-web-app-title" content="Marti Outfit" />
 
-  <title>Marty Outfit</title>
+  <title>Marti Outfit</title>
 
   <!-- Manifest PWA -->
   <link rel="manifest" href="./manifest.json" />
@@ -46,7 +46,7 @@
   <!-- Schermata di caricamento iniziale -->
   <div id="splash" class="splash">
     <div class="splash-logo">👔</div>
-    <div class="splash-title">Marty Outfit</div>
+    <div class="splash-title">Marti Outfit</div>
     <div class="splash-spinner"></div>
   </div>
 
@@ -76,7 +76,7 @@
         '<div style="font-size:64px;margin-bottom:12px">🛍️</div>' +
         '<h2 style="margin:0 0 8px;font-size:20px">L\'app non parte</h2>' +
         '<p style="margin:0 0 24px;color:#666;line-height:1.5;max-width:340px">' +
-        'Cache disallineata. Premi Ricarica. Se non basta, rimuovi e re-aggiungi Marty Outfit dalla home (tieni premuta l\'icona).' +
+        'Cache disallineata. Premi Ricarica. Se non basta, rimuovi e re-aggiungi Marti Outfit dalla home (tieni premuta l\'icona).' +
         '</p>' +
         '<button id="__btn_recover__" style="padding:14px 28px;background:#d4af37;color:#1a1a1a;border:none;border-radius:24px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:12px;">↻ Ricarica</button>' +
         '<button id="__btn_clear__" style="padding:10px 20px;background:transparent;color:#666;border:1px solid #ccc;border-radius:20px;font-size:14px;cursor:pointer;">🗑 Pulisci cache e ricarica</button>';
@@ -259,7 +259,11 @@
           <button id="btn-analyze" class="btn-primary hidden">
             🤖 Analizza con AI
           </button>
+          <button id="btn-bg-removal" class="btn-primary hidden" style="margin-top:var(--space-2);">
+            ✨ Rimuovi sfondo
+          </button>
           <div id="analyze-status" class="analyze-status"></div>
+          <div id="bg-removal-status" class="analyze-status"></div>
         </div>
 
         <!-- Wear stats (visibile solo in modifica capo esistente) -->
@@ -662,7 +666,7 @@
         <h3 class="settings-section-title">💧 Watermark</h3>
         <div class="form-group">
           <label for="ct-wm-text">Testo</label>
-          <input type="text" id="ct-wm-text" value="✨ Marty Outfit" />
+          <input type="text" id="ct-wm-text" value="✨ Marti Outfit" />
         </div>
         <div class="settings-row">
           <label class="settings-row-title" for="ct-wm-color">Colore</label>

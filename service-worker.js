@@ -1,7 +1,7 @@
-// Service Worker per PWA Marty Outfit
+// Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v124-insp-modal';
+const CACHE_VERSION = 'v125-rename-marti';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.

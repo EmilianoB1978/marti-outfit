@@ -189,7 +189,7 @@ async function buildWrappedBlob(season, stats, items, gaps) {
   ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
   ctx.font = "500 20px -apple-system, system-ui, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("📔 Marty Outfit", W / 2, 1020);
+  ctx.fillText("📔 Marti Outfit", W / 2, 1020);
 
   return await new Promise(resolve => canvas.toBlob(b => resolve(b), "image/png"));
 }

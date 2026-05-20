@@ -2,7 +2,7 @@
 // Firebase configuration
 // =============================================================================
 // 1. Vai su https://console.firebase.google.com
-// 2. Crea un progetto (es. "my-wardrobe")
+// 2. Crea un progetto (es. "Marti Outfit")
 // 3. Aggiungi una "Web App" (icona </>)
 // 4. Copia il blocco firebaseConfig qui sotto, sostituendo i valori
 // 5. Abilita: Firestore Database (modalita' produzione) e Storage

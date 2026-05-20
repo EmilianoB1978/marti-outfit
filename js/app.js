@@ -6,6 +6,7 @@ import { isConfigured } from "./firebase-config.js";
 import * as Wardrobe from "./wardrobe.js";
 import * as Outfit from "./outfit.js";
 import * as Claude from "./claude-api.js";
+import * as BgRemoval from "./bg-removal.js";
 import * as Theme from "./theme/manager.js";
 import * as Weather from "./weather.js";
 import * as Haptic from "./haptic.js";
@@ -35,6 +36,7 @@ const state = {
   armoFilter: null,   // null | 'good' (in palette) | 'out' (fuori palette)
   editingId: null,    // null = nuovo capo, string = modifica capo esistente
   pendingPhoto: null, // { blob, base64, dataUrl } in attesa di salvataggio
+  pendingCutout: null, // Blob PNG/WebP del cutout senza sfondo, in attesa di upload
 };
 
 // =============================================================================
@@ -518,7 +520,7 @@ function openBuilder(template) {
     line: { show: true },
     emoji: "",
     photoStyle: { radius: 12, borderColor: "#e0e0e0", borderWidth: 2, gap: 24, padding: 60, shadow: false, cardBg: "#fff" },
-    watermark: { text: "✨ Marty Outfit", color: "#aaaaaa", font: "system" },
+    watermark: { text: "✨ Marti Outfit", color: "#aaaaaa", font: "system" },
     overlays: [],
   };
 
@@ -563,7 +565,7 @@ function openBuilder(template) {
   document.getElementById("ct-photo-shadow").checked = !!config.photoStyle.shadow;
 
   // Watermark
-  document.getElementById("ct-wm-text").value = config.watermark?.text || "✨ Marty Outfit";
+  document.getElementById("ct-wm-text").value = config.watermark?.text || "✨ Marti Outfit";
   document.getElementById("ct-wm-color").value = config.watermark?.color || "#aaaaaa";
 
   // Overlays
@@ -1612,6 +1614,7 @@ function renderFilters() {
 function openAddItem() {
   state.editingId = null;
   state.pendingPhoto = null;
+  state.pendingCutout = null;
 
   document.getElementById("modal-title").textContent = "Nuovo capo";
   document.getElementById("btn-delete-item").classList.add("hidden");
@@ -1619,7 +1622,10 @@ function openAddItem() {
   document.getElementById("item-quick-actions")?.classList.add("hidden");
   document.getElementById("photo-preview").innerHTML = '<span class="photo-placeholder">📷</span>';
   document.getElementById("btn-analyze").classList.add("hidden");
+  document.getElementById("btn-bg-removal")?.classList.add("hidden");
   document.getElementById("analyze-status").textContent = "";
+  const bgStatus = document.getElementById("bg-removal-status");
+  if (bgStatus) bgStatus.textContent = "";
 
   // Reset form: select single-value e textarea/input
   ["field-category", "field-subcategory", "field-style",
@@ -1658,14 +1664,26 @@ function openEditItem(id) {
 
   state.editingId = id;
   state.pendingPhoto = null;
+  state.pendingCutout = null;
 
   document.getElementById("modal-title").textContent = "Modifica capo";
   document.getElementById("btn-delete-item").classList.remove("hidden");
   document.getElementById("item-quick-actions")?.classList.remove("hidden");
-  document.getElementById("photo-preview").innerHTML = item.photo_url
-    ? `<img src="${item.photo_url}" alt="" />`
+  // Preferisco mostrare il cutout se gia' presente (visuale piu' pulita)
+  const previewSrc = item.cutout_url || item.photo_url;
+  document.getElementById("photo-preview").innerHTML = previewSrc
+    ? `<img src="${previewSrc}" alt="" />`
     : '<span class="photo-placeholder">📷</span>';
   document.getElementById("btn-analyze").classList.add("hidden");
+  // Mostra il pulsante "Rimuovi sfondo" anche in edit se il capo ha la foto
+  // ma non ha ancora il cutout (cosi' Martina puo' rigenerarlo a posteriori).
+  const bgBtnEdit = document.getElementById("btn-bg-removal");
+  if (bgBtnEdit) {
+    if (item.photo_url && !item.cutout_url) bgBtnEdit.classList.remove("hidden");
+    else bgBtnEdit.classList.add("hidden");
+  }
+  const bgStatusEdit = document.getElementById("bg-removal-status");
+  if (bgStatusEdit) bgStatusEdit.textContent = "";
 
   // Cascade: refresh subcategory in base alla categoria del capo PRIMA di settarla
   setSelectValueOrAdd("field-category", item.category || "");
@@ -1770,6 +1788,7 @@ function closeModal() {
   document.getElementById("modal-item").classList.add("hidden");
   state.editingId = null;
   state.pendingPhoto = null;
+  state.pendingCutout = null;
 }
 
 // =============================================================================
@@ -1789,8 +1808,14 @@ async function handlePhotoSelected(file) {
     const preview = document.getElementById("photo-preview");
     preview.innerHTML = `<img src="data:image/jpeg;base64,${result.base64}" alt="" />`;
 
-    // Mostro pulsante analizza
+    // Foto nuova caricata: scarto eventuale cutout precedente
+    state.pendingCutout = null;
+    const bgStatusReset = document.getElementById("bg-removal-status");
+    if (bgStatusReset) bgStatusReset.textContent = "";
+
+    // Mostro pulsanti analizza + rimuovi sfondo
     document.getElementById("btn-analyze").classList.remove("hidden");
+    document.getElementById("btn-bg-removal")?.classList.remove("hidden");
     status.textContent = "";
   } catch (err) {
     console.error("Errore foto:", err);
@@ -1886,6 +1911,75 @@ async function analyzePendingPhoto() {
     console.error("Errore analisi:", err);
     status.textContent = "Analisi fallita: " + err.message;
     toast("Analisi AI fallita", "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// =============================================================================
+// Rimuovi sfondo dalla foto del capo (locale via @imgly, no API)
+// =============================================================================
+// Funziona sia in "nuovo capo" (foto in state.pendingPhoto) sia in "modifica
+// capo" (foto gia' su Storage in state.editingId -> item.photo_url).
+// In edit, salvo subito il cutout su Firebase via uploadAndSaveCutout.
+// In nuovo capo, tengo il blob in state.pendingCutout e lo salvo in saveItem.
+async function removeBgFromPendingPhoto() {
+  const btn = document.getElementById("btn-bg-removal");
+  const status = document.getElementById("bg-removal-status");
+  const preview = document.getElementById("photo-preview");
+
+  // Determino la sorgente: nuovo capo (blob) o edit (URL Storage)
+  let sourceUrl = null;
+  if (state.pendingPhoto && state.pendingPhoto.blob) {
+    sourceUrl = URL.createObjectURL(state.pendingPhoto.blob);
+  } else if (state.editingId) {
+    const item = state.items.find(i => i.id === state.editingId);
+    if (item && item.photo_url) sourceUrl = item.photo_url;
+  }
+
+  if (!sourceUrl) {
+    toast("Carica prima una foto", "error");
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = "✨ Scarico il modello (~30 MB al primo uso)...";
+
+  try {
+    const cutoutBlob = await BgRemoval.removeBackground(sourceUrl, (p) => {
+      const pct = Math.round(p * 100);
+      status.textContent = `✨ Rimozione sfondo: ${pct}%`;
+    });
+
+    // Preview con cutout (PNG trasparente)
+    const cutoutUrl = URL.createObjectURL(cutoutBlob);
+    preview.innerHTML = `<img src="${cutoutUrl}" alt="" />`;
+
+    if (state.editingId) {
+      // Edit mode: salvo subito su Storage + Firestore
+      status.textContent = "💾 Salvataggio cutout...";
+      const url = await Wardrobe.uploadAndSaveCutout(state.editingId, cutoutBlob);
+      // Aggiorno l'item in memoria
+      const item = state.items.find(i => i.id === state.editingId);
+      if (item) item.cutout_url = url;
+      status.textContent = "✓ Sfondo rimosso e salvato";
+      btn.classList.add("hidden");  // gia' salvato, nascondo
+      toast("Sfondo rimosso", "success");
+    } else {
+      // Nuovo capo: tengo il blob, sara' uploadato in saveItem
+      state.pendingCutout = cutoutBlob;
+      status.textContent = "✓ Sfondo rimosso (verra' salvato col capo)";
+      toast("Sfondo rimosso", "success");
+    }
+
+    // Cleanup ObjectURL della sorgente (solo se l'avevamo creato noi)
+    if (state.pendingPhoto && state.pendingPhoto.blob && sourceUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(sourceUrl);
+    }
+  } catch (err) {
+    console.error("Errore rimozione sfondo:", err);
+    status.textContent = "Errore: " + (err.message || "rimozione fallita");
+    toast("Rimozione sfondo fallita", "error");
   } finally {
     btn.disabled = false;
   }
@@ -1996,6 +2090,17 @@ async function saveItem() {
       }
       const newItem = await Wardrobe.createItem(data);
       Haptic.success();
+
+      // Se abbiamo un cutout pendente (sfondo gia' rimosso prima del save),
+      // lo carichiamo su Storage e linkiamo al capo appena creato.
+      if (state.pendingCutout) {
+        try {
+          const cutoutUrl = await Wardrobe.uploadAndSaveCutout(newItem.id, state.pendingCutout);
+          newItem.cutout_url = cutoutUrl;
+        } catch (cuErr) {
+          console.warn("Upload cutout fallito (non bloccante):", cuErr);
+        }
+      }
 
       // Se il prezzo e' > 0 e il toggle 'Registra in budget' e' attivo,
       // crea automaticamente una transazione nel budget del mese corrente.
@@ -2518,6 +2623,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Bottoni modale
   document.getElementById("btn-analyze").addEventListener("click", analyzePendingPhoto);
+  document.getElementById("btn-bg-removal")?.addEventListener("click", removeBgFromPendingPhoto);
   document.getElementById("btn-save-item").addEventListener("click", saveItem);
   document.getElementById("btn-delete-item").addEventListener("click", deleteCurrentItem);
   document.getElementById("btn-mark-worn").addEventListener("click", markCurrentItemAsWorn);

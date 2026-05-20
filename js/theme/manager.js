@@ -1,5 +1,5 @@
 // =============================================================================
-// Theme manager - Marty Outfit
+// Theme manager - Marti Outfit
 // =============================================================================
 // Applica il tema al documento, gestisce persistenza, esporta/importa,
 // reagisce a prefers-color-scheme se la modalita' attiva e' "auto".

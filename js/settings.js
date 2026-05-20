@@ -1,5 +1,5 @@
 // =============================================================================
-// Settings page controller - Marty Outfit
+// Settings page controller - Marti Outfit
 // =============================================================================
 // Cablo gli elementi della UI con il theme manager.
 // Pattern: ad ogni evento input/change, chiamo Theme.set/update/overrideToken;

@@ -205,7 +205,7 @@ export async function buildWrappedImageBlob(trip, stats) {
   // Footer brand
   ctx.fillStyle = "#a89968";
   ctx.font = "22px -apple-system, system-ui, sans-serif";
-  ctx.fillText("✨ Marty Outfit", W / 2, 1030);
+  ctx.fillText("✨ Marti Outfit", W / 2, 1030);
 
   // Export Blob
   return new Promise(resolve => canvas.toBlob(b => resolve(b), "image/png"));

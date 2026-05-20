@@ -1,5 +1,5 @@
 // =============================================================================
-// Theme presets - Marty Outfit
+// Theme presets - Marti Outfit
 // =============================================================================
 // Ogni preset e' un oggetto piatto: chiave token -> valore CSS.
 // Vengono applicati da theme/manager.js settando document.documentElement.style.

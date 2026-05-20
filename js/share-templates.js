@@ -355,7 +355,7 @@ async function renderClassic(ctx, data, opts) {
   if (opts.includeWatermark !== false) {
     ctx.fillStyle = "#aaa"; ctx.textAlign = "center";
     ctx.font = "300 26px " + FONT_FAMILIES.system;
-    ctx.fillText("✨ made with Marty Outfit", SIZE / 2, SIZE - 40);
+    ctx.fillText("✨ made with Marti Outfit", SIZE / 2, SIZE - 40);
   }
 }
 
@@ -418,7 +418,7 @@ async function renderPastel(ctx, data, opts) {
 
   if (opts.includeWatermark !== false) {
     ctx.fillStyle = "#a04860"; ctx.font = "italic 300 24px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText("✨ Marty Outfit", SIZE / 2, SIZE - 40);
+    ctx.fillText("✨ Marti Outfit", SIZE / 2, SIZE - 40);
   }
 }
 
@@ -507,7 +507,7 @@ async function renderPolaroid(ctx, data, opts) {
 
   if (opts.includeWatermark !== false) {
     ctx.fillStyle = "#7a5a3a"; ctx.font = "italic 24px " + FONT_FAMILIES.serif; ctx.textAlign = "center";
-    ctx.fillText("✨ Marty Outfit", SIZE / 2, SIZE - 40);
+    ctx.fillText("✨ Marti Outfit", SIZE / 2, SIZE - 40);
   }
 }
 
@@ -697,7 +697,7 @@ async function renderCustom(ctx, canvas, data, opts) {
     ctx.fillStyle = wm.color || "#aaa";
     ctx.textAlign = "center";
     ctx.font = "300 24px " + (FONT_FAMILIES[wm.font] || FONT_FAMILIES.system);
-    ctx.fillText(wm.text || "✨ made with Marty Outfit", W / 2, H - 40);
+    ctx.fillText(wm.text || "✨ made with Marti Outfit", W / 2, H - 40);
   }
 
   // ===== Overlays multipli (text, sticker, shape, logo) =====

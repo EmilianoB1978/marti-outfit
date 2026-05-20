@@ -67,7 +67,7 @@ export const STARTER_PRESETS = [
       line: { show: true, color: "#d4af37", width: 3 },
       emoji: "",
       photoStyle: { radius: 12, borderColor: "#e0e0e0", borderWidth: 2, cardBg: "#fff", padding: 60, gap: 24, shadow: false },
-      watermark: { text: "✨ Marty Outfit", color: "#aaa", font: "system" },
+      watermark: { text: "✨ Marti Outfit", color: "#aaa", font: "system" },
     },
   },
 ];

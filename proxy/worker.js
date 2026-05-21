@@ -34,12 +34,15 @@ const OPENAI_IMAGE_MODEL = "gpt-image-1";
 // (Settings -> Bindings -> Workers AI -> Variable name: AI).
 const CF_AI_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 
-// Prompt per analisi foto: chiediamo JSON strutturato ricco
+// Prompt per analisi foto: chiediamo JSON strutturato ricco. La lista delle
+// sotto-categorie disponibili viene iniettata dinamicamente dal client (campo
+// available_subcategories nel body) e appesa al prompt per istruire Claude
+// a preferire valori esistenti invece di inventarne.
 const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO un oggetto JSON (nessun testo prima o dopo) con questi campi:
 
 {
-  "category": "top|bottom|scarpe|accessori|capospalla|completo",
-  "subcategory": "tipo specifico in italiano (es. 't-shirt', 'jeans slim', 'sneakers', 'blazer', 'maglione girocollo', 'gonna a tubo')",
+  "category": "top|bottom|vestito|scarpe|accessori|capospalla|completo",
+  "subcategory": "tipo specifico in italiano. REGOLA: se il capo corrisponde a una delle sotto-categorie esistenti elencate sotto, USA esattamente quel valore. Solo se nessuna sotto-categoria esistente descrive il capo, proponi un nome nuovo in italiano minuscolo, conciso (1-3 parole)",
   "color_primary": "array di colori principali in italiano (es. ['blu navy'] o ['bianco', 'rosso']). Sempre array.",
   "color_secondary": "array di colori secondari (se presenti). Sempre array, anche vuoto: [].",
   "color": "alias del primo colore principale (compat) oppure stringa vuota.",
@@ -181,8 +184,20 @@ function extractJson(text) {
 // Endpoint: POST /analyze
 // =============================================================================
 async function handleAnalyze(req, env, cors) {
-  const { image, mimeType } = await req.json();
+  const { image, mimeType, available_subcategories } = await req.json();
   if (!image) return errorResponse("Campo 'image' mancante", 400, cors);
+
+  // Costruisco il prompt aggiungendo la lista delle sub disponibili (se
+  // fornita dal client). Questo guida Claude a riutilizzare valori esistenti
+  // invece di inventarne nuovi a ogni capo.
+  let finalPrompt = ANALYZE_PROMPT;
+  if (Array.isArray(available_subcategories) && available_subcategories.length > 0) {
+    const list = available_subcategories
+      .filter(s => typeof s === "string" && s.trim())
+      .map(s => `- ${s.trim()}`)
+      .join("\n");
+    finalPrompt += `\n\nSotto-categorie ESISTENTI (preferiscine UNA da questa lista se descrive il capo, anche se non perfetta):\n${list}\n\nProponi un nuovo valore SOLO se nessuna voce di questa lista e' applicabile.`;
+  }
 
   const claudeRes = await fetch(ANTHROPIC_API, {
     method: "POST",
@@ -201,7 +216,7 @@ async function handleAnalyze(req, env, cors) {
             type: "image",
             source: { type: "base64", media_type: mimeType || "image/jpeg", data: image }
           },
-          { type: "text", text: ANALYZE_PROMPT }
+          { type: "text", text: finalPrompt }
         ]
       }]
     })
@@ -279,8 +294,19 @@ async function handleSuggest(req, env, cors) {
 // Body: { "image": "<base64>", "mimeType": "image/jpeg" }
 // Output: { "garments": [{ bbox, category, ...tags }] }
 async function handleAnalyzeOutfit(req, env, cors) {
-  const { image, mimeType } = await req.json();
+  const { image, mimeType, available_subcategories } = await req.json();
   if (!image) return errorResponse("Campo 'image' mancante", 400, cors);
+
+  // Stesso meccanismo di /analyze: appendi la lista sub esistenti al prompt
+  // per evitare che Claude inventi nomi nuovi a ogni outfit.
+  let finalPrompt = ANALYZE_OUTFIT_PROMPT;
+  if (Array.isArray(available_subcategories) && available_subcategories.length > 0) {
+    const list = available_subcategories
+      .filter(s => typeof s === "string" && s.trim())
+      .map(s => `- ${s.trim()}`)
+      .join("\n");
+    finalPrompt += `\n\nSotto-categorie ESISTENTI nel guardaroba (USA queste se descrivono il capo, anche se non perfette):\n${list}\n\nProponi una NUOVA sotto-categoria SOLO se nessuna voce della lista e' applicabile.`;
+  }
 
   const claudeRes = await fetch(ANTHROPIC_API, {
     method: "POST",
@@ -299,7 +325,7 @@ async function handleAnalyzeOutfit(req, env, cors) {
             type: "image",
             source: { type: "base64", media_type: mimeType || "image/jpeg", data: image }
           },
-          { type: "text", text: ANALYZE_OUTFIT_PROMPT }
+          { type: "text", text: finalPrompt }
         ]
       }]
     })

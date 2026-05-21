@@ -57,6 +57,21 @@ async function boot() {
   let items = [];
   try { items = await Wardrobe.listItems(); } catch (err) {}
   await Taxonomies.load(items);
+  // Auto-assignment delle sotto-categorie orfane via euristica keyword
+  // (categoria parent dedotta da pattern come "stivale*" → scarpe).
+  // Si esegue una sola volta per session, silenzioso se non c'e' nulla da fare.
+  try {
+    const { assigned } = Taxonomies.autoAssignOrphans();
+    if (assigned > 0) {
+      // Toast informativo dopo il primo render (lasciamo passare 600ms cosi'
+      // l'utente vede la pagina caricata prima del messaggio).
+      setTimeout(() => {
+        toast(`🪄 Assegnate automaticamente ${assigned} sotto-categorie`, "success");
+      }, 600);
+    }
+  } catch (err) {
+    console.warn("[taxonomies-page] autoAssignOrphans failed", err);
+  }
   render();
 }
 

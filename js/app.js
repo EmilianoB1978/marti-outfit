@@ -1912,10 +1912,25 @@ async function analyzePendingPhoto() {
   status.textContent = "🤖 Analisi AI in corso...";
 
   try {
-    const tags = await Claude.analyzeGarment(state.pendingPhoto.base64);
+    // Passo a Claude la lista delle sotto-categorie ESISTENTI per evitare
+    // che ne inventi di nuove. Se l'utente ha gia' scelto una categoria,
+    // passo solo le sub di quella categoria (lista corta = matching migliore).
+    const chosenCat = (document.getElementById("field-category").value || "").toLowerCase().trim();
+    let availableSubs;
+    if (chosenCat) {
+      const usedSubs = state.items.map(it => (it.subcategory || "").trim()).filter(Boolean);
+      availableSubs = Taxonomies.getSubcategoriesForCategory(chosenCat, usedSubs);
+    } else {
+      availableSubs = Taxonomies.listSimpleValues("subcategories");
+    }
 
-    // Se l'AI restituisce valori non in tassonomia (es. nuovo pattern/material),
-    // li aggiungo automaticamente prima di selezionarli nei select
+    const tags = await Claude.analyzeGarment(state.pendingPhoto.base64, availableSubs);
+
+    // Se l'AI restituisce valori non in tassonomia, li aggiungo
+    // automaticamente. ECCEZIONE: subcategories NON viene auto-aggiunta -
+    // il valore proposto da Claude diventa un suggerimento "ghost" cliccabile
+    // (vedi _setAiSubcategoryHint). Se l'utente conferma e la sub non esiste,
+    // saveItem chiedera' esplicitamente l'autorizzazione alla creazione.
     const autoAddIfMissing = async (taxonomy, value) => {
       if (!value) return;
       const existing = Taxonomies.listSimpleValues(taxonomy).map(v => v.toLowerCase());
@@ -1929,7 +1944,7 @@ async function analyzePendingPhoto() {
     };
     await Promise.all([
       autoAddIfMissing("styles", tags.style),
-      autoAddIfMissing("subcategories", tags.subcategory),
+      // subcategories: NON auto-add (richiesta utente: prima usare esistenti)
       autoAddMulti("patterns",  tags.pattern),
       autoAddMulti("materials", tags.material),
       autoAddMulti("colors",    tags.color_primary || tags.color),
@@ -2378,8 +2393,40 @@ async function saveItem() {
   if (data.subcategory === "__add_new__") data.subcategory = null;
   if (data.style === "__add_new__")       data.style = null;
 
+  // GATE sottocategoria: se la sub e' NUOVA (non esiste ne' in built-in
+  // CATEGORY_TO_SUBCATEGORIES ne' nella taxonomy del DB), chiedo conferma
+  // esplicita prima di crearla. L'utente puo':
+  //  - confermare → crea la sub + (se categoria nota) associa parent
+  //  - rifiutare → il capo viene salvato con subcategory=null
+  if (data.subcategory) {
+    const knownSubs = Taxonomies.listSimpleValues("subcategories")
+      .map(v => v.toLowerCase());
+    const knownBuiltIn = new Set();
+    Object.values(Taxonomies.CATEGORY_TO_SUBCATEGORIES || {}).forEach(arr => {
+      arr.forEach(s => knownBuiltIn.add(s.toLowerCase()));
+    });
+    const lower = data.subcategory.toLowerCase();
+    const isKnown = knownSubs.includes(lower) || knownBuiltIn.has(lower);
+    if (!isKnown) {
+      const catLabel = data.category ? `"${data.category}"` : "questa categoria";
+      const ok = window.confirm(
+        `La sotto-categoria "${data.subcategory}" non esiste ancora.\n\n` +
+        `Vuoi crearla nuova in ${catLabel}?\n\n` +
+        `Annulla → il capo verra' salvato senza sotto-categoria.`
+      );
+      if (!ok) {
+        data.subcategory = null;
+      } else if (data.category) {
+        // L'utente conferma: associo il parent cosi' apparira' nella
+        // categoria giusta in tab Categorie.
+        try { Taxonomies.setSubcategoryParent(data.subcategory, data.category); }
+        catch {}
+      }
+    }
+  }
+
   // Auto-save dei valori NUOVI scritti nei campi free-text dentro le tassonomie
-  // (silenzioso, niente prompt: l'utente l'ha gia' digitato).
+  // (silenzioso, niente prompt: l'utente l'ha gia' digitato o confermato sopra).
   const autoAdd = async (taxonomy, value) => {
     if (!value) return;
     const existing = Taxonomies.listSimpleValues(taxonomy).map(v => v.toLowerCase());

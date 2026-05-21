@@ -83,15 +83,19 @@ export async function resizeImage(file, maxSize = 800, quality = 0.78) {
  * @param {string} base64Image - immagine in base64 (no data URI prefix)
  * @returns {Promise<{category, color, style, season, occasion, description}>}
  */
-export async function analyzeGarment(base64Image) {
+export async function analyzeGarment(base64Image, availableSubcategories = null) {
   if (!isWorkerConfigured) {
     throw new Error("Cloudflare Worker non configurato. Modifica js/claude-api.js");
   }
 
+  const body = { image: base64Image, mimeType: "image/jpeg" };
+  if (Array.isArray(availableSubcategories) && availableSubcategories.length > 0) {
+    body.available_subcategories = availableSubcategories;
+  }
   const response = await fetch(`${WORKER_URL}/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: base64Image, mimeType: "image/jpeg" })
+    body: JSON.stringify(body)
   });
 
   if (!response.ok) {
@@ -110,15 +114,19 @@ export async function analyzeGarment(base64Image) {
  * @param {string} base64Image - foto outfit (preferibilmente resize a 1024px max)
  * @returns {Promise<{garments: Array<{bbox:number[], category, subcategory, ...}>}>}
  */
-export async function analyzeOutfit(base64Image) {
+export async function analyzeOutfit(base64Image, availableSubcategories = null) {
   if (!isWorkerConfigured) {
     throw new Error("Cloudflare Worker non configurato. Modifica js/claude-api.js");
   }
 
+  const body = { image: base64Image, mimeType: "image/jpeg" };
+  if (Array.isArray(availableSubcategories) && availableSubcategories.length > 0) {
+    body.available_subcategories = availableSubcategories;
+  }
   const response = await fetch(`${WORKER_URL}/analyze-outfit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: base64Image, mimeType: "image/jpeg" })
+    body: JSON.stringify(body)
   });
 
   if (!response.ok) {

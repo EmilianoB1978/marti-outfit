@@ -222,6 +222,107 @@ export function removeSubcategoryParent(sub) {
   }
 }
 
+// Hint testuali per matching euristico delle sotto-categorie orfane.
+// Quando una sub non e' in CATEGORY_TO_SUBCATEGORIES, controllo se contiene
+// uno di questi hint per assegnarla automaticamente alla categoria giusta.
+// L'ordine in cui appaiono nell'array CONTA: prima i match piu' specifici.
+const CATEGORY_KEYWORDS = {
+  capospalla: [
+    "giacca", "cappotto", "trench", "piumino", "bomber", "blazer",
+    "parka", "kimono", "spolverino", "impermeabile", "mantella",
+    "giubbotto", "giubbino", "smanicato",
+  ],
+  scarpe: [
+    "scarpa", "scarpe", "sneaker", "stivale", "stivaletto", "anfibi",
+    "mocassino", "sandalo", "ballerina", "tacco", "decollete", "decoltè",
+    "infradito", "ciabatta", "espadrillas", "slingback", "zoccolo",
+    "stringata",
+  ],
+  accessori: [
+    "borsa", "borsetta", "tracolla", "pochette", "shopper", "zaino",
+    "marsupio", "clutch",
+    "cappello", "berretto", "cuffia", "bandana",
+    "sciarpa", "foulard", "stola", "pashmina",
+    "cintura",
+    "occhiali", "occhiale",
+    "orologio",
+    "collana", "anello", "orecchin", "bracciale", "gioiello", "ciondolo",
+    "guanti", "guanto", "muffole",
+  ],
+  vestito: [
+    "abito", "vestito", "tubino", "chemisier", "salopette", "tutina",
+    "jumpsuit",
+  ],
+  completo: [
+    "completo", "tailleur", "smoking", "coordinato", "tuta",
+  ],
+  bottom: [
+    "jeans", "pantalon", "chinos", "leggings", "shorts", "bermuda",
+    "pantaloncini", "gonna", "palazzo", "culotte", "sigaretta", "cargo",
+    "skinny", "bootcut", "wide leg",
+  ],
+  top: [
+    "t-shirt", "tshirt", "tee", "camicia", "camicetta", "blusa",
+    "polo", "felpa", "maglione", "maglia", "cardigan", "gilet",
+    "dolcevita", "crop", "canotta", "tunica", "body", "bustier", "corpetto",
+    "pullover", "sweater",
+  ],
+};
+
+/**
+ * Indovina la categoria parent di una sub basandosi su keyword.
+ * Ritorna la categoria piu' probabile, o null se nessun match.
+ */
+export function guessParentCategory(sub) {
+  const v = (sub || "").toLowerCase().trim();
+  if (!v) return null;
+  // Match con keyword piu' lunga vince (es. "giubbotto" vs "giacca" entrambi
+  // in capospalla, ma se sub = "giacca jeans" matchiamo "giacca" non "jean"
+  // perche' capospalla viene prima nel loop dict-iteration).
+  // Per essere robusti: controllo TUTTE le keyword e prendo il match piu' lungo.
+  let bestCat = null;
+  let bestLen = 0;
+  for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    for (const kw of keywords) {
+      if (v.includes(kw) && kw.length > bestLen) {
+        bestCat = cat;
+        bestLen = kw.length;
+      }
+    }
+  }
+  return bestCat;
+}
+
+/**
+ * Per OGNI sub orfana (nel DB ma senza parent in CATEGORY_TO_SUBCATEGORIES
+ * ne' in localStorage override), prova ad assegnarle un parent via euristica
+ * keyword. Persiste in localStorage. Ritorna { assigned: N, remaining: M }.
+ */
+export function autoAssignOrphans() {
+  const fromTax = listSimpleValues("subcategories");
+  const parentMap = _loadSubcatParentMap();
+  const known = new Set(
+    Object.values(CATEGORY_TO_SUBCATEGORIES).flat().map(s => s.toLowerCase())
+  );
+
+  let assigned = 0;
+  let remaining = 0;
+  for (const sub of fromTax) {
+    const lower = sub.toLowerCase().trim();
+    if (known.has(lower)) continue;       // gia' in built-in
+    if (parentMap[lower]) continue;        // gia' assegnata manualmente
+    const guess = guessParentCategory(sub);
+    if (guess) {
+      parentMap[lower] = guess;
+      assigned++;
+    } else {
+      remaining++;
+    }
+  }
+  if (assigned > 0) _saveSubcatParentMap(parentMap);
+  return { assigned, remaining };
+}
+
 /**
  * Raggruppa TUTTE le sotto-categorie note (built-in + custom DB + override)
  * per categoria parent. Le sub senza parent finiscono in "altre".

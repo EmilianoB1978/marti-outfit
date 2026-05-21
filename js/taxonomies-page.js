@@ -63,6 +63,13 @@ async function boot() {
 function render() {
   const tax = state.currentTax;
   const list = document.getElementById("tax-list");
+
+  // Tab Categorie: render speciale ad albero con sotto-categorie indented
+  if (tax === "categories") {
+    renderCategoriesTree(list);
+    return;
+  }
+
   const values = Taxonomies.listValues(tax);
 
   if (values.length === 0) {
@@ -96,6 +103,186 @@ function render() {
   });
   // Bind controlli pannello look (se aperto)
   if (state.expanded) bindLookPanel(state.expanded);
+}
+
+// =============================================================================
+// Render albero Categorie con sotto-categorie indented
+// =============================================================================
+function renderCategoriesTree(list) {
+  const categories = Taxonomies.listValues("categories");
+  const subsByCategory = Taxonomies.listSubcategoriesByCategory();
+  const stylable = ChipStyles.isTaxonomyStylable("categories");
+
+  if (categories.length === 0) {
+    list.innerHTML = `<p class="empty-state-inline">Nessuna categoria.</p>`;
+    return;
+  }
+
+  // Per ogni categoria principale, una "card" con le sue sotto-categorie
+  const blocks = categories.map(catItem => {
+    const catRow = renderRow("categories", catItem, stylable);
+    const subs = subsByCategory[catItem.value] || [];
+    const subRows = subs.map(sub => `
+      <div class="tax-subrow" data-value="${escapeHtml(sub)}" data-parent="${escapeHtml(catItem.value)}">
+        <span class="tax-subrow-bullet">└</span>
+        <span class="tax-subrow-label">${escapeHtml(sub)}</span>
+        <button class="btn-icon tax-subrow-edit" aria-label="Rinomina sotto-categoria">✏️</button>
+        <button class="btn-icon tax-subrow-delete" aria-label="Elimina sotto-categoria">🗑️</button>
+      </div>
+    `).join("");
+    return `
+      <div class="tax-cat-block">
+        ${catRow}
+        <div class="tax-subgroup">
+          ${subRows}
+          <button class="tax-subgroup-add" data-parent="${escapeHtml(catItem.value)}">
+            + Aggiungi sotto-categoria
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  // Sub orfane (senza categoria associata)
+  const orphans = subsByCategory.altre || [];
+  if (orphans.length) {
+    const orphanRows = orphans.map(sub => `
+      <div class="tax-subrow" data-value="${escapeHtml(sub)}" data-parent="">
+        <span class="tax-subrow-bullet">⚠</span>
+        <span class="tax-subrow-label">${escapeHtml(sub)}</span>
+        <button class="btn-icon tax-subrow-assign" aria-label="Assegna a categoria">→</button>
+        <button class="btn-icon tax-subrow-delete" aria-label="Elimina">🗑️</button>
+      </div>
+    `).join("");
+    blocks.push(`
+      <div class="tax-cat-block tax-cat-block-orphan">
+        <div class="tax-cat-orphan-header">
+          <span>⚠️ Sotto-categorie senza categoria</span>
+          <small>tocca → per assegnarle</small>
+        </div>
+        <div class="tax-subgroup">${orphanRows}</div>
+      </div>
+    `);
+  }
+
+  list.innerHTML = blocks.join("");
+
+  // Bind: categoria (edit/delete/look)
+  list.querySelectorAll(".tax-row-edit").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onRename(btn.closest(".tax-row").dataset.value);
+    });
+  });
+  list.querySelectorAll(".tax-row-delete").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onDelete(btn.closest(".tax-row").dataset.value);
+    });
+  });
+  list.querySelectorAll(".tax-row-look").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const value = btn.closest(".tax-row").dataset.value;
+      toggleLookPanel(value);
+    });
+  });
+  if (state.expanded) bindLookPanel(state.expanded);
+
+  // Bind: sotto-categoria edit/delete/assign
+  list.querySelectorAll(".tax-subrow-edit").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const row = btn.closest(".tax-subrow");
+      onRenameSubcategory(row.dataset.value, row.dataset.parent);
+    });
+  });
+  list.querySelectorAll(".tax-subrow-delete").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const row = btn.closest(".tax-subrow");
+      onDeleteSubcategory(row.dataset.value);
+    });
+  });
+  list.querySelectorAll(".tax-subrow-assign").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const row = btn.closest(".tax-subrow");
+      onAssignSubcategory(row.dataset.value);
+    });
+  });
+
+  // Bind: "+ Aggiungi sotto-categoria" per ogni categoria
+  list.querySelectorAll(".tax-subgroup-add").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onAddSubcategory(btn.dataset.parent);
+    });
+  });
+}
+
+async function onAddSubcategory(parentCategory) {
+  const name = prompt(`Nuova sotto-categoria di "${parentCategory}":`);
+  if (!name || !name.trim()) return;
+  const clean = name.trim();
+  try {
+    const added = await Taxonomies.addValue("subcategories", clean);
+    Taxonomies.setSubcategoryParent(clean, parentCategory);
+    if (!added) {
+      // Esisteva gia' come valore: comunque associo il parent
+      toast(`"${clean}" associata a ${parentCategory}`, "success");
+    } else {
+      toast(`Aggiunta "${clean}" sotto ${parentCategory}`, "success");
+    }
+    render();
+  } catch (err) {
+    console.error(err);
+    toast("Errore: " + err.message, "error");
+  }
+}
+
+async function onRenameSubcategory(oldValue, parentCategory) {
+  const newValue = prompt("Nuovo nome:", oldValue);
+  if (!newValue || newValue.trim() === "" || newValue.trim() === oldValue) return;
+  try {
+    await Taxonomies.renameValue("subcategories", oldValue, newValue.trim());
+    // Sposta anche il mapping parent
+    Taxonomies.removeSubcategoryParent(oldValue);
+    if (parentCategory) Taxonomies.setSubcategoryParent(newValue.trim(), parentCategory);
+    render();
+    toast("Rinominata", "success");
+  } catch (err) {
+    toast("Errore: " + err.message, "error");
+  }
+}
+
+async function onDeleteSubcategory(value) {
+  if (!confirm(`Eliminare la sotto-categoria "${value}"?`)) return;
+  try {
+    await Taxonomies.removeValue("subcategories", value);
+    Taxonomies.removeSubcategoryParent(value);
+    render();
+    toast("Eliminata", "success");
+  } catch (err) {
+    toast("Errore: " + err.message, "error");
+  }
+}
+
+async function onAssignSubcategory(value) {
+  const categories = Taxonomies.listValues("categories").map(c => c.value);
+  const choice = prompt(
+    `Assegna "${value}" a una categoria.\nOpzioni: ${categories.join(", ")}`,
+    categories[0] || ""
+  );
+  if (!choice || !choice.trim()) return;
+  const clean = choice.trim().toLowerCase();
+  if (!categories.includes(clean)) {
+    toast(`Categoria "${clean}" non esiste`, "error");
+    return;
+  }
+  Taxonomies.setSubcategoryParent(value, clean);
+  render();
+  toast(`Assegnata a ${clean}`, "success");
 }
 
 function renderRow(tax, item, stylable) {
@@ -293,6 +480,23 @@ function getDisplayValue(value) {
 // =============================================================================
 // Tabs
 // =============================================================================
+// Adatta placeholder + hint a seconda della tab attiva
+function updateAddRowForTab(tax) {
+  const input = document.getElementById("tax-new-input");
+  const hint = document.getElementById("tax-hint");
+  if (input) {
+    if (tax === "categories") input.placeholder = "Nuova categoria (es. accessori, capospalla)...";
+    else input.placeholder = `Aggiungi nuovo valore (${tax})...`;
+  }
+  if (hint) {
+    if (tax === "categories") {
+      hint.innerHTML = `Le <strong>sotto-categorie</strong> appaiono indentate sotto la rispettiva categoria. Tocca "+ Aggiungi sotto-categoria" per crearne una nuova nella categoria scelta.`;
+    } else {
+      hint.textContent = "Gestisci i valori usati nei tag dei tuoi capi. Puoi aggiungere, rinominare o eliminare.";
+    }
+  }
+}
+
 function initTabs() {
   document.querySelectorAll(".settings-tabs .tab").forEach(tab => {
     tab.addEventListener("click", () => {
@@ -300,9 +504,11 @@ function initTabs() {
       tab.classList.add("is-active");
       state.currentTax = tab.dataset.tax;
       state.expanded = null;
+      updateAddRowForTab(state.currentTax);
       render();
     });
   });
+  updateAddRowForTab(state.currentTax);
 }
 
 // =============================================================================

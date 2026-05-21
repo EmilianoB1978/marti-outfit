@@ -1226,6 +1226,104 @@ body.editor-page {
 }
 
 /* ============================================================================
+   Tree Categorie con sotto-categorie indentate (tab Categorie)
+   ============================================================================ */
+.tax-cat-block {
+  margin-bottom: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-card, 12px);
+  overflow: hidden;
+}
+.tax-cat-block .tax-row {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+}
+.tax-cat-block .tax-row-label {
+  font-weight: 700;
+}
+
+.tax-subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px var(--space-3) var(--space-2) var(--space-3);
+  background: var(--color-surface-alt, rgba(0, 0, 0, 0.02));
+}
+.tax-subrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px var(--space-2);
+  border-radius: 8px;
+}
+.tax-subrow:hover {
+  background: var(--color-surface, rgba(0, 0, 0, 0.04));
+}
+.tax-subrow-bullet {
+  width: 18px;
+  text-align: center;
+  color: var(--color-text-muted, #888);
+  font-family: monospace;
+  font-size: 13px;
+}
+.tax-subrow-label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text, #222);
+}
+.tax-subrow .btn-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+.tax-subrow .btn-icon:hover {
+  opacity: 1;
+}
+
+.tax-subgroup-add {
+  display: block;
+  margin-top: var(--space-2);
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px dashed var(--color-border, rgba(0, 0, 0, 0.18));
+  border-radius: 8px;
+  color: var(--color-text-muted, #777);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  align-self: flex-start;
+}
+.tax-subgroup-add:hover,
+.tax-subgroup-add:active {
+  background: var(--color-surface, rgba(0, 0, 0, 0.04));
+  color: var(--color-text, #222);
+  border-color: var(--color-text-muted, rgba(0, 0, 0, 0.35));
+}
+
+/* Blocco sotto-categorie ORFANE (warning) */
+.tax-cat-block-orphan {
+  border-color: var(--color-warning, #f0a020);
+}
+.tax-cat-orphan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-2) var(--space-3);
+  font-weight: 600;
+  font-size: 13px;
+  background: rgba(240, 160, 32, 0.08);
+  color: var(--color-warning, #b07010);
+}
+.tax-cat-orphan-header small {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+/* ============================================================================
    Link prodotto field + status banner
    ============================================================================ */
 .link-field-row {

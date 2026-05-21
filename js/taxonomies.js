@@ -166,6 +166,101 @@ export function getSubcategoriesForCategory(category, extraUserSubcategories = [
 }
 
 // =============================================================================
+// Mapping sub → categoria override (persistente in localStorage)
+// =============================================================================
+// CATEGORY_TO_SUBCATEGORIES e' hardcoded. Per le sotto-categorie che l'utente
+// crea dalla pagina Categorie (sotto una categoria specifica) memorizziamo
+// il mapping in localStorage cosi' poi getSubcategoriesForCategory le mostra
+// nella categoria giusta.
+const LS_KEY_SUBCAT_PARENT = "marty_subcat_parent_map";
+
+function _loadSubcatParentMap() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_SUBCAT_PARENT);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function _saveSubcatParentMap(m) {
+  try { localStorage.setItem(LS_KEY_SUBCAT_PARENT, JSON.stringify(m)); }
+  catch (err) { console.warn("[taxonomies] localStorage write failed", err); }
+}
+
+/**
+ * Ritorna la categoria parent di una sub. Priorita':
+ * 1. CATEGORY_TO_SUBCATEGORIES hardcoded (built-in)
+ * 2. localStorage override (sub aggiunte dall'utente con categoria scelta)
+ * 3. null (sub libera/orfana)
+ */
+export function getSubcategoryParent(sub) {
+  const v = (sub || "").toLowerCase().trim();
+  if (!v) return null;
+  for (const [cat, subs] of Object.entries(CATEGORY_TO_SUBCATEGORIES)) {
+    if (subs.map(s => s.toLowerCase()).includes(v)) return cat;
+  }
+  const map = _loadSubcatParentMap();
+  return map[v] || null;
+}
+
+/** Imposta la categoria parent di una sub aggiunta dall'utente. */
+export function setSubcategoryParent(sub, category) {
+  const v = (sub || "").toLowerCase().trim();
+  if (!v || !category) return;
+  const map = _loadSubcatParentMap();
+  map[v] = category;
+  _saveSubcatParentMap(map);
+}
+
+/** Rimuove l'override (usato quando si elimina una sub). */
+export function removeSubcategoryParent(sub) {
+  const v = (sub || "").toLowerCase().trim();
+  if (!v) return;
+  const map = _loadSubcatParentMap();
+  if (v in map) {
+    delete map[v];
+    _saveSubcatParentMap(map);
+  }
+}
+
+/**
+ * Raggruppa TUTTE le sotto-categorie note (built-in + custom DB + override)
+ * per categoria parent. Le sub senza parent finiscono in "altre".
+ * Output: { top: [sub...], bottom: [sub...], ..., altre: [sub...] }
+ */
+export function listSubcategoriesByCategory() {
+  const groups = {};
+  // Built-in: la mappa hardcoded e' la fonte primaria
+  for (const [cat, subs] of Object.entries(CATEGORY_TO_SUBCATEGORIES)) {
+    groups[cat] = [...subs];
+  }
+  // Custom DB + overrides: cerca parent per ogni sub presente nella taxonomy
+  const fromTax = listSimpleValues("subcategories");
+  const parentMap = _loadSubcatParentMap();
+  const known = new Set(
+    Object.values(CATEGORY_TO_SUBCATEGORIES).flat().map(s => s.toLowerCase())
+  );
+  const orphans = [];
+  for (const sub of fromTax) {
+    const lower = sub.toLowerCase().trim();
+    if (known.has(lower)) continue;  // gia' in built-in
+    const cat = parentMap[lower];
+    if (cat && groups[cat]) {
+      if (!groups[cat].map(s => s.toLowerCase()).includes(lower)) {
+        groups[cat].push(sub);
+      }
+    } else {
+      orphans.push(sub);
+    }
+  }
+  if (orphans.length) groups.altre = orphans;
+  // Ordine alfabetico in ogni gruppo
+  for (const cat of Object.keys(groups)) {
+    groups[cat].sort((a, b) => String(a).localeCompare(String(b), "it", { sensitivity: "base" }));
+  }
+  return groups;
+}
+
+// =============================================================================
 // Cache in memoria (singleton)
 // =============================================================================
 let _cache = null;

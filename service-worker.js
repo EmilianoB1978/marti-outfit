@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v133-outfit-genai';
+const CACHE_VERSION = 'v134-outfit-cfai';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -158,7 +158,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🎨 Estrai capi rifatto da zero: ora invece di ritagliare la foto, l'AI GENERA una foto-prodotto pulita di ogni capo (stile ChatGPT). Richiede OPENAI_API_KEY nel Worker.";
+const WHATS_NEW = "🎨 Estrai capi: ora GRATUITO via Cloudflare AI (flux-1-schnell). Genera foto-prodotto pulite dei capi senza costi OpenAI. Richiede AI binding nel Worker (1 click).";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

@@ -29,6 +29,10 @@ const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 const REMOVE_BG_API = "https://api.remove.bg/v1.0/removebg";
 const OPENAI_IMAGES_EDIT_API = "https://api.openai.com/v1/images/edits";
 const OPENAI_IMAGE_MODEL = "gpt-image-1";
+// Cloudflare Workers AI: flux-1-schnell e' text-to-image gratuito (10k Neurons
+// gratis/giorno = ~400 immagini/giorno). Richiede AI binding nel Worker
+// (Settings -> Bindings -> Workers AI -> Variable name: AI).
+const CF_AI_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 
 // Prompt per analisi foto: chiediamo JSON strutturato ricco
 const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO un oggetto JSON (nessun testo prima o dopo) con questi campi:
@@ -319,33 +323,100 @@ async function handleAnalyzeOutfit(req, env, cors) {
 }
 
 // =============================================================================
+// Generazione via Cloudflare Workers AI (flux-1-schnell, gratuito)
+// =============================================================================
+async function generateViaCloudflareAI(prompt, env, cors) {
+  if (!env.AI) {
+    return errorResponse(
+      "Workers AI binding 'AI' non configurato. Worker Settings -> Bindings -> Add Workers AI -> Variable name: AI.",
+      503, cors
+    );
+  }
+
+  // Wrap del prompt utente con direttive di stile e-commerce
+  const fullPrompt =
+    "Professional e-commerce product photography of a single fashion garment, " +
+    "isolated on a pure clean background, front view, flat lay or invisible " +
+    "mannequin style, studio lighting, no person, no model, no hands, no body " +
+    "parts, no shadows, sharp focus, high detail, magazine quality. " +
+    "Garment description: " + prompt;
+
+  let aiResponse;
+  try {
+    // Workers AI binding ritorna un Response stream (image/png o image/jpeg)
+    // oppure { image: base64 } a seconda del modello. flux-1-schnell ritorna
+    // { image: base64 } come JSON.
+    aiResponse = await env.AI.run(CF_AI_IMAGE_MODEL, {
+      prompt: fullPrompt,
+      // steps default = 4 (flux-schnell, ottimizzato per velocita')
+    });
+  } catch (err) {
+    return errorResponse("Workers AI error: " + (err.message || String(err)), 502, cors);
+  }
+
+  // aiResponse puo' essere:
+  //   - { image: "<base64>" } (modelli text-to-image moderni)
+  //   - ReadableStream / Uint8Array (modelli legacy)
+  let pngBytes;
+  if (aiResponse && typeof aiResponse === "object" && aiResponse.image) {
+    const bin = atob(aiResponse.image);
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    pngBytes = buf.buffer;
+  } else if (aiResponse instanceof ReadableStream) {
+    pngBytes = await new Response(aiResponse).arrayBuffer();
+  } else if (aiResponse instanceof Uint8Array) {
+    pngBytes = aiResponse.buffer;
+  } else {
+    return errorResponse("Workers AI: formato risposta non riconosciuto", 502, cors);
+  }
+
+  return new Response(pngBytes, {
+    status: 200,
+    headers: { "Content-Type": "image/png", ...cors },
+  });
+}
+
+// =============================================================================
 // Endpoint: POST /generate-garment
 // =============================================================================
-// Genera la foto-prodotto di un singolo capo usando OpenAI gpt-image-1.
-// Modalita': "edits" con immagine di reference (la foto outfit intera).
+// Genera la foto-prodotto di un singolo capo.
+//
+// Provider scelto in base al campo 'provider' (default 'cf' = gratuito):
+//   - 'cf': Cloudflare Workers AI con flux-1-schnell (TEXT-to-image, gratuito
+//           fino a ~400 immagini/giorno). Non vede la foto originale, genera
+//           dal solo prompt testuale. Buona qualita' per "capo generico".
+//   - 'openai': OpenAI gpt-image-1 con images/edits (image-to-image, ~$0.05/img).
+//               Vede la foto originale come reference, fedelta' al capo maggiore.
 //
 // Body JSON: {
-//   "imageUrl": "<URL pubblico della foto outfit>",
+//   "imageUrl": "<URL pubblico della foto outfit>" (usato solo se provider='openai'),
 //   "prompt": "<descrizione visuale dettagliata del SOLO capo, in inglese>",
-//   "quality": "low|medium|high" (default "low" per contenere i costi)
+//   "provider": "cf|openai" (default "cf"),
+//   "quality": "low|medium|high" (solo provider='openai', default "low")
 // }
 // Response: PNG binary con sfondo trasparente (Content-Type: image/png)
-//
-// Costi gpt-image-1 (1024x1024):
-//   - low quality:    ~$0.011 input + $0.04 output = ~$0.05/img
-//   - medium quality: ~$0.04 input + $0.13 output = ~$0.17/img
-//   - high quality:   ~$0.17 input + $0.42 output = ~$0.59/img
 async function handleGenerateGarment(req, env, cors) {
+  const { imageUrl, prompt, provider, quality } = await req.json();
+  if (!prompt) return errorResponse("Campo 'prompt' mancante", 400, cors);
+
+  // Dispatch al provider scelto
+  const chosen = (provider || "cf").toLowerCase();
+  if (chosen === "cf") {
+    return await generateViaCloudflareAI(prompt, env, cors);
+  }
+  if (chosen !== "openai") {
+    return errorResponse(`Provider sconosciuto: '${chosen}'. Usa 'cf' o 'openai'.`, 400, cors);
+  }
+
+  // Provider 'openai' richiede anche imageUrl come reference
+  if (!imageUrl) return errorResponse("Campo 'imageUrl' mancante per provider 'openai'", 400, cors);
   if (!env.OPENAI_API_KEY) {
     return errorResponse(
       "OPENAI_API_KEY non configurata. Crea API key su platform.openai.com e aggiungila come Encrypted Variable nel Worker.",
       503, cors
     );
   }
-
-  const { imageUrl, prompt, quality } = await req.json();
-  if (!imageUrl) return errorResponse("Campo 'imageUrl' mancante", 400, cors);
-  if (!prompt) return errorResponse("Campo 'prompt' mancante", 400, cors);
 
   // Step 1: scarico la foto outfit come blob
   let imageBytes;

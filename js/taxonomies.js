@@ -78,35 +78,42 @@ const STRUCTURED = ["categories"];
 // =============================================================================
 export const CATEGORY_TO_SUBCATEGORIES = {
   top: [
-    "t-shirt", "camicia", "camicetta", "blusa", "polo",
-    "felpa", "maglione", "cardigan", "gilet", "top",
-    "dolcevita", "crop top", "canotta", "tunica",
+    "t-shirt", "camicia", "camicia polo", "camicetta", "blusa", "polo",
+    "felpa", "felpa con cappuccio", "maglione", "maglia", "cardigan",
+    "gilet", "dolcevita", "crop top", "canotta", "tunica", "body",
+    "bustier", "corpetto",
   ],
   bottom: [
-    "jeans", "pantaloni", "chinos", "leggings",
-    "gonna", "shorts", "bermuda", "pantaloncini",
+    "jeans", "jeans skinny", "jeans wide leg", "jeans palazzo", "jeans bootcut",
+    "pantaloni", "pantaloni palazzo", "pantaloni culotte", "pantaloni sigaretta",
+    "pantaloni cargo", "chinos", "leggings",
+    "gonna", "gonna midi", "gonna lunga", "gonna corta", "gonna a tubo", "gonna a ruota",
+    "shorts", "bermuda", "pantaloncini",
   ],
   vestito: [
-    "abito corto", "abito lungo", "abito midi",
-    "tubino", "abito da sera", "abito casual",
+    "abito corto", "abito midi", "abito lungo", "abito da sera",
+    "abito casual", "tubino", "chemisier", "tunica", "salopette", "tutina",
   ],
   scarpe: [
-    "sneakers", "stivali", "stivaletti", "mocassini",
-    "sandali", "scarpe eleganti", "decolleté", "ballerine",
-    "tacchi", "infradito", "espadrillas",
+    "sneakers", "stivali", "stivaletti", "anfibi",
+    "mocassini", "slingback", "sandali", "scarpe eleganti",
+    "decollete", "ballerine", "tacchi", "infradito",
+    "espadrillas", "ciabatte",
   ],
   accessori: [
-    "cappello", "berretto", "sciarpa", "foulard",
-    "cintura", "borsa", "borsetta", "zaino",
-    "occhiali", "orologio", "gioiello", "guanti",
+    "cappello", "berretto", "sciarpa", "foulard", "stola",
+    "cintura", "borsa", "tracolla", "pochette", "zaino", "shopper",
+    "occhiali", "occhiali da sole", "orologio", "collana", "anello",
+    "orecchini", "bracciale", "gioiello", "guanti",
   ],
   capospalla: [
-    "blazer", "giacca", "cappotto", "piumino",
-    "trench", "bomber", "parka", "kimono", "spolverino",
+    "blazer", "giacca", "giubbotto", "giubbotto di pelle",
+    "cappotto", "piumino", "trench", "bomber", "parka",
+    "kimono", "spolverino", "impermeabile", "mantella",
   ],
   completo: [
     "completo giacca-pantalone", "completo gonna-giacca",
-    "tailleur", "smoking",
+    "tailleur", "smoking", "tuta sportiva", "coordinato",
   ],
 };
 

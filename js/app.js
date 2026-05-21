@@ -1415,6 +1415,64 @@ function renderSkeletonWardrobe() {
 // =============================================================================
 // Rendering: griglia capi
 // =============================================================================
+// Formatta created_at (Firestore Timestamp | Date | seconds | ISO string)
+// come "mag '26" (3 lettere mese + apostrofo + anno 2 cifre, in italiano).
+// Mostra/aggiorna l'hint "ghost" per la sotto-categoria suggerita dall'AI.
+// Il bottone appare SOTTO la select #field-subcategory, in stile italico
+// grigio. Click → setta il valore nella select + nasconde l'hint. Cambio
+// manuale della select → nasconde l'hint automaticamente.
+function _setAiSubcategoryHint(suggestion) {
+  const hint = document.getElementById("ai-subcategory-hint");
+  const subSel = document.getElementById("field-subcategory");
+  if (!hint || !subSel) return;
+
+  const clean = (suggestion || "").trim();
+  if (!clean) {
+    hint.classList.add("hidden");
+    hint.hidden = true;
+    return;
+  }
+
+  hint.textContent = `💡 AI suggerisce: ${clean} — tocca per usare`;
+  hint.dataset.value = clean;
+  hint.classList.remove("hidden");
+  hint.hidden = false;
+
+  // Click sull'hint → applica il suggerimento + auto-hide
+  hint.onclick = () => {
+    setSelectValueOrAdd("field-subcategory", clean);
+    _hideAiSubcategoryHint();
+  };
+  // Cambio manuale dell'utente → auto-hide
+  subSel.addEventListener("change", _hideAiSubcategoryHint, { once: true });
+}
+
+function _hideAiSubcategoryHint() {
+  const hint = document.getElementById("ai-subcategory-hint");
+  if (!hint) return;
+  hint.classList.add("hidden");
+  hint.hidden = true;
+  hint.onclick = null;
+  delete hint.dataset.value;
+}
+
+function _formatCardInsertDate(ts) {
+  if (!ts) return "";
+  let d = null;
+  if (typeof ts.toDate === "function") d = ts.toDate();
+  else if (typeof ts.seconds === "number") d = new Date(ts.seconds * 1000);
+  else if (ts instanceof Date) d = ts;
+  else if (typeof ts === "string" || typeof ts === "number") {
+    const x = new Date(ts);
+    if (!isNaN(x.getTime())) d = x;
+  }
+  if (!d) return "";
+  // "mag '26"
+  const month = d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${month} '${yy}`;
+}
+
 function renderWardrobe() {
   const grid = document.getElementById("wardrobe-grid");
   const empty = document.getElementById("empty-state");
@@ -1450,6 +1508,13 @@ function renderWardrobe() {
     let linkBadge = "";
     if (linkStatus === "expired") linkBadge = `<div class="item-link-badge is-expired" title="Link scaduto">⚠️</div>`;
     else if (linkStatus === "ok" || linkStatus === "warning") linkBadge = `<div class="item-link-badge" title="Link prodotto">🔗</div>`;
+    // Data inserimento (mese + anno 2 cifre, italiano). created_at e' un
+    // Firestore Timestamp: ha .toDate() oppure .seconds (legacy). Fallback
+    // a stringa ISO. Stile discreto (badge piccolo angolo basso destra).
+    const dateLabel = _formatCardInsertDate(item.created_at);
+    const dateBadge = dateLabel
+      ? `<div class="item-date-badge" title="Inserito ${dateLabel}">${dateLabel}</div>`
+      : "";
     return `
     <div class="item-card" data-id="${item.id}">
       ${item.photo_url
@@ -1458,6 +1523,7 @@ function renderWardrobe() {
       }
       ${linkBadge}
       ${wearCount > 0 ? `<div class="item-wear-badge">👕 ${wearCount}</div>` : ''}
+      ${dateBadge}
       <div class="item-info">
         <div class="item-category">${item.category || "—"}</div>
         <div class="item-tags">
@@ -1627,6 +1693,7 @@ function openAddItem() {
   document.getElementById("analyze-status").textContent = "";
   const bgStatus = document.getElementById("bg-removal-status");
   if (bgStatus) bgStatus.textContent = "";
+  _hideAiSubcategoryHint();
 
   // Reset form: select single-value e textarea/input
   ["field-category", "field-subcategory", "field-style",
@@ -1676,15 +1743,23 @@ function openEditItem(id) {
     ? `<img src="${previewSrc}" alt="" />`
     : '<span class="photo-placeholder">📷</span>';
   document.getElementById("btn-analyze").classList.add("hidden");
-  // Mostra il pulsante "Rimuovi sfondo" anche in edit se il capo ha la foto
-  // ma non ha ancora il cutout (cosi' Martina puo' rigenerarlo a posteriori).
+  // Mostra il pulsante "Rimuovi sfondo" SEMPRE in edit se il capo ha una foto.
+  // Anche se il cutout esiste gia', l'utente puo' voler rigenerarlo (es. foto
+  // sostituita, qualita' bassa, ecc.). Etichetta dinamica per chiarezza.
   const bgBtnEdit = document.getElementById("btn-bg-removal");
   if (bgBtnEdit) {
-    if (item.photo_url && !item.cutout_url) bgBtnEdit.classList.remove("hidden");
-    else bgBtnEdit.classList.add("hidden");
+    if (item.photo_url) {
+      bgBtnEdit.classList.remove("hidden");
+      bgBtnEdit.textContent = item.cutout_url
+        ? "✨ Rigenera sfondo"
+        : "✨ Rimuovi sfondo";
+    } else {
+      bgBtnEdit.classList.add("hidden");
+    }
   }
   const bgStatusEdit = document.getElementById("bg-removal-status");
   if (bgStatusEdit) bgStatusEdit.textContent = "";
+  _hideAiSubcategoryHint();
 
   // Cascade: refresh subcategory in base alla categoria del capo PRIMA di settarla
   setSelectValueOrAdd("field-category", item.category || "");
@@ -1872,7 +1947,14 @@ async function analyzePendingPhoto() {
 
     // Campi base
     setIfEmpty("field-category", tags.category);
-    setIfEmpty("field-subcategory", tags.subcategory);
+    // Cascade: refresha le opzioni della sub in base alla categoria appena
+    // settata. Senza questo, l'hint sotto suggerirebbe valori ma la select
+    // potrebbe non contenerli ancora.
+    refreshSubcategorySelect();
+    // Sotto-categoria: NON compilo direttamente. Mostro un hint "ghost"
+    // cliccabile sotto la select (richiesta Martina: AI compila categoria
+    // ma lascia in ghost la sub, senza nemmeno selezionarla).
+    _setAiSubcategoryHint(tags.subcategory);
     setIfEmpty("field-style", tags.style);
 
     // Multi-chips: unisce i valori AI con quelli gia' attivi (se presenti).

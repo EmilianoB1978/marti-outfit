@@ -303,6 +303,7 @@
             <option value="">— Scegli —</option>
             <option value="top">Top</option>
             <option value="bottom">Bottom</option>
+            <option value="vestito">Vestito / Abito</option>
             <option value="scarpe">Scarpe</option>
             <option value="accessori">Accessori</option>
             <option value="capospalla">Capospalla</option>
@@ -315,6 +316,10 @@
           <select id="field-subcategory">
             <!-- popolata dinamicamente -->
           </select>
+          <!-- Hint AI: suggerimento cliccabile sotto la select, in stile
+               ghost (italico grigio). Non compila la sub finche' l'utente
+               non lo conferma con un tap. -->
+          <button type="button" id="ai-subcategory-hint" class="ai-suggestion-ghost hidden" hidden></button>
         </div>
 
         <div class="form-group">

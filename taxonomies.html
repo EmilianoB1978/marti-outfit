@@ -52,6 +52,32 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <!-- Modal: assegna sotto-categoria orfana a una categoria via dropdown -->
+  <div id="assign-orphan-modal" class="modal hidden">
+    <div class="modal-content modal-small">
+      <header class="modal-header">
+        <button class="btn-icon" id="assign-orphan-close" aria-label="Chiudi">✕</button>
+        <h2>Assegna categoria</h2>
+        <span class="settings-header-spacer"></span>
+      </header>
+      <div class="modal-body">
+        <p class="settings-hint" style="margin-bottom: var(--space-3);">
+          Scegli la categoria per "<strong id="assign-orphan-sub"></strong>":
+        </p>
+        <div class="form-group">
+          <label for="assign-orphan-cat">Categoria</label>
+          <select id="assign-orphan-cat">
+            <option value="">— Seleziona —</option>
+          </select>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn--ghost" id="assign-orphan-cancel">Annulla</button>
+        <button class="btn btn--primary" id="assign-orphan-confirm">Assegna</button>
+      </footer>
+    </div>
+  </div>
+
   <script type="module" src="./js/theme/manager.js"></script>
   <script type="module" src="./js/taxonomies-page.js"></script>
 </body>

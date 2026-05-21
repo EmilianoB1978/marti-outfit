@@ -400,6 +400,35 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Modal small: dialog centrato per scelte rapide (es. assegna sotto-cat) */
+.modal-small {
+  height: auto;
+  max-height: min(80vh, 460px);
+  width: 92%;
+  max-width: 420px;
+  margin: auto;
+  border-radius: var(--radius-card);
+}
+.modal:has(.modal-small) {
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+.modal-small .modal-body {
+  padding: var(--space-4);
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  padding-bottom: calc(var(--space-3) + var(--safe-bottom));
+}
+.modal-footer .btn {
+  min-width: 100px;
+}
+
 /* ============================================================================
    Form
    ============================================================================ */

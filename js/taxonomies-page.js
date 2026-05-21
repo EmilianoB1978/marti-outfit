@@ -350,21 +350,52 @@ async function onDeleteSubcategory(value) {
   }
 }
 
-async function onAssignSubcategory(value) {
-  const categories = Taxonomies.listValues("categories").map(c => c.value);
-  const choice = prompt(
-    `Assegna "${value}" a una categoria.\nOpzioni: ${categories.join(", ")}`,
-    categories[0] || ""
-  );
-  if (!choice || !choice.trim()) return;
-  const clean = choice.trim().toLowerCase();
-  if (!categories.includes(clean)) {
-    toast(`Categoria "${clean}" non esiste`, "error");
+// Stato runtime del modal "Assegna categoria" per sotto-categorie orfane.
+let _assignOrphanSub = null;
+
+function onAssignSubcategory(value) {
+  _assignOrphanSub = value;
+
+  // Popolo il dropdown con le categorie correnti (label + value)
+  const sel = document.getElementById("assign-orphan-cat");
+  const categories = Taxonomies.listValues("categories");
+  const guess = Taxonomies.guessParentCategory(value);  // suggerimento euristico
+  sel.innerHTML = '<option value="">— Seleziona —</option>' +
+    categories.map(c => {
+      const sel = (c.value === guess) ? " selected" : "";
+      const labelStr = c.label || c.value;
+      return `<option value="${escapeHtml(c.value)}"${sel}>${escapeHtml(labelStr)}</option>`;
+    }).join("");
+
+  document.getElementById("assign-orphan-sub").textContent = value;
+  document.getElementById("assign-orphan-modal").classList.remove("hidden");
+}
+
+function closeAssignOrphanModal() {
+  document.getElementById("assign-orphan-modal").classList.add("hidden");
+  _assignOrphanSub = null;
+}
+
+function confirmAssignOrphan() {
+  const sub = _assignOrphanSub;
+  const cat = document.getElementById("assign-orphan-cat").value;
+  if (!sub) {
+    closeAssignOrphanModal();
     return;
   }
-  Taxonomies.setSubcategoryParent(value, clean);
-  render();
-  toast(`Assegnata a ${clean}`, "success");
+  if (!cat) {
+    toast("Seleziona una categoria", "error");
+    return;
+  }
+  try {
+    Taxonomies.setSubcategoryParent(sub, cat);
+    closeAssignOrphanModal();
+    render();
+    toast(`"${sub}" assegnata a ${cat}`, "success");
+  } catch (err) {
+    console.error(err);
+    toast("Errore assegnazione", "error");
+  }
 }
 
 function renderRow(tax, item, stylable) {
@@ -600,5 +631,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("tax-new-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") onAdd();
   });
+
+  // Wire del modal "Assegna sotto-categoria orfana a categoria"
+  const closeBtn = document.getElementById("assign-orphan-close");
+  const cancelBtn = document.getElementById("assign-orphan-cancel");
+  const confirmBtn = document.getElementById("assign-orphan-confirm");
+  if (closeBtn) closeBtn.addEventListener("click", closeAssignOrphanModal);
+  if (cancelBtn) cancelBtn.addEventListener("click", closeAssignOrphanModal);
+  if (confirmBtn) confirmBtn.addEventListener("click", confirmAssignOrphan);
+
   boot();
 });

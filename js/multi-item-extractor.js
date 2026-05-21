@@ -25,6 +25,11 @@ const REMOVE_BG_ENDPOINT = WORKER_URL + "/remove-bg";
 // troppo stretti che taglino bordi del capo.
 const BBOX_PADDING = 0.03;
 
+// Dimensione minima (px) del crop. Sotto questa soglia remove.bg risponde
+// "Could not identify foreground in image". Se il crop e' piu' piccolo,
+// lo scaliamo su (upscaling bilineare nel canvas).
+const MIN_CROP_SIZE = 400;
+
 /**
  * Crea un'immagine HTMLImageElement da una sorgente blob: o https:
  */
@@ -52,10 +57,18 @@ async function cropToBlob(sourceUrl, bbox) {
   const w = Math.min(1 - nx + BBOX_PADDING, nw + BBOX_PADDING * 2) * img.naturalWidth;
   const h = Math.min(1 - ny + BBOX_PADDING, nh + BBOX_PADDING * 2) * img.naturalHeight;
 
+  // Se il crop e' piu' piccolo di MIN_CROP_SIZE, scaliamo il canvas
+  // mantenendo il rapporto (upscaling bilineare) cosi' remove.bg
+  // non si lamenta che il foreground e' indistinto.
+  const minDim = Math.min(w, h);
+  const scale = minDim < MIN_CROP_SIZE ? MIN_CROP_SIZE / minDim : 1;
+
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(w);
-  canvas.height = Math.round(h);
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
   const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(img, x, y, w, h, 0, 0, canvas.width, canvas.height);
 
   return new Promise((resolve, reject) => {
@@ -81,12 +94,15 @@ async function uploadCropBlob(blob) {
 /**
  * Chiama il Worker /remove-bg passando una URL pubblica (Firebase Storage).
  * Ritorna il Blob PNG cutout.
+ *
+ * @param {string} imageUrl - URL Firebase Storage pubblica del crop
+ * @param {string} type - 'product' (per crop di outfit, isola il capo) o 'auto'
  */
-async function removeBackgroundServer(imageUrl) {
+async function removeBackgroundServer(imageUrl, type = "product") {
   const res = await fetch(REMOVE_BG_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageUrl })
+    body: JSON.stringify({ imageUrl, type })
   });
 
   if (!res.ok) {

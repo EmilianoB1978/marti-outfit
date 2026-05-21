@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v131-outfit-extract';
+const CACHE_VERSION = 'v132-outfit-product-type';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -158,7 +158,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "👗 Nuovo: estrai automaticamente piu' capi da una foto di outfit intero. Modal 'Nuovo capo' -> 'Da foto outfit intero' -> Claude AI riconosce i capi, ognuno con bg rimosso, scegli quali salvare.";
+const WHATS_NEW = "👗 Migliorato l'estrazione capi: ora isola SOLO il vestito (non la persona intera), bbox piu' stretti, crop piccoli auto-scalati per evitare errori 'no foreground'.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

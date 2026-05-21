@@ -54,16 +54,19 @@ Rispondi SOLO con il JSON, niente markdown, niente backticks.`;
 
 // Prompt per analisi outfit completo: identifica tutti i capi indossati
 // con bounding box per crop separato + tag di catalogazione.
-const ANALYZE_OUTFIT_PROMPT = `Analizza questa foto di una persona vestita e identifica TUTTI i capi indossati visibili: top, bottom, scarpe, accessori (borse, cinture, gioielli grandi), capospalla.
+const ANALYZE_OUTFIT_PROMPT = `Analizza questa foto di una persona vestita e identifica TUTTI i capi indossati visibili: top, bottom, scarpe, accessori (borse, cinture, occhiali, gioielli grandi), capospalla.
 
 Per ogni capo restituisci la posizione (bounding box) e i tag di catalogazione.
 
-REGOLE bounding box:
+REGOLE bounding box (CRITICHE per qualita' del crop):
 - Coordinate NORMALIZZATE 0-1 in formato [x, y, w, h] dove (0,0)=alto-sinistra (1,1)=basso-destra
-- Esempio: capo nella meta' alta destra = [0.5, 0, 0.5, 0.5]
-- Includi un padding 3-5% attorno al capo per non tagliare bordi
+- Il bbox deve essere il piu' STRETTO POSSIBILE attorno al SOLO capo (no padding, ci pensa il sistema)
+- Per un top: SOLO la zona del busto+braccia, NON includere il volto sopra ne' i pantaloni sotto
+- Per un bottom: SOLO la zona dei pantaloni/gonna, NON includere il top sopra ne' le scarpe sotto
+- Per le scarpe: SOLO i piedi, includere entrambe le scarpe in un unico bbox
+- Per accessori piccoli (occhiali, gioielli): bbox MINIMO 8% di lato per evitare crop troppo piccoli
 - I bbox di capi diversi possono sovrapporsi leggermente (es. top + capospalla)
-- Ignora viso, mani, capelli, sfondo, oggetti non vestiti
+- Ignora viso, mani, capelli, sfondo
 - Se la foto NON contiene una persona vestita (es. capo singolo a terra), ritorna garments: []
 
 Schema JSON di output (SOLO JSON, niente markdown, niente backticks):
@@ -342,14 +345,23 @@ async function handleRemoveBg(req, env, cors) {
     );
   }
 
-  const { imageUrl } = await req.json();
+  const { imageUrl, type } = await req.json();
   if (!imageUrl) return errorResponse("Campo 'imageUrl' mancante", 400, cors);
 
-  // remove.bg accetta direttamente una URL pubblica: niente download intermedio
+  // remove.bg accetta direttamente una URL pubblica: niente download intermedio.
+  // Parametro 'type' opzionale:
+  //   - 'auto' (default): detection automatica - va bene per capo singolo gia' isolato
+  //   - 'product': vestiti/oggetti - usare quando l'immagine contiene una persona
+  //                ma vogliamo isolare SOLO il prodotto/capo (es. crop da outfit)
+  //   - 'person': estrae la persona intera (NON usare per capi singoli)
+  // Valori ammessi remove.bg: auto|person|product|car|animal|graphic|transportation|other
   const form = new FormData();
   form.append("image_url", imageUrl);
   form.append("size", "auto");
   form.append("format", "png");
+  if (type && ["product", "person", "auto", "car", "animal", "graphic", "transportation", "other"].includes(type)) {
+    form.append("type", type);
+  }
 
   let rbRes;
   try {

@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v141-photo-outfit-composer';
+const CACHE_VERSION = 'v142-bg-eye-level';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -160,7 +160,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "📸 Nuovo: carica una foto allo specchio, l'AI rimuove lo sfondo e tu scegli un ambiente bello (~50 sfondi mare/montagna/citta/ufficio/casa/ristorante/festa/cafe/shopping).";
+const WHATS_NEW = "🔄 Galleria sfondi rifatta: foto eye-level con pavimento visibile (sentieri, lungomari, strade, interni). Niente piu' vette aeree o panorami impossibili da abitare.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

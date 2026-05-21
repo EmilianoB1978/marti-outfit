@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v128-sw-bypass-cross-origin';
+const CACHE_VERSION = 'v129-bgremoval-diagnostic';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -157,7 +157,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✨ Rimozione sfondo ora funziona davvero: corretto bug del service worker che bloccava il modello AI. Aggiorna e riprova.";
+const WHATS_NEW = "🔍 Diagnostica rimozione sfondo: ora il messaggio di errore indica esattamente quale step e' fallito ([import-lib] / [fetch-image] / [inference]). Aggiorna e riprova.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

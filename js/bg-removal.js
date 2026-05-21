@@ -16,13 +16,25 @@
 // che jsdelivr/unpkg lasciano non risolti -> errore "Module does not resolve to URL"
 const CDN_URL = "https://esm.sh/@imgly/background-removal@1.7.0";
 
+// Helper: wrappa un'eccezione con un prefisso di fase, cosi' nei toast
+// vediamo ESATTAMENTE quale step della pipeline ha fallito.
+class BgRemovalError extends Error {
+  constructor(phase, originalErr) {
+    const orig = originalErr && originalErr.message ? originalErr.message : String(originalErr || "errore sconosciuto");
+    super(`[${phase}] ${orig}`);
+    this.phase = phase;
+    this.original = originalErr;
+  }
+}
+
 // Import lazy della libreria (solo al primo uso)
 let _libPromise = null;
 function loadLibrary() {
   if (!_libPromise) {
     _libPromise = import(/* @vite-ignore */ CDN_URL).catch(err => {
       _libPromise = null;  // permetti retry su errore
-      throw err;
+      console.error("[bg-removal] import lib failed", err);
+      throw new BgRemovalError("import-lib", err);
     });
   }
   return _libPromise;
@@ -33,14 +45,29 @@ function loadLibrary() {
  * @param {function} onProgress - callback opzionale (0..1)
  */
 export async function preload(onProgress) {
-  const lib = await loadLibrary();
+  let lib;
+  try {
+    lib = await loadLibrary();
+  } catch (e) { throw e; }  // gia' wrappato
+
   // Trigger del download modello con un'immagine 1x1 dummy
-  const dummyBlob = await fetch("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==").then(r => r.blob());
-  return lib.removeBackground(dummyBlob, {
-    progress: (key, current, total) => {
-      if (onProgress) onProgress(current / total);
-    }
-  });
+  let dummyBlob;
+  try {
+    dummyBlob = await fetch("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==").then(r => r.blob());
+  } catch (err) {
+    throw new BgRemovalError("preload-dummy", err);
+  }
+
+  try {
+    return await lib.removeBackground(dummyBlob, {
+      progress: (key, current, total) => {
+        if (onProgress) onProgress(current / total);
+      }
+    });
+  } catch (err) {
+    console.error("[bg-removal] preload model failed", err);
+    throw new BgRemovalError("preload-model", err);
+  }
 }
 
 /**
@@ -50,19 +77,37 @@ export async function preload(onProgress) {
  * @returns {Promise<Blob>}
  */
 export async function removeBackground(imageUrl, onProgress) {
-  const lib = await loadLibrary();
+  // Fase 1: carica la libreria @imgly via dynamic import
+  let lib;
+  try {
+    lib = await loadLibrary();
+  } catch (e) { throw e; }  // gia' wrappato come [import-lib]
 
-  // Scarico l'immagine come blob (la libreria accetta blob, file, URL)
-  const response = await fetch(imageUrl);
-  if (!response.ok) throw new Error(`Errore caricamento foto: ${response.status}`);
-  const inputBlob = await response.blob();
+  // Fase 2: scarica l'immagine sorgente (Firebase Storage URL)
+  let inputBlob;
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    inputBlob = await response.blob();
+  } catch (err) {
+    console.error("[bg-removal] fetch image failed", err, imageUrl);
+    throw new BgRemovalError("fetch-image", err);
+  }
 
-  return lib.removeBackground(inputBlob, {
-    progress: (key, current, total) => {
-      if (onProgress) onProgress(current / total);
-    },
-    // Modello small: piu' veloce, qualita' OK per vestiti su sfondo semplice
-    model: "small",
-    output: { format: "image/png", quality: 0.9 },
-  });
+  // Fase 3: esegue il modello ONNX (scaricato in IndexedDB al primo uso)
+  try {
+    return await lib.removeBackground(inputBlob, {
+      progress: (key, current, total) => {
+        if (onProgress) onProgress(current / total);
+      },
+      // Modello small: piu' veloce, qualita' OK per vestiti su sfondo semplice
+      model: "small",
+      output: { format: "image/png", quality: 0.9 },
+    });
+  } catch (err) {
+    console.error("[bg-removal] inference failed", err);
+    throw new BgRemovalError("inference", err);
+  }
 }

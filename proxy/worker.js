@@ -9,8 +9,9 @@
 //   2. Crea un Worker (es. nome "marty-outfit-proxy")
 //   3. Incolla questo codice
 //   4. Settings -> Variables -> Add (encrypted):
-//        ANTHROPIC_API_KEY  = sk-ant-... (per /analyze, /suggest)
-//        REMOVE_BG_API_KEY  = ...        (per /remove-bg) - opzionale
+//        ANTHROPIC_API_KEY  = sk-ant-... (per /analyze, /suggest, /analyze-outfit)
+//        REMOVE_BG_API_KEY  = ...        (per /remove-bg)
+//        OPENAI_API_KEY     = sk-...     (per /generate-garment, opzionale)
 //        ALLOWED_ORIGIN     = https://tuonome.github.io
 //   5. Deploy. Poi metti l'URL del Worker in js/claude-api.js
 //
@@ -26,6 +27,8 @@
 const CLAUDE_MODEL = "claude-sonnet-4-20250514";
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 const REMOVE_BG_API = "https://api.remove.bg/v1.0/removebg";
+const OPENAI_IMAGES_EDIT_API = "https://api.openai.com/v1/images/edits";
+const OPENAI_IMAGE_MODEL = "gpt-image-1";
 
 // Prompt per analisi foto: chiediamo JSON strutturato ricco
 const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO un oggetto JSON (nessun testo prima o dopo) con questi campi:
@@ -52,31 +55,21 @@ Importante:
 
 Rispondi SOLO con il JSON, niente markdown, niente backticks.`;
 
-// Prompt per analisi outfit completo: identifica tutti i capi indossati
-// con bounding box per crop separato + tag di catalogazione.
+// Prompt per analisi outfit completo: identifica tutti i capi e prepara
+// una descrizione visuale dettagliata per la generazione AI delle foto-prodotto.
 const ANALYZE_OUTFIT_PROMPT = `Analizza questa foto di una persona vestita e identifica TUTTI i capi indossati visibili: top, bottom, scarpe, accessori (borse, cinture, occhiali, gioielli grandi), capospalla.
 
-Per ogni capo restituisci la posizione (bounding box) e i tag di catalogazione.
-
-REGOLE bounding box (CRITICHE per qualita' del crop):
-- Coordinate NORMALIZZATE 0-1 in formato [x, y, w, h] dove (0,0)=alto-sinistra (1,1)=basso-destra
-- Il bbox deve essere il piu' STRETTO POSSIBILE attorno al SOLO capo (no padding, ci pensa il sistema)
-- Per un top: SOLO la zona del busto+braccia, NON includere il volto sopra ne' i pantaloni sotto
-- Per un bottom: SOLO la zona dei pantaloni/gonna, NON includere il top sopra ne' le scarpe sotto
-- Per le scarpe: SOLO i piedi, includere entrambe le scarpe in un unico bbox
-- Per accessori piccoli (occhiali, gioielli): bbox MINIMO 8% di lato per evitare crop troppo piccoli
-- I bbox di capi diversi possono sovrapporsi leggermente (es. top + capospalla)
-- Ignora viso, mani, capelli, sfondo
-- Se la foto NON contiene una persona vestita (es. capo singolo a terra), ritorna garments: []
+Per ogni capo:
+1. Estrai i tag di catalogazione (categoria, colori, pattern, ecc.)
+2. Scrivi una "image_prompt" in INGLESE che descriva il SOLO capo nel dettaglio visivo: forma, taglio, lunghezza, vestibilita', colori esatti (con riferimenti hex o nome preciso es. 'burgundy', 'cream'), texture/materiale visibile, dettagli (bottoni, tasche, cuciture, scollo), eventuale stampa o pattern. Sii MOLTO descrittivo: questo prompt viene usato per generare un'immagine product-shot del capo isolato.
 
 Schema JSON di output (SOLO JSON, niente markdown, niente backticks):
 
 {
   "garments": [
     {
-      "bbox": [x, y, w, h],
       "category": "top|bottom|scarpe|accessori|capospalla|completo",
-      "subcategory": "tipo specifico (es. 'camicetta', 'pantaloni palazzo', 'sneakers')",
+      "subcategory": "tipo specifico in italiano (es. 'camicia polo', 'pantaloni palazzo', 'sneakers')",
       "color_primary": ["array colori principali in italiano"],
       "color_secondary": [],
       "pattern": ["tinta unita|righe|quadri|floreale|denim|grafico|animalier|pois|tartan|altro"],
@@ -85,12 +78,16 @@ Schema JSON di output (SOLO JSON, niente markdown, niente backticks):
       "formality": 1-5,
       "season": ["primavera|primestate|estate|estunno|autunno|autinverno|inverno|inveravera"],
       "occasion": ["array"],
-      "description": "max 80 caratteri"
+      "description": "max 80 caratteri in italiano",
+      "image_prompt": "Descrizione dettagliata in INGLESE del SOLO capo per generation AI (60-120 parole, molto specifica sui dettagli visivi)"
     }
   ]
 }
 
-Importante: formality DEVE essere numero (non stringa). Se non riconosci un dato, null.`;
+Importante:
+- formality DEVE essere numero (non stringa). Se non riconosci un dato, null.
+- image_prompt deve essere in inglese e descrivere SOLO il capo (no persona, no contesto)
+- Se la foto NON contiene una persona vestita, ritorna garments: []`;
 
 // Prompt per outfit: input = lista capi + contesto + meteo opzionale
 function buildOutfitPrompt(context, items, weather) {
@@ -322,6 +319,123 @@ async function handleAnalyzeOutfit(req, env, cors) {
 }
 
 // =============================================================================
+// Endpoint: POST /generate-garment
+// =============================================================================
+// Genera la foto-prodotto di un singolo capo usando OpenAI gpt-image-1.
+// Modalita': "edits" con immagine di reference (la foto outfit intera).
+//
+// Body JSON: {
+//   "imageUrl": "<URL pubblico della foto outfit>",
+//   "prompt": "<descrizione visuale dettagliata del SOLO capo, in inglese>",
+//   "quality": "low|medium|high" (default "low" per contenere i costi)
+// }
+// Response: PNG binary con sfondo trasparente (Content-Type: image/png)
+//
+// Costi gpt-image-1 (1024x1024):
+//   - low quality:    ~$0.011 input + $0.04 output = ~$0.05/img
+//   - medium quality: ~$0.04 input + $0.13 output = ~$0.17/img
+//   - high quality:   ~$0.17 input + $0.42 output = ~$0.59/img
+async function handleGenerateGarment(req, env, cors) {
+  if (!env.OPENAI_API_KEY) {
+    return errorResponse(
+      "OPENAI_API_KEY non configurata. Crea API key su platform.openai.com e aggiungila come Encrypted Variable nel Worker.",
+      503, cors
+    );
+  }
+
+  const { imageUrl, prompt, quality } = await req.json();
+  if (!imageUrl) return errorResponse("Campo 'imageUrl' mancante", 400, cors);
+  if (!prompt) return errorResponse("Campo 'prompt' mancante", 400, cors);
+
+  // Step 1: scarico la foto outfit come blob
+  let imageBytes;
+  let imageMime = "image/png";
+  try {
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) {
+      return errorResponse(`Foto outfit non scaricabile (HTTP ${imgRes.status})`, 502, cors);
+    }
+    imageBytes = await imgRes.arrayBuffer();
+    imageMime = imgRes.headers.get("Content-Type") || "image/png";
+  } catch (err) {
+    return errorResponse("Errore download foto: " + err.message, 502, cors);
+  }
+
+  // Step 2: chiama OpenAI gpt-image-1 in modalita' "edit" (image-to-image)
+  //   - input image: la foto outfit intera (reference)
+  //   - prompt: descrizione del SOLO capo da generare isolato
+  //   - background: "transparent" -> PNG con alpha (no remove.bg necessario)
+  //   - quality: "low" di default per contenere i costi
+  //   - size: "1024x1024" e' il minimo supportato da gpt-image-1
+  //
+  // Wrappiamo il prompt utente con un envelope che chiarisce il task a
+  // gpt-image-1, riducendo la possibilita' che generi la persona o lo sfondo.
+  const fullPrompt =
+    "From the reference photo, generate a clean professional e-commerce " +
+    "product shot showing ONLY the following garment, completely isolated, " +
+    "on a transparent background, front view, flat lay or invisible mannequin " +
+    "style, no person, no model, no hands, no body parts, no other items. " +
+    "Match the garment's exact shape, color, fabric and details. " +
+    "Garment description: " + prompt;
+
+  const form = new FormData();
+  form.append("model", OPENAI_IMAGE_MODEL);
+  form.append("image", new Blob([imageBytes], { type: imageMime }), "outfit.png");
+  form.append("prompt", fullPrompt);
+  form.append("background", "transparent");
+  form.append("size", "1024x1024");
+  form.append("quality", (quality || "low"));
+  form.append("output_format", "png");
+  form.append("n", "1");
+
+  let oaRes;
+  try {
+    oaRes = await fetch(OPENAI_IMAGES_EDIT_API, {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + env.OPENAI_API_KEY },
+      body: form,
+    });
+  } catch (err) {
+    return errorResponse("Errore connessione OpenAI: " + err.message, 502, cors);
+  }
+
+  if (!oaRes.ok) {
+    let detail;
+    try {
+      const j = await oaRes.json();
+      detail = (j.error && (j.error.message || j.error.code)) || JSON.stringify(j);
+    } catch {
+      try { detail = await oaRes.text(); } catch { detail = "(no body)"; }
+    }
+    return errorResponse(`OpenAI (${oaRes.status}): ${detail.slice(0, 400)}`, oaRes.status, cors);
+  }
+
+  // Step 3: la response e' JSON { data: [{ b64_json | url }] }
+  const oa = await oaRes.json();
+  const item = oa && oa.data && oa.data[0];
+  if (!item) return errorResponse("OpenAI: risposta senza data", 502, cors);
+
+  let pngBytes;
+  if (item.b64_json) {
+    // base64 → ArrayBuffer
+    const bin = atob(item.b64_json);
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    pngBytes = buf.buffer;
+  } else if (item.url) {
+    const r = await fetch(item.url);
+    pngBytes = await r.arrayBuffer();
+  } else {
+    return errorResponse("OpenAI: nessun b64_json o url nella risposta", 502, cors);
+  }
+
+  return new Response(pngBytes, {
+    status: 200,
+    headers: { "Content-Type": "image/png", ...cors },
+  });
+}
+
+// =============================================================================
 // Endpoint: POST /remove-bg
 // =============================================================================
 // Body JSON: { "imageUrl": "<URL pubblico Firebase Storage>" }
@@ -433,6 +547,7 @@ export default {
 
       if (url.pathname === "/analyze") return await handleAnalyze(request, env, cors);
       if (url.pathname === "/analyze-outfit") return await handleAnalyzeOutfit(request, env, cors);
+      if (url.pathname === "/generate-garment") return await handleGenerateGarment(request, env, cors);
       if (url.pathname === "/suggest") return await handleSuggest(request, env, cors);
       return errorResponse("Endpoint non trovato", 404, cors);
     } catch (err) {

@@ -2032,12 +2032,12 @@ async function handleOutfitPhotoSelected(file) {
     const resized = await Claude.resizeImage(file);
     previewEl.innerHTML = `<img src="data:image/jpeg;base64,${resized.base64}" alt="" />`;
 
-    // Step 2: blob: URL per crop locale (la foto NON la carichiamo su Storage
-    // intera, solo i crop dei singoli capi)
+    // Step 2: blob: URL solo per UI (preview). La foto vera viene uploadata
+    // dentro extractAll come reference per gpt-image-1.
     const sourceObjectUrl = URL.createObjectURL(resized.blob);
     _outfitExtractState.sourceObjectUrl = sourceObjectUrl;
 
-    // Step 3: chiama Claude per identificare i capi
+    // Step 3: chiama Claude per identificare i capi + image_prompt per ognuno
     statusEl.textContent = "🤖 Analisi AI dell'outfit...";
     const { garments } = await Claude.analyzeOutfit(resized.base64);
 
@@ -2046,13 +2046,17 @@ async function handleOutfitPhotoSelected(file) {
       return;
     }
 
-    statusEl.textContent = `✨ ${garments.length} capi rilevati. Estrazione in corso...`;
+    statusEl.textContent = `✨ ${garments.length} capi rilevati. Generazione foto in corso (~10-15s per capo)...`;
     progressEl.classList.remove("hidden");
 
-    // Step 4: estrazione batch (crop + upload + bg-removal sequenziale)
-    const results = await OutfitExtract.extractAll(sourceObjectUrl, garments, (i, total, label, result) => {
+    // Step 4: per ogni capo, genera foto-prodotto via OpenAI gpt-image-1
+    const results = await OutfitExtract.extractAll(resized.blob, garments, (i, total, label, result) => {
+      if (i < 0) {
+        // Step di setup (upload outfit reference)
+        progressEl.textContent = label;
+        return;
+      }
       progressEl.textContent = `Capo ${i + 1}/${total}: ${label}`;
-      // Render incrementale: aggiungo la card non appena ho il risultato
       if (label === "ok" && result) {
         appendExtractedItemCard(result, i);
       } else if (label === "errore" && result) {

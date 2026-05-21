@@ -1,90 +1,39 @@
 // =============================================================================
-// Multi-item extractor
+// Multi-item extractor (v2 — image generation)
 // =============================================================================
 // Date una foto di outfit completo (persona vestita) e la lista di garments
-// rilevati da Claude (con bbox + tag), estrae N capi separati con sfondo
-// rimosso, pronti per essere salvati come item indipendenti nel guardaroba.
+// rilevati da Claude (con tag + image_prompt), GENERA per ogni capo una nuova
+// immagine fotorealistica isolata su sfondo trasparente via OpenAI gpt-image-1.
+//
+// Differenze vs v1 (crop + bg-removal):
+// - Niente bounding box: usa il modello AI con prompt visivo dettagliato
+// - Output = foto-prodotto e-commerce (stile flat-lay / invisible mannequin)
+//   anziche' "pezzo di persona estratto dalla foto"
+// - Lo stesso risultato che produce ChatGPT con il tool "estrai capi"
 //
 // Pipeline per ogni garment:
-//   1. Crop locale (canvas) usando il bbox normalizzato
-//   2. Upload del crop come foto sorgente su Firebase (tmp/extracted/)
-//   3. POST al Worker /remove-bg per ottenere il cutout con sfondo trasparente
-//   4. (Caller: presenta in review modal, salva quelli selezionati)
+//   1. Upload della foto outfit completa su Firebase (UNA volta, condivisa)
+//   2. POST /generate-garment al Worker con { imageUrl, prompt } del capo
+//   3. Salva il PNG generato in items/<id>.png (Firebase Storage)
+//   4. Caller riceve { photo_url, photo_path, cutout_blob, tags }
+//      (photo_url e cutout_url coincidono: l'output e' gia' pulito)
 //
 // IMPORTANTE: il file ritorna i blob + le URL Storage. Il caller decide se:
-//   - Creare l'item (salva il photo_url che e' gia' su Storage)
-//   - Scartare il capo (deve cancellare la photo dallo Storage via cleanup)
+//   - Creare l'item (salva photo_url che e' gia' su Storage)
+//   - Scartare il capo (deve cancellare via cleanup)
 // =============================================================================
 
 import { storage, storageRef, uploadBytes, getDownloadURL, deleteObject } from "./firebase-config.js";
 
 const WORKER_URL = "https://marty-outfit-proxy.e-barbierato.workers.dev";
-const REMOVE_BG_ENDPOINT = WORKER_URL + "/remove-bg";
-
-// Padding aggiunto attorno al bbox (in proporzione, 0-1) per evitare crop
-// troppo stretti che taglino bordi del capo.
-const BBOX_PADDING = 0.03;
-
-// Dimensione minima (px) del crop. Sotto questa soglia remove.bg risponde
-// "Could not identify foreground in image". Se il crop e' piu' piccolo,
-// lo scaliamo su (upscaling bilineare nel canvas).
-const MIN_CROP_SIZE = 400;
+const GENERATE_GARMENT_ENDPOINT = WORKER_URL + "/generate-garment";
 
 /**
- * Crea un'immagine HTMLImageElement da una sorgente blob: o https:
+ * Carica un Blob immagine su Firebase Storage in items/.
  */
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Caricamento immagine fallito"));
-    img.src = src;
-  });
-}
-
-/**
- * Crop di una porzione di immagine secondo bbox normalizzato [x, y, w, h].
- * Ritorna un Blob JPEG (qualita' 92%).
- */
-async function cropToBlob(sourceUrl, bbox) {
-  const img = await loadImage(sourceUrl);
-
-  const [nx, ny, nw, nh] = bbox;
-  // Padding + clamp ai bordi
-  const x = Math.max(0, nx - BBOX_PADDING) * img.naturalWidth;
-  const y = Math.max(0, ny - BBOX_PADDING) * img.naturalHeight;
-  const w = Math.min(1 - nx + BBOX_PADDING, nw + BBOX_PADDING * 2) * img.naturalWidth;
-  const h = Math.min(1 - ny + BBOX_PADDING, nh + BBOX_PADDING * 2) * img.naturalHeight;
-
-  // Se il crop e' piu' piccolo di MIN_CROP_SIZE, scaliamo il canvas
-  // mantenendo il rapporto (upscaling bilineare) cosi' remove.bg
-  // non si lamenta che il foreground e' indistinto.
-  const minDim = Math.min(w, h);
-  const scale = minDim < MIN_CROP_SIZE ? MIN_CROP_SIZE / minDim : 1;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(w * scale);
-  canvas.height = Math.round(h * scale);
-  const ctx = canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(img, x, y, w, h, 0, 0, canvas.width, canvas.height);
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(blob => {
-      if (blob) resolve(blob);
-      else reject(new Error("Crop fallito"));
-    }, "image/jpeg", 0.92);
-  });
-}
-
-/**
- * Upload di un blob immagine su Firebase Storage nel folder degli items.
- * Ritorna { url, path }.
- */
-async function uploadCropBlob(blob) {
-  const filename = `items/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+async function uploadBlob(blob, extHint = "jpg") {
+  const ext = (blob.type && blob.type.includes("png")) ? "png" : extHint;
+  const filename = `items/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const ref = storageRef(storage, filename);
   await uploadBytes(ref, blob, { contentType: blob.type || "image/jpeg" });
   const url = await getDownloadURL(ref);
@@ -92,17 +41,14 @@ async function uploadCropBlob(blob) {
 }
 
 /**
- * Chiama il Worker /remove-bg passando una URL pubblica (Firebase Storage).
- * Ritorna il Blob PNG cutout.
- *
- * @param {string} imageUrl - URL Firebase Storage pubblica del crop
- * @param {string} type - 'product' (per crop di outfit, isola il capo) o 'auto'
+ * Chiama /generate-garment per generare la foto-prodotto del capo.
+ * Ritorna il Blob PNG generato.
  */
-async function removeBackgroundServer(imageUrl, type = "product") {
-  const res = await fetch(REMOVE_BG_ENDPOINT, {
+async function generateGarmentImage(outfitUrl, prompt, quality = "low") {
+  const res = await fetch(GENERATE_GARMENT_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageUrl, type })
+    body: JSON.stringify({ imageUrl: outfitUrl, prompt, quality }),
   });
 
   if (!res.ok) {
@@ -113,15 +59,14 @@ async function removeBackgroundServer(imageUrl, type = "product") {
     } catch {
       try { detail = await res.text(); } catch { detail = ""; }
     }
-    throw new Error(`Worker /remove-bg HTTP ${res.status}: ${detail.slice(0, 200)}`);
+    throw new Error(`Worker /generate-garment HTTP ${res.status}: ${detail.slice(0, 200)}`);
   }
 
   return res.blob();
 }
 
 /**
- * Cancella una foto da Firebase Storage (best-effort, non lancia errori).
- * Usato per cleanup quando l'utente scarta un capo non confermato.
+ * Cancella una foto da Firebase Storage (best-effort).
  */
 export async function deleteStoragePath(path) {
   if (!path) return;
@@ -133,73 +78,66 @@ export async function deleteStoragePath(path) {
 }
 
 /**
- * Estrae un singolo capo: crop + upload + bg-removal.
+ * Estrae N capi da una foto outfit.
+ * Pipeline: 1 upload foto outfit + N chiamate /generate-garment.
  *
- * @param {string} sourceUrl - URL della foto outfit intera (blob: o https:)
- * @param {object} garment - oggetto da Claude { bbox, category, ... }
- * @param {function} onProgress - callback (label: string) per UI feedback
- * @returns {Promise<{photo_url, photo_path, cutout_blob, tags}>}
- */
-async function extractOne(sourceUrl, garment, onProgress = () => {}) {
-  if (!Array.isArray(garment.bbox) || garment.bbox.length !== 4) {
-    throw new Error("Garment senza bbox valido");
-  }
-
-  onProgress("📐 Ritaglio");
-  const cropBlob = await cropToBlob(sourceUrl, garment.bbox);
-
-  onProgress("📤 Upload");
-  const { url, path } = await uploadCropBlob(cropBlob);
-
-  onProgress("✨ Rimozione sfondo");
-  const cutoutBlob = await removeBackgroundServer(url);
-
-  // Estraggo i tag (tutti i campi tranne bbox)
-  const { bbox, ...tags } = garment;
-
-  return {
-    photo_url: url,
-    photo_path: path,
-    cutout_blob: cutoutBlob,
-    tags,
-  };
-}
-
-/**
- * Estrae N capi da una foto outfit in batch sequenziale (rispetta rate limit
- * remove.bg di 1 req/sec).
- *
- * @param {string} sourceUrl - URL della foto outfit (blob: o https:)
- * @param {Array} garments - lista da Claude (da analyzeOutfit())
- * @param {function} onItemProgress - callback (index, total, label, result?) per UI
+ * @param {Blob} outfitBlob - la foto outfit originale (resized)
+ * @param {Array} garments - lista da Claude analyzeOutfit() con image_prompt
+ * @param {function} onItemProgress - (index, total, label, result?)
  * @returns {Promise<Array<{photo_url, photo_path, cutout_blob, tags, error?}>>}
  */
-export async function extractAll(sourceUrl, garments, onItemProgress = () => {}) {
+export async function extractAll(outfitBlob, garments, onItemProgress = () => {}) {
+  // Step 0: upload della foto outfit (sara' la reference per tutti i capi)
+  onItemProgress(-1, garments.length, "📤 Upload foto outfit");
+  const outfit = await uploadBlob(outfitBlob, "jpg");
+  // outfit.path da pulire alla fine (e' temporanea, non e' un capo)
+  const tempOutfitPath = outfit.path;
+
   const results = [];
 
   for (let i = 0; i < garments.length; i++) {
     const garment = garments[i];
     try {
-      onItemProgress(i, garments.length, "in corso");
-      const r = await extractOne(sourceUrl, garment, (lbl) => {
-        onItemProgress(i, garments.length, lbl);
-      });
-      results.push(r);
-      onItemProgress(i, garments.length, "ok", r);
+      onItemProgress(i, garments.length, "🎨 Generazione AI");
+
+      const prompt = garment.image_prompt
+        || `${garment.subcategory || garment.category || "garment"}, ${(garment.color_primary || []).join(" ")}, ${(garment.material || []).join(" ")}, ${(garment.pattern || []).join(" ")}`;
+
+      const generatedBlob = await generateGarmentImage(outfit.url, prompt, "low");
+
+      onItemProgress(i, garments.length, "📤 Salvataggio");
+      const { url, path } = await uploadBlob(generatedBlob, "png");
+
+      // Tag senza image_prompt (e' un dato runtime, non lo salviamo sull'item)
+      const { image_prompt, ...tags } = garment;
+
+      const result = {
+        photo_url: url,
+        photo_path: path,
+        // L'output e' gia' un PNG con sfondo trasparente: lo riuso come cutout.
+        cutout_blob: generatedBlob,
+        tags,
+      };
+      results.push(result);
+      onItemProgress(i, garments.length, "ok", result);
     } catch (err) {
       console.error(`[multi-item] capo ${i + 1} fallito:`, err);
-      results.push({
+      const errorResult = {
         error: err.message || String(err),
         tags: garment,
-      });
-      onItemProgress(i, garments.length, "errore", { error: err.message });
+      };
+      results.push(errorResult);
+      onItemProgress(i, garments.length, "errore", errorResult);
     }
-    // Rate limit safety: 1.2s tra una chiamata e l'altra (free tier remove.bg
-    // permette 1 req/sec, ma meglio non rasentare il limite)
+    // Throttle leggero tra le chiamate OpenAI (rate limit Tier 1 e' largo,
+    // ma evitiamo burst).
     if (i < garments.length - 1) {
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 500));
     }
   }
+
+  // Cleanup della foto outfit temporanea (non e' un capo, era solo reference)
+  await deleteStoragePath(tempOutfitPath);
 
   return results;
 }

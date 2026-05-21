@@ -18,6 +18,9 @@ const STRUCTURED = ["categories"];
 const state = {
   currentTax: "categories",
   expanded: null,   // valore della row con pannello look aperto, null se nessuno
+  // Set delle categorie con sotto-categorie espanse (tab Categorie).
+  // Default: vuoto = tutte collassate.
+  expandedCats: new Set(),
 };
 
 // =============================================================================
@@ -118,10 +121,27 @@ function renderCategoriesTree(list) {
     return;
   }
 
+  // Toolbar: bottoni globali "Espandi tutto / Comprimi tutto"
+  const toolbar = `
+    <div class="tax-tree-toolbar">
+      <button class="tax-tree-toolbar-btn" data-action="expand-all">⬇ Espandi tutto</button>
+      <button class="tax-tree-toolbar-btn" data-action="collapse-all">⬆ Comprimi tutto</button>
+    </div>
+  `;
+
   // Per ogni categoria principale, una "card" con le sue sotto-categorie
   const blocks = categories.map(catItem => {
-    const catRow = renderRow("categories", catItem, stylable);
+    const isExpanded = state.expandedCats.has(catItem.value);
     const subs = subsByCategory[catItem.value] || [];
+    const subCount = subs.length;
+
+    // Wrappo la categoria row con un chevron toggle. Il renderRow esistente
+    // produce gia' il markup .tax-row con bottoni edit/delete/look: lascio
+    // tutto invariato e aggiungo il chevron come adornment cliccabile.
+    const catRow = renderRow("categories", catItem, stylable);
+    const chevron = `<button class="tax-cat-chevron" data-cat="${escapeHtml(catItem.value)}" aria-label="${isExpanded ? 'Comprimi' : 'Espandi'}" aria-expanded="${isExpanded}">${isExpanded ? '▼' : '▶'}</button>`;
+    const countBadge = subCount > 0 ? `<span class="tax-cat-count">${subCount}</span>` : "";
+
     const subRows = subs.map(sub => `
       <div class="tax-subrow" data-value="${escapeHtml(sub)}" data-parent="${escapeHtml(catItem.value)}">
         <span class="tax-subrow-bullet">└</span>
@@ -131,8 +151,12 @@ function renderCategoriesTree(list) {
       </div>
     `).join("");
     return `
-      <div class="tax-cat-block">
-        ${catRow}
+      <div class="tax-cat-block${isExpanded ? '' : ' is-collapsed'}">
+        <div class="tax-cat-header" data-cat="${escapeHtml(catItem.value)}">
+          ${chevron}
+          ${catRow}
+          ${countBadge}
+        </div>
         <div class="tax-subgroup">
           ${subRows}
           <button class="tax-subgroup-add" data-parent="${escapeHtml(catItem.value)}">
@@ -146,6 +170,7 @@ function renderCategoriesTree(list) {
   // Sub orfane (senza categoria associata)
   const orphans = subsByCategory.altre || [];
   if (orphans.length) {
+    const isOrphanExpanded = state.expandedCats.has("__orphans__");
     const orphanRows = orphans.map(sub => `
       <div class="tax-subrow" data-value="${escapeHtml(sub)}" data-parent="">
         <span class="tax-subrow-bullet">⚠</span>
@@ -155,17 +180,59 @@ function renderCategoriesTree(list) {
       </div>
     `).join("");
     blocks.push(`
-      <div class="tax-cat-block tax-cat-block-orphan">
-        <div class="tax-cat-orphan-header">
+      <div class="tax-cat-block tax-cat-block-orphan${isOrphanExpanded ? '' : ' is-collapsed'}">
+        <div class="tax-cat-orphan-header" data-cat="__orphans__">
+          <button class="tax-cat-chevron" data-cat="__orphans__" aria-label="${isOrphanExpanded ? 'Comprimi' : 'Espandi'}" aria-expanded="${isOrphanExpanded}">${isOrphanExpanded ? '▼' : '▶'}</button>
           <span>⚠️ Sotto-categorie senza categoria</span>
-          <small>tocca → per assegnarle</small>
+          <span class="tax-cat-count">${orphans.length}</span>
         </div>
         <div class="tax-subgroup">${orphanRows}</div>
       </div>
     `);
   }
 
-  list.innerHTML = blocks.join("");
+  list.innerHTML = toolbar + blocks.join("");
+
+  // Bind: bottoni globali Espandi tutto / Comprimi tutto
+  list.querySelectorAll(".tax-tree-toolbar-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      if (action === "expand-all") {
+        state.expandedCats = new Set(categories.map(c => c.value));
+      } else if (action === "collapse-all") {
+        state.expandedCats = new Set();
+      }
+      render();
+    });
+  });
+
+  // Bind: chevron + intera area header → toggle accordion
+  list.querySelectorAll(".tax-cat-chevron").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const cat = btn.dataset.cat;
+      if (state.expandedCats.has(cat)) state.expandedCats.delete(cat);
+      else state.expandedCats.add(cat);
+      render();
+    });
+  });
+  // Click sulla label categoria (non sui bottoni) → toggle. Comodo target piu' grande.
+  list.querySelectorAll(".tax-cat-block .tax-row-label").forEach(labelEl => {
+    labelEl.style.cursor = "pointer";
+    labelEl.addEventListener("click", (e) => {
+      // Se l'utente ha cliccato un btn-icon dentro la row, lascia perdere
+      if (e.target.closest(".btn-icon")) return;
+      e.stopPropagation();
+      const block = labelEl.closest(".tax-cat-block");
+      const header = block && block.querySelector(".tax-cat-header");
+      const cat = header && header.dataset.cat;
+      if (!cat) return;
+      if (state.expandedCats.has(cat)) state.expandedCats.delete(cat);
+      else state.expandedCats.add(cat);
+      render();
+    });
+  });
 
   // Bind: categoria (edit/delete/look)
   list.querySelectorAll(".tax-row-edit").forEach(btn => {

@@ -1228,6 +1228,28 @@ body.editor-page {
 /* ============================================================================
    Tree Categorie con sotto-categorie indentate (tab Categorie)
    ============================================================================ */
+.tax-tree-toolbar {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  justify-content: flex-end;
+}
+.tax-tree-toolbar-btn {
+  padding: 6px 12px;
+  background: var(--color-surface, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.12));
+  border-radius: 8px;
+  color: var(--color-text-muted, #555);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.tax-tree-toolbar-btn:hover,
+.tax-tree-toolbar-btn:active {
+  background: var(--color-surface-alt, rgba(0, 0, 0, 0.08));
+  color: var(--color-text, #222);
+}
+
 .tax-cat-block {
   margin-bottom: var(--space-3);
   background: var(--color-surface);
@@ -1235,14 +1257,65 @@ body.editor-page {
   border-radius: var(--radius-card, 12px);
   overflow: hidden;
 }
-.tax-cat-block .tax-row {
+
+/* Header categoria: chevron + row + count badge */
+.tax-cat-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+}
+.tax-cat-header .tax-row {
+  flex: 1;
   background: transparent;
   border: none;
   border-radius: 0;
-  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  border-bottom: none;
 }
 .tax-cat-block .tax-row-label {
   font-weight: 700;
+}
+.tax-cat-chevron {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  color: var(--color-text-muted, #777);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, color 0.15s;
+}
+.tax-cat-chevron:hover {
+  color: var(--color-text, #222);
+}
+.tax-cat-count {
+  flex: 0 0 auto;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  margin-right: var(--space-3);
+  background: var(--color-surface-alt, rgba(0, 0, 0, 0.06));
+  color: var(--color-text-muted, #666);
+  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Collassato: nasconde tutta la subgroup */
+.tax-cat-block.is-collapsed {
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.tax-cat-block.is-collapsed .tax-cat-header {
+  border-bottom: none;
+}
+.tax-cat-block.is-collapsed .tax-subgroup {
+  display: none;
 }
 
 .tax-subgroup {
@@ -1310,17 +1383,29 @@ body.editor-page {
 }
 .tax-cat-orphan-header {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
+  padding-left: 0;
   font-weight: 600;
   font-size: 13px;
   background: rgba(240, 160, 32, 0.08);
   color: var(--color-warning, #b07010);
+  border-bottom: 1px solid rgba(240, 160, 32, 0.2);
 }
-.tax-cat-orphan-header small {
-  font-weight: 400;
-  opacity: 0.7;
+.tax-cat-orphan-header > span:first-of-type {
+  flex: 1;
+}
+.tax-cat-orphan-header .tax-cat-chevron {
+  color: var(--color-warning, #b07010);
+}
+.tax-cat-orphan-header .tax-cat-count {
+  background: rgba(240, 160, 32, 0.18);
+  color: var(--color-warning, #b07010);
+  margin-right: 0;
+}
+.tax-cat-block-orphan.is-collapsed .tax-cat-orphan-header {
+  border-bottom: none;
 }
 
 /* ============================================================================

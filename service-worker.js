@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v137-taxonomies-tree';
+const CACHE_VERSION = 'v138-taxonomies-collapsible';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -158,7 +158,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🗂️ Categorie e sotto-categorie ora in un'unica vista ad albero: ogni sotto-cat e' indentata sotto la sua categoria. Tab 'Sotto-cat' rimossa.";
+const WHATS_NEW = "📂 Categorie ora collassate di default: tocca per espandere. Pulsanti 'Espandi tutto' / 'Comprimi tutto' in alto. Badge con conteggio sotto-categorie.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

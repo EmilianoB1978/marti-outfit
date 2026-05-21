@@ -632,10 +632,12 @@ html, body {
   -webkit-user-drag: none;
   will-change: transform;
 }
-.po-edit-fg:empty,
+/* Nasconde le immagini SOLO quando src e' vuoto o assente.
+   NB: non usare ":empty" su <img> perche' matcha sempre (img e' void
+   element e non ha figli) → l'immagine resterebbe nascosta anche quando
+   .src e' settato. Bug visto in v143. */
 .po-edit-fg[src=""],
 .po-edit-fg:not([src]) { display: none; }
-.po-edit-bg:empty,
 .po-edit-bg[src=""],
 .po-edit-bg:not([src]) { display: none; }
 

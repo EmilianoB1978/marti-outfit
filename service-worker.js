@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v143-photo-outfit-editor';
+const CACHE_VERSION = 'v144-fix-empty-img';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -160,7 +160,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✋ Foto outfit: ora puoi trascinare il cutout sopra lo sfondo (1 dito drag, 2 dita pinch). Slider zoom + bottoni +/- e ↺ per reset.";
+const WHATS_NEW = "🐛 Fix: anteprima editor foto outfit ora si popola davvero (bug CSS :empty su img).";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

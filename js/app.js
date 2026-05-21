@@ -8,6 +8,7 @@ import * as Outfit from "./outfit.js";
 import * as Claude from "./claude-api.js";
 import * as BgRemoval from "./bg-removal.js";
 import * as OutfitExtract from "./multi-item-extractor.js";
+import * as PhotoOutfit from "./photo-outfit-composer.js";
 import * as Theme from "./theme/manager.js";
 import * as Weather from "./weather.js";
 import * as Haptic from "./haptic.js";
@@ -3023,6 +3024,25 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("btn-outfit-extract-save")?.addEventListener("click", saveExtractedItems);
   document.getElementById("btn-outfit-extract-close")?.addEventListener("click", closeOutfitExtractModal);
+
+  // Composer "Foto outfit": apre il modal con galleria sfondi
+  const btnPhotoOutfit = document.getElementById("btn-photo-outfit");
+  if (btnPhotoOutfit) {
+    btnPhotoOutfit.addEventListener("click", () => PhotoOutfit.open());
+  }
+  document.getElementById("po-close")?.addEventListener("click", () => PhotoOutfit.close());
+  document.getElementById("po-save-btn")?.addEventListener("click", () => PhotoOutfit.save());
+  // Input file dentro il modal (camera + galleria)
+  document.getElementById("po-input-camera")?.addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (f) PhotoOutfit.onPhotoSelected(f);
+  });
+  document.getElementById("po-input-gallery")?.addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (f) PhotoOutfit.onPhotoSelected(f);
+  });
   document.getElementById("btn-delete-item").addEventListener("click", deleteCurrentItem);
   document.getElementById("btn-mark-worn").addEventListener("click", markCurrentItemAsWorn);
 

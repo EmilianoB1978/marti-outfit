@@ -191,9 +191,15 @@
           🎲 Sorprendimi (3 outfit casuali)
         </button>
 
-        <a href="./outfit-editor.html" class="btn btn--secondary btn--block" style="margin-bottom: var(--space-3);">
+        <a href="./outfit-editor.html" class="btn btn--secondary btn--block" style="margin-bottom: var(--space-2);">
           🎨 Crea outfit visuale (drag & drop)
         </a>
+
+        <button id="btn-photo-outfit" class="btn btn--secondary btn--block" style="margin-bottom: var(--space-3);">
+          📸 Carica foto outfit (con sfondo)
+        </button>
+        <input type="file" accept="image/*" id="input-photo-outfit-src" hidden />
+        <input type="file" accept="image/*" capture="environment" id="input-photo-outfit-camera" hidden />
 
         <div class="outfit-prompt">
           <label for="outfit-context">Per quale occasione?</label>
@@ -873,6 +879,67 @@
       );
     }
   </script>
+
+  <!-- Modale: composer outfit da foto reale di Martina vestita -->
+  <div id="modal-photo-outfit" class="modal hidden">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button class="btn-icon" id="po-close" aria-label="Chiudi">✕</button>
+        <h2>Foto outfit</h2>
+        <button class="btn-text" id="po-save-btn" disabled>Salva</button>
+      </header>
+      <div class="modal-body">
+        <p class="settings-hint" style="text-align:center;">
+          Carica una foto allo specchio, l'AI rimuove lo sfondo e tu scegli un ambiente bello.
+        </p>
+
+        <!-- Upload + preview foto sorgente -->
+        <div class="po-upload-row">
+          <label class="photo-card" style="flex:1;">
+            <span class="photo-card-icon">📸</span>
+            <span class="photo-card-label">Scatta<br>foto</span>
+            <input type="file" accept="image/*" capture="environment" id="po-input-camera" hidden />
+          </label>
+          <label class="photo-card" style="flex:1;">
+            <span class="photo-card-icon">🖼️</span>
+            <span class="photo-card-label">Galleria<br>telefono</span>
+            <input type="file" accept="image/*" id="po-input-gallery" hidden />
+          </label>
+        </div>
+
+        <!-- Preview a 2 colonne: sorgente | composite finale -->
+        <div class="po-preview-row">
+          <div class="po-preview-col">
+            <small>Sorgente</small>
+            <div id="po-preview" class="po-preview-box">
+              <span class="po-preview-placeholder">📸<br><small>Carica foto</small></span>
+            </div>
+          </div>
+          <div class="po-preview-col">
+            <small>Anteprima outfit</small>
+            <div id="po-preview-final" class="po-preview-box"></div>
+          </div>
+        </div>
+
+        <div id="po-status" class="analyze-status"></div>
+
+        <!-- Titolo outfit -->
+        <div class="form-group">
+          <label for="po-title">Titolo outfit</label>
+          <input type="text" id="po-title" placeholder="Outfit foto" maxlength="60" />
+        </div>
+
+        <!-- Galleria sfondi raggruppati per categoria -->
+        <h3 class="po-section-title">Scegli uno sfondo</h3>
+        <div id="po-bg-gallery" class="po-bg-gallery"></div>
+      </div>
+
+      <!-- Overlay busy -->
+      <div id="po-busy" class="po-busy hidden">
+        <div class="po-busy-spin"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- Modale: review capi estratti da foto outfit -->
   <div id="modal-outfit-extract" class="modal hidden">

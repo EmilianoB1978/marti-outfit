@@ -52,6 +52,43 @@ Importante:
 
 Rispondi SOLO con il JSON, niente markdown, niente backticks.`;
 
+// Prompt per analisi outfit completo: identifica tutti i capi indossati
+// con bounding box per crop separato + tag di catalogazione.
+const ANALYZE_OUTFIT_PROMPT = `Analizza questa foto di una persona vestita e identifica TUTTI i capi indossati visibili: top, bottom, scarpe, accessori (borse, cinture, gioielli grandi), capospalla.
+
+Per ogni capo restituisci la posizione (bounding box) e i tag di catalogazione.
+
+REGOLE bounding box:
+- Coordinate NORMALIZZATE 0-1 in formato [x, y, w, h] dove (0,0)=alto-sinistra (1,1)=basso-destra
+- Esempio: capo nella meta' alta destra = [0.5, 0, 0.5, 0.5]
+- Includi un padding 3-5% attorno al capo per non tagliare bordi
+- I bbox di capi diversi possono sovrapporsi leggermente (es. top + capospalla)
+- Ignora viso, mani, capelli, sfondo, oggetti non vestiti
+- Se la foto NON contiene una persona vestita (es. capo singolo a terra), ritorna garments: []
+
+Schema JSON di output (SOLO JSON, niente markdown, niente backticks):
+
+{
+  "garments": [
+    {
+      "bbox": [x, y, w, h],
+      "category": "top|bottom|scarpe|accessori|capospalla|completo",
+      "subcategory": "tipo specifico (es. 'camicetta', 'pantaloni palazzo', 'sneakers')",
+      "color_primary": ["array colori principali in italiano"],
+      "color_secondary": [],
+      "pattern": ["tinta unita|righe|quadri|floreale|denim|grafico|animalier|pois|tartan|altro"],
+      "material": ["cotone|denim|lana|pelle|lino|sintetico|cashmere|seta|maglia|velluto|jersey|altro"],
+      "style": "casual|elegante|sportivo|formale|streetwear",
+      "formality": 1-5,
+      "season": ["primavera|primestate|estate|estunno|autunno|autinverno|inverno|inveravera"],
+      "occasion": ["array"],
+      "description": "max 80 caratteri"
+    }
+  ]
+}
+
+Importante: formality DEVE essere numero (non stringa). Se non riconosci un dato, null.`;
+
 // Prompt per outfit: input = lista capi + contesto + meteo opzionale
 function buildOutfitPrompt(context, items, weather) {
   // Formato compatto delle features rilevanti (formality, material, pattern se presenti)
@@ -233,6 +270,55 @@ async function handleSuggest(req, env, cors) {
 
 
 // =============================================================================
+// Endpoint: POST /analyze-outfit
+// =============================================================================
+// Body: { "image": "<base64>", "mimeType": "image/jpeg" }
+// Output: { "garments": [{ bbox, category, ...tags }] }
+async function handleAnalyzeOutfit(req, env, cors) {
+  const { image, mimeType } = await req.json();
+  if (!image) return errorResponse("Campo 'image' mancante", 400, cors);
+
+  const claudeRes = await fetch(ANTHROPIC_API, {
+    method: "POST",
+    headers: {
+      "x-api-key": env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: 2000,  // outfit completo = piu' capi = output piu' lungo di /analyze
+      messages: [{
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: mimeType || "image/jpeg", data: image }
+          },
+          { type: "text", text: ANALYZE_OUTFIT_PROMPT }
+        ]
+      }]
+    })
+  });
+
+  if (!claudeRes.ok) {
+    const errText = await claudeRes.text();
+    return errorResponse("Claude API: " + errText, claudeRes.status, cors);
+  }
+
+  const data = await claudeRes.json();
+  const text = data.content?.[0]?.text || "";
+
+  try {
+    const parsed = extractJson(text);
+    const garments = Array.isArray(parsed.garments) ? parsed.garments : [];
+    return jsonResponse({ garments }, 200, cors);
+  } catch (err) {
+    return errorResponse("Risposta Claude non parseabile: " + text.slice(0, 200), 500, cors);
+  }
+}
+
+// =============================================================================
 // Endpoint: POST /remove-bg
 // =============================================================================
 // Body JSON: { "imageUrl": "<URL pubblico Firebase Storage>" }
@@ -334,6 +420,7 @@ export default {
       }
 
       if (url.pathname === "/analyze") return await handleAnalyze(request, env, cors);
+      if (url.pathname === "/analyze-outfit") return await handleAnalyzeOutfit(request, env, cors);
       if (url.pathname === "/suggest") return await handleSuggest(request, env, cors);
       return errorResponse("Endpoint non trovato", 404, cors);
     } catch (err) {

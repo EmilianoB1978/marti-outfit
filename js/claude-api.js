@@ -104,6 +104,32 @@ export async function analyzeGarment(base64Image) {
 }
 
 /**
+ * Analizza una foto di outfit completo (persona vestita) e ritorna la lista
+ * dei capi rilevati con bounding box (normalizzati 0-1) + tag di catalogazione.
+ *
+ * @param {string} base64Image - foto outfit (preferibilmente resize a 1024px max)
+ * @returns {Promise<{garments: Array<{bbox:number[], category, subcategory, ...}>}>}
+ */
+export async function analyzeOutfit(base64Image) {
+  if (!isWorkerConfigured) {
+    throw new Error("Cloudflare Worker non configurato. Modifica js/claude-api.js");
+  }
+
+  const response = await fetch(`${WORKER_URL}/analyze-outfit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: base64Image, mimeType: "image/jpeg" })
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Analisi outfit fallita: ${err}`);
+  }
+
+  return response.json();  // { garments: [...] }
+}
+
+/**
  * Genera 2-3 outfit per un contesto dato i capi disponibili.
  * Manda al Worker SOLO i metadati (no foto): risparmia token e tempo.
  * @param {string} context - es. "cena informale"

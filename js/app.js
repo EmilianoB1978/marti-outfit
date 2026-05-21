@@ -7,6 +7,7 @@ import * as Wardrobe from "./wardrobe.js";
 import * as Outfit from "./outfit.js";
 import * as Claude from "./claude-api.js";
 import * as BgRemoval from "./bg-removal.js";
+import * as OutfitExtract from "./multi-item-extractor.js";
 import * as Theme from "./theme/manager.js";
 import * as Weather from "./weather.js";
 import * as Haptic from "./haptic.js";
@@ -1996,6 +1997,244 @@ async function removeBgFromPendingPhoto() {
 }
 
 // =============================================================================
+// Estrazione multi-capo da foto outfit
+// =============================================================================
+// State runtime per il modal review: tiene le estrazioni con cleanup info
+// per cancellare le foto sorgenti non confermate.
+const _outfitExtractState = {
+  sourceObjectUrl: null,   // blob: URL della foto outfit (cleanup su revoke)
+  extracted: [],           // array di {photo_url, photo_path, cutout_blob, tags, selected}
+};
+
+async function handleOutfitPhotoSelected(file) {
+  if (!file) return;
+
+  // Subito chiudo il modal "Nuovo capo" e apro il modal review come placeholder
+  document.getElementById("modal-item").classList.add("hidden");
+  const extractModal = document.getElementById("modal-outfit-extract");
+  extractModal.classList.remove("hidden");
+
+  const statusEl = document.getElementById("outfit-extract-status");
+  const previewEl = document.getElementById("outfit-extract-preview");
+  const progressEl = document.getElementById("outfit-extract-progress");
+  const listEl = document.getElementById("outfit-extract-list");
+
+  // Reset stato precedente
+  await cleanupOutfitExtractState();
+  listEl.innerHTML = "";
+  progressEl.classList.add("hidden");
+  progressEl.textContent = "";
+  previewEl.classList.remove("hidden");
+  statusEl.textContent = "📐 Preparazione foto...";
+
+  try {
+    // Step 1: resize + base64 per Claude
+    const resized = await Claude.resizeImage(file);
+    previewEl.innerHTML = `<img src="data:image/jpeg;base64,${resized.base64}" alt="" />`;
+
+    // Step 2: blob: URL per crop locale (la foto NON la carichiamo su Storage
+    // intera, solo i crop dei singoli capi)
+    const sourceObjectUrl = URL.createObjectURL(resized.blob);
+    _outfitExtractState.sourceObjectUrl = sourceObjectUrl;
+
+    // Step 3: chiama Claude per identificare i capi
+    statusEl.textContent = "🤖 Analisi AI dell'outfit...";
+    const { garments } = await Claude.analyzeOutfit(resized.base64);
+
+    if (!garments || garments.length === 0) {
+      statusEl.textContent = "Nessun capo rilevato. Prova con una foto piu' chiara.";
+      return;
+    }
+
+    statusEl.textContent = `✨ ${garments.length} capi rilevati. Estrazione in corso...`;
+    progressEl.classList.remove("hidden");
+
+    // Step 4: estrazione batch (crop + upload + bg-removal sequenziale)
+    const results = await OutfitExtract.extractAll(sourceObjectUrl, garments, (i, total, label, result) => {
+      progressEl.textContent = `Capo ${i + 1}/${total}: ${label}`;
+      // Render incrementale: aggiungo la card non appena ho il risultato
+      if (label === "ok" && result) {
+        appendExtractedItemCard(result, i);
+      } else if (label === "errore" && result) {
+        appendExtractedErrorCard(result, i);
+      }
+    });
+
+    // Salvo lo state per il save finale
+    _outfitExtractState.extracted = results.filter(r => !r.error).map(r => ({
+      ...r,
+      selected: true,  // default: tutti selezionati
+    }));
+
+    progressEl.classList.add("hidden");
+    const ok = _outfitExtractState.extracted.length;
+    const ko = results.length - ok;
+    statusEl.textContent = `✓ ${ok} capi estratti${ko ? ` (${ko} falliti)` : ""}. Tocca per deselezionare prima di salvare.`;
+  } catch (err) {
+    console.error("[outfit-extract] errore:", err);
+    statusEl.textContent = "Errore: " + (err.message || "operazione fallita");
+    toast("Estrazione outfit fallita: " + (err.message || ""), "error");
+  }
+}
+
+function appendExtractedItemCard(result, index) {
+  const listEl = document.getElementById("outfit-extract-list");
+
+  const cutoutObjUrl = URL.createObjectURL(result.cutout_blob);
+  const t = result.tags || {};
+  const category = t.category || "?";
+  const sub = t.subcategory || "";
+  const colors = (t.color_primary || []).join(", ");
+  const tagSummary = [colors, (t.pattern || []).join("/"), (t.material || []).join("/")]
+    .filter(Boolean).join(" · ");
+
+  const card = document.createElement("div");
+  card.className = "outfit-extract-item";
+  card.dataset.index = index;
+  card.innerHTML = `
+    <div class="outfit-extract-thumb">
+      <img src="${cutoutObjUrl}" alt="" />
+    </div>
+    <div class="outfit-extract-meta">
+      <span class="cat">${category}</span>
+      ${sub ? `<span class="sub">${sub}</span>` : ""}
+      ${tagSummary ? `<span class="tags">${tagSummary}</span>` : ""}
+    </div>
+    <input type="checkbox" class="outfit-extract-toggle" checked aria-label="Includi nel salvataggio" />
+  `;
+
+  // Toggle handler: aggiorna il flag selected nello state
+  const toggle = card.querySelector(".outfit-extract-toggle");
+  toggle.addEventListener("change", () => {
+    const r = _outfitExtractState.extracted[index];
+    if (r) r.selected = toggle.checked;
+  });
+
+  listEl.appendChild(card);
+}
+
+function appendExtractedErrorCard(result, index) {
+  const listEl = document.getElementById("outfit-extract-list");
+  const t = result.tags || {};
+  const card = document.createElement("div");
+  card.className = "outfit-extract-item is-error";
+  card.innerHTML = `
+    <div class="outfit-extract-thumb">⚠️</div>
+    <div class="outfit-extract-meta">
+      <span class="cat">${t.category || "Capo"} ${index + 1}</span>
+      <span class="sub">${result.error || "Errore"}</span>
+    </div>
+  `;
+  listEl.appendChild(card);
+}
+
+// Salva i capi selezionati: createItem per ognuno + uploadAndSaveCutout
+async function saveExtractedItems() {
+  const selected = _outfitExtractState.extracted.filter(r => r.selected);
+  if (selected.length === 0) {
+    toast("Nessun capo selezionato", "warning");
+    return;
+  }
+
+  const saveBtn = document.getElementById("btn-outfit-extract-save");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "...";
+
+  const statusEl = document.getElementById("outfit-extract-status");
+
+  let saved = 0;
+  let errors = 0;
+
+  for (let i = 0; i < selected.length; i++) {
+    const r = selected[i];
+    statusEl.textContent = `💾 Salvataggio ${i + 1}/${selected.length}...`;
+
+    try {
+      const t = r.tags || {};
+      const payload = {
+        photo_url: r.photo_url,
+        photo_path: r.photo_path,
+        category: t.category || null,
+        subcategory: t.subcategory || null,
+        color: (t.color_primary || [])[0] || null,
+        color_primary: t.color_primary || [],
+        color_secondary: t.color_secondary || [],
+        pattern: t.pattern || [],
+        material: t.material || [],
+        style: t.style || null,
+        formality: typeof t.formality === "number" ? t.formality : null,
+        season: t.season || [],
+        occasion: t.occasion || [],
+        description: t.description || null,
+      };
+
+      const newItem = await Wardrobe.createItem(payload);
+
+      // Upload cutout (il blob ce l'ho gia' in memoria)
+      try {
+        const cutoutUrl = await Wardrobe.uploadAndSaveCutout(newItem.id, r.cutout_blob);
+        newItem.cutout_url = cutoutUrl;
+      } catch (cuErr) {
+        console.warn("[outfit-extract] cutout upload fallito (non bloccante):", cuErr);
+      }
+
+      // Aggiorno la lista in memoria per refresh UI sotto
+      state.items.unshift(newItem);
+      saved++;
+    } catch (err) {
+      console.error("[outfit-extract] save fallito:", err);
+      errors++;
+    }
+  }
+
+  // Anche i capi NON selezionati: pulisco la photo orfana da Storage
+  const unselected = _outfitExtractState.extracted.filter(r => !r.selected);
+  for (const r of unselected) {
+    await OutfitExtract.deleteStoragePath(r.photo_path);
+  }
+
+  // Reset state e refresh UI
+  _outfitExtractState.extracted = [];
+  await cleanupOutfitExtractState();
+
+  toast(`✓ ${saved} capi salvati${errors ? ` (${errors} errori)` : ""}`, saved > 0 ? "success" : "error");
+  document.getElementById("modal-outfit-extract").classList.add("hidden");
+  renderWardrobe();
+  saveBtn.disabled = false;
+  saveBtn.textContent = "Salva";
+}
+
+async function closeOutfitExtractModal() {
+  // Se l'utente chiude senza salvare, cancello tutte le photo gia' uploadate
+  if (_outfitExtractState.extracted.length > 0) {
+    const ok = await fmConfirm("Scartare tutti i capi estratti?", { danger: true });
+    if (!ok) return;
+    for (const r of _outfitExtractState.extracted) {
+      await OutfitExtract.deleteStoragePath(r.photo_path);
+    }
+    _outfitExtractState.extracted = [];
+  }
+  await cleanupOutfitExtractState();
+  document.getElementById("modal-outfit-extract").classList.add("hidden");
+}
+
+// Pulisce l'object URL della foto sorgente (libera memoria)
+async function cleanupOutfitExtractState() {
+  if (_outfitExtractState.sourceObjectUrl) {
+    URL.revokeObjectURL(_outfitExtractState.sourceObjectUrl);
+    _outfitExtractState.sourceObjectUrl = null;
+  }
+}
+
+// Helper conferma minimo (no dipendenza esterna)
+function fmConfirm(message, opts = {}) {
+  return new Promise(resolve => {
+    const ok = window.confirm(message);
+    resolve(ok);
+  });
+}
+
+// =============================================================================
 // Salva capo (create o update)
 // =============================================================================
 async function saveItem() {
@@ -2642,6 +2881,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-analyze").addEventListener("click", analyzePendingPhoto);
   document.getElementById("btn-bg-removal")?.addEventListener("click", removeBgFromPendingPhoto);
   document.getElementById("btn-save-item").addEventListener("click", saveItem);
+
+  // Estrazione multi-capo da foto outfit intero
+  document.getElementById("input-outfit-photo")?.addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";  // permette di riselezionare la stessa foto
+    if (f) handleOutfitPhotoSelected(f);
+  });
+  document.getElementById("btn-outfit-extract-save")?.addEventListener("click", saveExtractedItems);
+  document.getElementById("btn-outfit-extract-close")?.addEventListener("click", closeOutfitExtractModal);
   document.getElementById("btn-delete-item").addEventListener("click", deleteCurrentItem);
   document.getElementById("btn-mark-worn").addEventListener("click", markCurrentItemAsWorn);
 

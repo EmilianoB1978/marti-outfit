@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v130-bgremoval-server';
+const CACHE_VERSION = 'v131-outfit-extract';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -36,6 +36,7 @@ const SHELL_FILES = [
   './js/settings.js',
   './js/outfit-editor.js',
   './js/bg-removal.js',
+  './js/multi-item-extractor.js',
   './js/calendar.js',
   './js/weather.js',
   './js/search.js',
@@ -157,7 +158,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✨ Rimozione sfondo ora server-side via Hugging Face: niente piu' download di modelli sul telefono, qualita' superiore. Richiede HF_API_TOKEN nel Worker (vedi README).";
+const WHATS_NEW = "👗 Nuovo: estrai automaticamente piu' capi da una foto di outfit intero. Modal 'Nuovo capo' -> 'Da foto outfit intero' -> Claude AI riconosce i capi, ognuno con bg rimosso, scegli quali salvare.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

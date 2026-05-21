@@ -252,6 +252,16 @@
               <span class="photo-card-label">Incolla<br>foto</span>
             </button>
           </div>
+
+          <!-- Estrazione multi-capo da foto outfit intero (Martina vestita) -->
+          <label class="outfit-extract-card">
+            <span class="outfit-extract-icon">👗</span>
+            <div class="outfit-extract-text">
+              <strong>Da foto outfit intero</strong>
+              <small>Estrai automaticamente piu' capi da una foto allo specchio</small>
+            </div>
+            <input type="file" accept="image/*" id="input-outfit-photo" hidden />
+          </label>
           <p class="settings-hint" style="margin: var(--space-2) 0; text-align:center;">
             💡 Per importare da Zara, H&amp;M, ecc.: apri il link, tap lungo
             sulla foto → Copia → torna qui → Incolla foto → 🤖 Analizza con AI.
@@ -858,5 +868,24 @@
       );
     }
   </script>
+
+  <!-- Modale: review capi estratti da foto outfit -->
+  <div id="modal-outfit-extract" class="modal hidden">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button class="btn-icon" id="btn-outfit-extract-close">✕</button>
+        <h2>Capi estratti</h2>
+        <button class="btn-text" id="btn-outfit-extract-save">Salva</button>
+      </header>
+      <div class="modal-body">
+        <p id="outfit-extract-status" class="settings-hint" style="text-align:center;">
+          Carica una foto di outfit intero per estrarre piu' capi insieme.
+        </p>
+        <div id="outfit-extract-preview" class="outfit-extract-preview hidden"></div>
+        <div id="outfit-extract-progress" class="outfit-extract-progress hidden"></div>
+        <div id="outfit-extract-list" class="outfit-extract-list"></div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

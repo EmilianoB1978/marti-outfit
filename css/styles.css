@@ -591,6 +591,105 @@ html, body {
   height: 100%;
   object-fit: contain;
 }
+
+/* ============================================================================
+   Editor stage interattivo: sfondo + cutout overlay con touch drag/pinch
+   ============================================================================ */
+.po-edit-stage {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  background: var(--color-surface-alt, rgba(0, 0, 0, 0.04));
+  border: 1px dashed var(--color-border, rgba(0, 0, 0, 0.15));
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: none;     /* niente scroll/zoom del browser sopra lo stage */
+  user-select: none;
+  -webkit-user-select: none;
+}
+.po-edit-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;   /* il bg non e' interattivo */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.po-edit-fg {
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  height: 96%;
+  width: auto;
+  max-width: none;
+  /* Centra orizzontalmente + base scale 1.0 (poi sovrascritto da JS) */
+  transform: translateX(-50%) scale(1);
+  transform-origin: 50% 100%;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+.po-edit-fg:empty,
+.po-edit-fg[src=""],
+.po-edit-fg:not([src]) { display: none; }
+.po-edit-bg:empty,
+.po-edit-bg[src=""],
+.po-edit-bg:not([src]) { display: none; }
+
+.po-edit-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--color-text-muted, #888);
+  text-align: center;
+  padding: 12px;
+  pointer-events: none;
+}
+
+/* Controlli editor (sotto la riga di preview) */
+.po-edit-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 10px 12px;
+  background: var(--color-surface-alt, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  border-radius: 12px;
+}
+.po-edit-controls input[type="range"] {
+  flex: 1;
+  margin: 0;
+  accent-color: var(--accent, #d4af37);
+}
+.po-edit-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.12));
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #222);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+}
+.po-edit-btn:hover { background: var(--color-surface-alt, rgba(0, 0, 0, 0.05)); }
+.po-edit-btn:active { transform: scale(0.94); }
+.po-edit-reset {
+  font-size: 16px;
+  color: var(--color-text-muted, #666);
+}
 .po-preview-placeholder {
   text-align: center;
   font-size: 32px;

@@ -907,7 +907,7 @@
           </label>
         </div>
 
-        <!-- Preview a 2 colonne: sorgente | composite finale -->
+        <!-- Preview a 2 colonne: sorgente | editor finale -->
         <div class="po-preview-row">
           <div class="po-preview-col">
             <small>Sorgente</small>
@@ -916,9 +916,21 @@
             </div>
           </div>
           <div class="po-preview-col">
-            <small>Anteprima outfit</small>
-            <div id="po-preview-final" class="po-preview-box"></div>
+            <small>Anteprima · trascina e pinch</small>
+            <div id="po-edit-stage" class="po-edit-stage">
+              <img id="po-edit-bg" class="po-edit-bg" alt="" />
+              <img id="po-edit-fg" class="po-edit-fg" alt="" draggable="false" />
+              <span class="po-edit-placeholder">Scegli foto + sfondo</span>
+            </div>
           </div>
+        </div>
+
+        <!-- Controlli editor: zoom + reset -->
+        <div id="po-edit-controls" class="po-edit-controls hidden">
+          <button type="button" class="po-edit-btn" id="po-edit-zoom-out" aria-label="Riduci">−</button>
+          <input type="range" id="po-edit-zoom" min="20" max="250" step="2" value="100" />
+          <button type="button" class="po-edit-btn" id="po-edit-zoom-in" aria-label="Ingrandisci">+</button>
+          <button type="button" class="po-edit-btn po-edit-reset" id="po-edit-reset" aria-label="Centra">↺</button>
         </div>
 
         <div id="po-status" class="analyze-status"></div>

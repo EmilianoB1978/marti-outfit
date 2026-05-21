@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v127-editor-bg-retry';
+const CACHE_VERSION = 'v128-sw-bypass-cross-origin';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -157,7 +157,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✨ Sfondo nell'Editor outfit: se la rimozione automatica fallisce, ora vedi il bottone ✨ accanto al capo nel canvas per riprovare manualmente. Toast errore piu' chiaro.";
+const WHATS_NEW = "✨ Rimozione sfondo ora funziona davvero: corretto bug del service worker che bloccava il modello AI. Aggiorna e riprova.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW
@@ -182,41 +182,48 @@ self.addEventListener('activate', (event) => {
 });
 
 // Fetch: strategie differenziate
+//
+// REGOLA D'ORO: cross-origin = bypass totale del SW (return senza respondWith).
+// Senza questa regola, su Safari iOS il fetch a CDN remoti (esm.sh per @imgly,
+// modelli ONNX, Firebase Storage, Claude proxy Cloudflare) entrava nel branch
+// "cache-first" del SW e in caso di errore la catch ritornava
+// caches.match('./index.html') = null  →  "FetchEvent.respondWith received an
+// error: Returned response is null" → bg-removal fallita.
+//
+// Il browser sa gestire da solo CORS e cache HTTP per le risorse cross-origin,
+// non c'e' nessun guadagno a intercettarle dal SW. Same-origin solo, qui.
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const req = event.request;
+  const url = new URL(req.url);
 
-  // Non cachare API esterne (Firebase, Claude proxy) - sempre network
-  const isExternalAPI =
-    url.hostname.includes('googleapis.com') ||
-    url.hostname.includes('firebaseio.com') ||
-    url.hostname.includes('firebasestorage.googleapis.com') ||
-    url.hostname.includes('firebasestorage.app') ||
-    url.hostname.includes('workers.dev') ||
-    url.hostname.includes('anthropic.com');
+  // Solo GET vengono gestite dal SW (POST/PUT vanno sempre in rete)
+  if (req.method !== 'GET') return;
 
-  if (isExternalAPI) {
-    // Network-first per le API: se offline usa cache come fallback
+  // Cross-origin → lascia gestire al browser (no intercept)
+  if (url.origin !== self.location.origin) return;
+
+  // Same-origin: navigation HTML → network-first con fallback index.html
+  if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
+      fetch(req).catch(async () => {
+        const cached = await caches.match('./index.html');
+        return cached || Response.error();
+      })
     );
     return;
   }
 
-  // Cache-first per assets locali
+  // Same-origin asset (js/css/img/font) → cache-first
   event.respondWith(
-    caches.match(event.request)
-      .then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(response => {
-          // Cacha solo risposte valide same-origin
-          if (response.ok && url.origin === self.location.origin) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          }
-          return response;
-        });
-      })
-      .catch(() => caches.match('./index.html'))
+    caches.match(req).then(cached => {
+      if (cached) return cached;
+      return fetch(req).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
+        }
+        return response;
+      }).catch(() => Response.error());
+    })
   );
 });

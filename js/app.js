@@ -1928,25 +1928,40 @@ async function removeBgFromPendingPhoto() {
   const status = document.getElementById("bg-removal-status");
   const preview = document.getElementById("photo-preview");
 
-  // Determino la sorgente: nuovo capo (blob) o edit (URL Storage)
-  let sourceUrl = null;
-  if (state.pendingPhoto && state.pendingPhoto.blob) {
-    sourceUrl = URL.createObjectURL(state.pendingPhoto.blob);
-  } else if (state.editingId) {
-    const item = state.items.find(i => i.id === state.editingId);
-    if (item && item.photo_url) sourceUrl = item.photo_url;
-  }
-
-  if (!sourceUrl) {
-    toast("Carica prima una foto", "error");
-    return;
-  }
-
   btn.disabled = true;
-  status.textContent = "✨ Scarico il modello (~30 MB al primo uso)...";
 
   try {
-    const cutoutBlob = await BgRemoval.removeBackground(sourceUrl, (p) => {
+    // Determino la URL pubblica della foto sorgente. Il server-side fa
+    // bg-removal via HF API, quindi la foto deve essere su URL fetchabile
+    // (non blob: locale). In flow "Nuovo capo" la foto non e' ancora su
+    // Firebase: la carico ORA e mi tengo url+path per riuso in saveItem
+    // (evito doppio upload).
+    let sourceUrl = null;
+
+    if (state.pendingPhoto && state.pendingPhoto.blob) {
+      if (state.pendingPhoto.uploaded && state.pendingPhoto.uploaded.url) {
+        // Gia' uploadata da un tentativo precedente: riuso
+        sourceUrl = state.pendingPhoto.uploaded.url;
+      } else {
+        status.textContent = "📤 Carico la foto...";
+        const { url, path } = await Wardrobe.uploadPhoto(state.pendingPhoto.blob);
+        state.pendingPhoto.uploaded = { url, path };
+        sourceUrl = url;
+      }
+    } else if (state.editingId) {
+      const item = state.items.find(i => i.id === state.editingId);
+      if (item && item.photo_url) sourceUrl = item.photo_url;
+    }
+
+    if (!sourceUrl) {
+      toast("Carica prima una foto", "error");
+      btn.disabled = false;
+      return;
+    }
+
+    status.textContent = "✨ Rimozione sfondo in corso...";
+
+    const cutoutBlob = await BgRemoval.removeBackgroundSmart(sourceUrl, (p) => {
       const pct = Math.round(p * 100);
       status.textContent = `✨ Rimozione sfondo: ${pct}%`;
     });
@@ -1971,15 +1986,10 @@ async function removeBgFromPendingPhoto() {
       status.textContent = "✓ Sfondo rimosso (verra' salvato col capo)";
       toast("Sfondo rimosso", "success");
     }
-
-    // Cleanup ObjectURL della sorgente (solo se l'avevamo creato noi)
-    if (state.pendingPhoto && state.pendingPhoto.blob && sourceUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(sourceUrl);
-    }
   } catch (err) {
     console.error("Errore rimozione sfondo:", err);
     status.textContent = "Errore: " + (err.message || "rimozione fallita");
-    toast("Rimozione sfondo fallita", "error");
+    toast("Rimozione sfondo fallita: " + (err.message || ""), "error");
   } finally {
     btn.disabled = false;
   }
@@ -2071,11 +2081,18 @@ async function saveItem() {
   btn.textContent = "...";
 
   try {
-    // Upload foto se presente
+    // Upload foto se presente. Se l'utente aveva gia' premuto "Rimuovi sfondo"
+    // prima del Salva, la foto e' gia' su Storage (state.pendingPhoto.uploaded):
+    // riuso URL+path invece di re-uploadare lo stesso file.
     if (state.pendingPhoto) {
-      const { url, path } = await Wardrobe.uploadPhoto(state.pendingPhoto.blob);
-      data.photo_url = url;
-      data.photo_path = path;
+      if (state.pendingPhoto.uploaded && state.pendingPhoto.uploaded.url) {
+        data.photo_url = state.pendingPhoto.uploaded.url;
+        data.photo_path = state.pendingPhoto.uploaded.path;
+      } else {
+        const { url, path } = await Wardrobe.uploadPhoto(state.pendingPhoto.blob);
+        data.photo_url = url;
+        data.photo_path = path;
+      }
     }
 
     if (state.editingId) {

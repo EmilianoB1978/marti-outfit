@@ -6,16 +6,24 @@
 //
 // Setup:
 //   1. Vai su https://dash.cloudflare.com -> Workers & Pages -> Create
-//   2. Crea un Worker (es. nome "my-wardrobe-proxy")
+//   2. Crea un Worker (es. nome "marty-outfit-proxy")
 //   3. Incolla questo codice
 //   4. Settings -> Variables -> Add (encrypted):
-//        ANTHROPIC_API_KEY = sk-ant-...
-//        ALLOWED_ORIGIN = https://tuonome.github.io
+//        ANTHROPIC_API_KEY = sk-ant-... (per /analyze, /suggest)
+//        HF_API_TOKEN      = hf_...     (per /remove-bg) - opzionale
+//        ALLOWED_ORIGIN    = https://tuonome.github.io
 //   5. Deploy. Poi metti l'URL del Worker in js/claude-api.js
+//
+// HF_API_TOKEN:
+//   - Crea account su https://huggingface.co (gratuito)
+//   - Settings -> Access Tokens -> New token (read) -> copia
+//   - Free tier: ~300 immagini/ora, sufficiente per uso personale
 // =============================================================================
 
 const CLAUDE_MODEL = "claude-sonnet-4-20250514";
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
+const HF_BG_REMOVAL_MODEL = "briaai/RMBG-1.4";
+const HF_INFERENCE_API = "https://api-inference.huggingface.co/models/";
 
 // Prompt per analisi foto: chiediamo JSON strutturato ricco
 const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO un oggetto JSON (nessun testo prima o dopo) con questi campi:
@@ -223,6 +231,81 @@ async function handleSuggest(req, env, cors) {
 
 
 // =============================================================================
+// Endpoint: POST /remove-bg
+// =============================================================================
+// Body JSON: { "imageUrl": "<URL pubblico Firebase Storage>" }
+// Response: PNG binary con sfondo trasparente (Content-Type: image/png)
+// Errori: JSON { error: "..." }
+//
+// Pipeline:
+//   1. Scarica l'immagine dalla URL fornita (deve essere pubblica)
+//   2. POST binary -> Hugging Face Inference API (modello briaai/RMBG-1.4)
+//   3. HF ritorna PNG con bg trasparente, lo passiamo al client
+//
+// briaai/RMBG-1.4: modello leggero specializzato in soggetto/sfondo,
+// qualita' eccellente su vestiti su qualsiasi sfondo. Gratis su HF.
+async function handleRemoveBg(req, env, cors) {
+  if (!env.HF_API_TOKEN) {
+    return errorResponse(
+      "HF_API_TOKEN non configurato. Crea token su huggingface.co/settings/tokens e aggiungilo come Encrypted Variable nel Worker.",
+      503, cors
+    );
+  }
+
+  const { imageUrl } = await req.json();
+  if (!imageUrl) return errorResponse("Campo 'imageUrl' mancante", 400, cors);
+
+  // Step 1: scarica immagine sorgente
+  let imageBytes;
+  try {
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) {
+      return errorResponse(`Foto non scaricabile (HTTP ${imgRes.status})`, 502, cors);
+    }
+    imageBytes = await imgRes.arrayBuffer();
+  } catch (err) {
+    return errorResponse("Errore download foto: " + err.message, 502, cors);
+  }
+
+  // Step 2: chiama Hugging Face Inference API
+  // RMBG-1.4 accetta binary diretto, ritorna PNG cutout binary
+  let hfRes;
+  try {
+    hfRes = await fetch(HF_INFERENCE_API + HF_BG_REMOVAL_MODEL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + env.HF_API_TOKEN,
+        "Content-Type": "application/octet-stream",
+        "Accept": "image/png",
+        // Se il modello e' "cold" (non in memoria), HF lo carica al primo
+        // hit (10-20s). Senza questo header verremmo bouncerati con 503.
+        "X-Wait-For-Model": "true",
+      },
+      body: imageBytes,
+    });
+  } catch (err) {
+    return errorResponse("Errore connessione Hugging Face: " + err.message, 502, cors);
+  }
+
+  if (!hfRes.ok) {
+    // HF a volte risponde JSON con dettagli errore anche su 200, qui solo non-ok
+    let detail;
+    try { detail = await hfRes.text(); } catch { detail = "(no body)"; }
+    return errorResponse(`Hugging Face API (${hfRes.status}): ${detail.slice(0, 300)}`, hfRes.status, cors);
+  }
+
+  // Step 3: passa il PNG binary al client
+  const cutoutBytes = await hfRes.arrayBuffer();
+  return new Response(cutoutBytes, {
+    status: 200,
+    headers: {
+      "Content-Type": "image/png",
+      ...cors,
+    },
+  });
+}
+
+// =============================================================================
 // Entrypoint Worker
 // =============================================================================
 export default {
@@ -241,6 +324,9 @@ export default {
     }
 
     try {
+      // /remove-bg richiede solo HF_API_TOKEN (gestito nell'handler).
+      // /analyze e /suggest richiedono ANTHROPIC_API_KEY.
+      if (url.pathname === "/remove-bg") return await handleRemoveBg(request, env, cors);
 
       if (!env.ANTHROPIC_API_KEY) {
         return errorResponse("ANTHROPIC_API_KEY non configurata nel Worker", 500, cors);

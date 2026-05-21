@@ -105,7 +105,7 @@ async function addItemToCanvas(itemId) {
   // Process del cutout
   showProcessing("Rimozione sfondo...");
   try {
-    const cutoutBlob = await BgRemoval.removeBackground(item.photo_url, frac => {
+    const cutoutBlob = await BgRemoval.removeBackgroundSmart(item.photo_url, frac => {
       document.getElementById("processing-text").textContent = `Rimozione sfondo... ${Math.round(frac * 100)}%`;
     });
     const cutoutUrl = await Wardrobe.uploadAndSaveCutout(itemId, cutoutBlob);
@@ -146,7 +146,7 @@ async function retryBgRemovalOnCanvasItem(canvasItem) {
 
   showProcessing("Rimozione sfondo...");
   try {
-    const cutoutBlob = await BgRemoval.removeBackground(item.photo_url, frac => {
+    const cutoutBlob = await BgRemoval.removeBackgroundSmart(item.photo_url, frac => {
       document.getElementById("processing-text").textContent = `Rimozione sfondo... ${Math.round(frac * 100)}%`;
     });
     const cutoutUrl = await Wardrobe.uploadAndSaveCutout(item.id, cutoutBlob);

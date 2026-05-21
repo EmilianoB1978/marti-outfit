@@ -9,21 +9,23 @@
 //   2. Crea un Worker (es. nome "marty-outfit-proxy")
 //   3. Incolla questo codice
 //   4. Settings -> Variables -> Add (encrypted):
-//        ANTHROPIC_API_KEY = sk-ant-... (per /analyze, /suggest)
-//        HF_API_TOKEN      = hf_...     (per /remove-bg) - opzionale
-//        ALLOWED_ORIGIN    = https://tuonome.github.io
+//        ANTHROPIC_API_KEY  = sk-ant-... (per /analyze, /suggest)
+//        REMOVE_BG_API_KEY  = ...        (per /remove-bg) - opzionale
+//        ALLOWED_ORIGIN     = https://tuonome.github.io
 //   5. Deploy. Poi metti l'URL del Worker in js/claude-api.js
 //
-// HF_API_TOKEN:
-//   - Crea account su https://huggingface.co (gratuito)
-//   - Settings -> Access Tokens -> New token (read) -> copia
-//   - Free tier: ~300 immagini/ora, sufficiente per uso personale
+// REMOVE_BG_API_KEY:
+//   - Crea account gratuito su https://www.remove.bg/users/sign_up
+//   - Profilo (alto dx) -> My API Key -> Show/Copia
+//   - Free tier: 50 immagini/mese (poi $0.20/img). Per uso personale e' ok.
+//   - Hugging Face Inference API gratuita dismessa nel 2025: alternative
+//     valutate (Photoroom, Replicate, HF Spaces) ma remove.bg ha free tier
+//     piu' ampio e qualita' superiore per fashion.
 // =============================================================================
 
 const CLAUDE_MODEL = "claude-sonnet-4-20250514";
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
-const HF_BG_REMOVAL_MODEL = "briaai/RMBG-1.4";
-const HF_INFERENCE_API = "https://api-inference.huggingface.co/models/";
+const REMOVE_BG_API = "https://api.remove.bg/v1.0/removebg";
 
 // Prompt per analisi foto: chiediamo JSON strutturato ricco
 const ANALYZE_PROMPT = `Analizza questo capo d'abbigliamento e restituisci SOLO un oggetto JSON (nessun testo prima o dopo) con questi campi:
@@ -237,17 +239,19 @@ async function handleSuggest(req, env, cors) {
 // Response: PNG binary con sfondo trasparente (Content-Type: image/png)
 // Errori: JSON { error: "..." }
 //
-// Pipeline:
-//   1. Scarica l'immagine dalla URL fornita (deve essere pubblica)
-//   2. POST binary -> Hugging Face Inference API (modello briaai/RMBG-1.4)
-//   3. HF ritorna PNG con bg trasparente, lo passiamo al client
-//
-// briaai/RMBG-1.4: modello leggero specializzato in soggetto/sfondo,
-// qualita' eccellente su vestiti su qualsiasi sfondo. Gratis su HF.
+// Provider: remove.bg API
+//   - Endpoint: POST https://api.remove.bg/v1.0/removebg
+//   - Auth: header X-Api-Key
+//   - Body: multipart/form-data con campi:
+//       image_url   (URL pubblica) OPPURE image_file (binary)
+//       size        (auto = default, preserva risoluzione fino a 4 MP free)
+//       format      (auto, png, jpg, zip)
+//   - Response: PNG binary con sfondo trasparente
+//   - Rate limit free: 50 immagini/mese, 1 chiamata/sec
 async function handleRemoveBg(req, env, cors) {
-  if (!env.HF_API_TOKEN) {
+  if (!env.REMOVE_BG_API_KEY) {
     return errorResponse(
-      "HF_API_TOKEN non configurato. Crea token su huggingface.co/settings/tokens e aggiungilo come Encrypted Variable nel Worker.",
+      "REMOVE_BG_API_KEY non configurato. Crea account gratuito su remove.bg, copia API Key dal profilo, aggiungila come Encrypted Variable nel Worker.",
       503, cors
     );
   }
@@ -255,47 +259,44 @@ async function handleRemoveBg(req, env, cors) {
   const { imageUrl } = await req.json();
   if (!imageUrl) return errorResponse("Campo 'imageUrl' mancante", 400, cors);
 
-  // Step 1: scarica immagine sorgente
-  let imageBytes;
-  try {
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) {
-      return errorResponse(`Foto non scaricabile (HTTP ${imgRes.status})`, 502, cors);
-    }
-    imageBytes = await imgRes.arrayBuffer();
-  } catch (err) {
-    return errorResponse("Errore download foto: " + err.message, 502, cors);
-  }
+  // remove.bg accetta direttamente una URL pubblica: niente download intermedio
+  const form = new FormData();
+  form.append("image_url", imageUrl);
+  form.append("size", "auto");
+  form.append("format", "png");
 
-  // Step 2: chiama Hugging Face Inference API
-  // RMBG-1.4 accetta binary diretto, ritorna PNG cutout binary
-  let hfRes;
+  let rbRes;
   try {
-    hfRes = await fetch(HF_INFERENCE_API + HF_BG_REMOVAL_MODEL, {
+    rbRes = await fetch(REMOVE_BG_API, {
       method: "POST",
       headers: {
-        "Authorization": "Bearer " + env.HF_API_TOKEN,
-        "Content-Type": "application/octet-stream",
-        "Accept": "image/png",
-        // Se il modello e' "cold" (non in memoria), HF lo carica al primo
-        // hit (10-20s). Senza questo header verremmo bouncerati con 503.
-        "X-Wait-For-Model": "true",
+        "X-Api-Key": env.REMOVE_BG_API_KEY,
+        // NB: NON settare Content-Type quando si usa FormData (il browser/runtime
+        // aggiunge il boundary multipart corretto in automatico).
       },
-      body: imageBytes,
+      body: form,
     });
   } catch (err) {
-    return errorResponse("Errore connessione Hugging Face: " + err.message, 502, cors);
+    return errorResponse("Errore connessione remove.bg: " + err.message, 502, cors);
   }
 
-  if (!hfRes.ok) {
-    // HF a volte risponde JSON con dettagli errore anche su 200, qui solo non-ok
+  if (!rbRes.ok) {
     let detail;
-    try { detail = await hfRes.text(); } catch { detail = "(no body)"; }
-    return errorResponse(`Hugging Face API (${hfRes.status}): ${detail.slice(0, 300)}`, hfRes.status, cors);
+    try {
+      // remove.bg ritorna JSON con { errors: [{ title, code, detail }] }
+      const j = await rbRes.json();
+      detail = (j.errors && j.errors[0])
+        ? `${j.errors[0].title || ''} ${j.errors[0].detail || ''}`.trim()
+        : JSON.stringify(j);
+    } catch {
+      try { detail = await rbRes.text(); } catch { detail = "(no body)"; }
+    }
+    // 402 = credito esaurito (50/mese free); 403 = chiave invalida; 400 = URL non valida
+    return errorResponse(`remove.bg (${rbRes.status}): ${detail.slice(0, 300)}`, rbRes.status, cors);
   }
 
-  // Step 3: passa il PNG binary al client
-  const cutoutBytes = await hfRes.arrayBuffer();
+  // PNG binary cutout
+  const cutoutBytes = await rbRes.arrayBuffer();
   return new Response(cutoutBytes, {
     status: 200,
     headers: {

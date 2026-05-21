@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v125-rename-marti';
+const CACHE_VERSION = 'v126-bg-removal';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -157,7 +157,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✨ Ispirazioni potenziate: salvi post Instagram con tag stile, stagioni, occasioni — sincronizzati con Categorie e tag. Modal grafico con chip cliccabili. Filtri estesi nel feed.";
+const WHATS_NEW = "✨ Rimuovi lo sfondo dalle foto dei capi con 1 tap. Nuovo bottone nel modal Aggiungi capo (e in modifica per capi senza cutout). Brand: Marti Outfit.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

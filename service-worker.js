@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v126-bg-removal';
+const CACHE_VERSION = 'v127-editor-bg-retry';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -157,7 +157,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✨ Rimuovi lo sfondo dalle foto dei capi con 1 tap. Nuovo bottone nel modal Aggiungi capo (e in modifica per capi senza cutout). Brand: Marti Outfit.";
+const WHATS_NEW = "✨ Sfondo nell'Editor outfit: se la rimozione automatica fallisce, ora vedi il bottone ✨ accanto al capo nel canvas per riprovare manualmente. Toast errore piu' chiaro.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

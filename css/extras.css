@@ -580,6 +580,28 @@ body.editor-page {
 }
 .canvas-item.is-selected .canvas-item-delete { display: flex; }
 
+/* Bottone ✨ "Rimuovi sfondo" (visibile solo se l'item e' stato piazzato con
+   foto originale, cioe' bg-removal non ancora applicata). Stile speculare al
+   delete, ma sul lato sinistro e di colore oro/gold del brand. */
+.canvas-item-bg {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #d4af37;
+  color: #1a1a1a;
+  border: 2px solid white;
+  font-size: 14px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+}
+.canvas-item.is-selected .canvas-item-bg { display: flex; }
+
 /* Strip dei capi (bottom) */
 .editor-strip {
   background: var(--color-bg);

@@ -87,14 +87,19 @@ async function addItemToCanvas(itemId) {
 
   // Se gia' c'e' un cutout, lo uso direttamente
   if (item.cutout_url) {
-    placeOnCanvas(item, item.cutout_url);
+    placeOnCanvas(item, item.cutout_url, { hasCutout: true });
     return;
   }
 
   // Bg removal: prima volta = preload del modello (se non gia' fatto)
   if (!state.modelReady) {
     await preloadModel();
-    if (!state.modelReady) return;  // utente ha annullato o errore
+    if (!state.modelReady) {
+      // Utente annullato o errore: piazza comunque con foto originale
+      // cosi' Martina puo' lavorare e premere "✨ Sfondo" dal canvas dopo.
+      placeOnCanvas(item, item.photo_url, { hasCutout: false });
+      return;
+    }
   }
 
   // Process del cutout
@@ -105,12 +110,61 @@ async function addItemToCanvas(itemId) {
     });
     const cutoutUrl = await Wardrobe.uploadAndSaveCutout(itemId, cutoutBlob);
     item.cutout_url = cutoutUrl;
-    placeOnCanvas(item, cutoutUrl);
+    placeOnCanvas(item, cutoutUrl, { hasCutout: true });
   } catch (err) {
-    console.error("Bg removal failed:", err);
-    toast("Rimozione sfondo fallita, uso foto originale", "warning");
-    // Fallback: uso la foto originale (con sfondo)
-    placeOnCanvas(item, item.photo_url);
+    console.error("[outfit-editor] bg removal failed:", err);
+    // Reset cache modello: al prossimo tentativo riscarica @imgly
+    // (utile se IndexedDB e' corrotta / dispositivo cambiato)
+    localStorage.removeItem(STORAGE_KEY_MODEL_READY);
+    state.modelReady = false;
+    const msg = err && err.message ? err.message : "errore sconosciuto";
+    toast("Sfondo non rimosso: " + msg + " — tap ✨ sul capo per riprovare", "warning");
+    // Fallback: piazza con foto originale, l'utente puo' riprovare via bottone
+    placeOnCanvas(item, item.photo_url, { hasCutout: false });
+  } finally {
+    hideProcessing();
+  }
+}
+
+// =============================================================================
+// Bg removal manuale: chiamato dal bottone ✨ del canvas item
+// (usato quando il capo era stato piazzato con foto originale per fallback,
+// oppure quando l'utente vuole rifare il cutout di un capo gia' processato)
+// =============================================================================
+async function retryBgRemovalOnCanvasItem(canvasItem) {
+  const item = canvasItem.item;
+  if (!item || !item.photo_url) {
+    toast("Capo senza foto originale", "error");
+    return;
+  }
+
+  // Se il modello non e' pronto, preload con splash
+  if (!state.modelReady) {
+    await preloadModel();
+    if (!state.modelReady) return;
+  }
+
+  showProcessing("Rimozione sfondo...");
+  try {
+    const cutoutBlob = await BgRemoval.removeBackground(item.photo_url, frac => {
+      document.getElementById("processing-text").textContent = `Rimozione sfondo... ${Math.round(frac * 100)}%`;
+    });
+    const cutoutUrl = await Wardrobe.uploadAndSaveCutout(item.id, cutoutBlob);
+    item.cutout_url = cutoutUrl;
+    // Sostituisco il src dell'img senza ricreare l'elemento (preserva pos/zoom)
+    canvasItem.imageUrl = cutoutUrl;
+    const imgEl = canvasItem.el.querySelector("img");
+    if (imgEl) imgEl.src = cutoutUrl;
+    // Rimuovo il bottone ✨ ora che il cutout c'e'
+    const bgBtn = canvasItem.el.querySelector(".canvas-item-bg");
+    if (bgBtn) bgBtn.remove();
+    toast("Sfondo rimosso", "success");
+  } catch (err) {
+    console.error("[outfit-editor] retry bg removal failed:", err);
+    localStorage.removeItem(STORAGE_KEY_MODEL_READY);
+    state.modelReady = false;
+    const msg = err && err.message ? err.message : "errore sconosciuto";
+    toast("Rimozione fallita: " + msg, "error");
   } finally {
     hideProcessing();
   }
@@ -145,8 +199,10 @@ async function preloadModel() {
 
 // =============================================================================
 // Posiziona un item sul canvas
+// opts.hasCutout: true se imageUrl e' un cutout pulito, false se foto originale
+//                 con sfondo (in questo caso mostra il bottone ✨ per ritentare)
 // =============================================================================
-function placeOnCanvas(item, imageUrl) {
+function placeOnCanvas(item, imageUrl, opts = {}) {
   document.getElementById("canvas-empty")?.classList.add("hidden");
 
   const canvas = document.getElementById("editor-canvas");
@@ -171,9 +227,15 @@ function placeOnCanvas(item, imageUrl) {
   el.className = "canvas-item";
   el.dataset.id = canvasItem.id;
   el.style.zIndex = canvasItem.zIndex;
+  // Se il capo e' stato piazzato con foto originale (sfondo presente),
+  // mostro anche il bottone ✨ per fare bg-removal manuale.
+  const bgBtn = opts.hasCutout
+    ? ""
+    : `<button class="canvas-item-bg" aria-label="Rimuovi sfondo" title="Rimuovi sfondo">✨</button>`;
   el.innerHTML = `
     <img src="${imageUrl}" alt="" draggable="false" />
     <button class="canvas-item-delete" aria-label="Rimuovi">✕</button>
+    ${bgBtn}
   `;
   canvas.appendChild(el);
   canvasItem.el = el;
@@ -188,6 +250,15 @@ function placeOnCanvas(item, imageUrl) {
     e.stopPropagation();
     removeFromCanvas(canvasItem);
   });
+
+  // Bg-removal button (visibile solo se piazzato con foto originale)
+  const bgBtnEl = el.querySelector(".canvas-item-bg");
+  if (bgBtnEl) {
+    bgBtnEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      retryBgRemovalOnCanvasItem(canvasItem);
+    });
+  }
 }
 
 function applyTransform(ci) {
@@ -219,10 +290,10 @@ function attachGestures(ci) {
   let active = null;  // { startTouches, startState }
 
   function onTouchStart(e) {
-    // Se il touch e' sul bottone delete (✕), lascia passare l'evento al click
-    // handler. Senza questo, preventDefault() blocca la sintesi del click event
-    // e il bottone diventa inerte.
-    if (e.target.closest(".canvas-item-delete")) {
+    // Se il touch e' su un bottone (delete ✕ o bg-removal ✨), lascia passare
+    // l'evento al click handler. Senza questo, preventDefault() blocca la
+    // sintesi del click event e il bottone diventa inerte.
+    if (e.target.closest(".canvas-item-delete") || e.target.closest(".canvas-item-bg")) {
       return;
     }
     e.preventDefault();
@@ -311,7 +382,7 @@ function attachGestures(ci) {
 
   // Mouse events fallback (desktop testing)
   el.addEventListener("mousedown", (e) => {
-    if (e.target.closest(".canvas-item-delete")) return;
+    if (e.target.closest(".canvas-item-delete") || e.target.closest(".canvas-item-bg")) return;
     e.stopPropagation();
     selectItem(ci);
     const startX = e.clientX, startY = e.clientY;

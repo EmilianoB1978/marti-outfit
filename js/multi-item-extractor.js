@@ -42,11 +42,13 @@ async function uploadBlob(blob, extHint = "jpg") {
 
 /**
  * Provider di image generation per /generate-garment.
- * - 'cf' (default): Cloudflare Workers AI flux-1-schnell. Gratuito, solo prompt.
- * - 'openai': OpenAI gpt-image-1. Pagato, vede la foto outfit come reference.
+ * - 'openai' (default): OpenAI gpt-image-1, vede la foto outfit come reference.
+ *   Alta fedelta' al capo originale. Costo ~$0.05/capo (quality=low).
+ * - 'cf': Cloudflare Workers AI flux-1-schnell. Gratuito, solo prompt.
+ *   Disponibile come fallback futuro, ma default e' openai per qualita'.
  * Per cambiare globalmente, modifica DEFAULT_PROVIDER.
  */
-const DEFAULT_PROVIDER = "cf";
+const DEFAULT_PROVIDER = "openai";
 
 /**
  * Chiama /generate-garment per generare la foto-prodotto del capo.
@@ -97,15 +99,12 @@ export async function deleteStoragePath(path) {
  * @returns {Promise<Array<{photo_url, photo_path, cutout_blob, tags, error?}>>}
  */
 export async function extractAll(outfitBlob, garments, onItemProgress = () => {}) {
-  // Step 0: upload della foto outfit SOLO se provider 'openai' (vede la foto
-  // come reference). Per 'cf' (flux-schnell, text-to-image) e' inutile.
-  let outfit = null;
-  let tempOutfitPath = null;
-  if (DEFAULT_PROVIDER === "openai") {
-    onItemProgress(-1, garments.length, "📤 Upload foto outfit");
-    outfit = await uploadBlob(outfitBlob, "jpg");
-    tempOutfitPath = outfit.path;
-  }
+  // Step 0: upload della foto outfit. Per provider 'openai' viene usata come
+  // reference visuale; per 'cf' (text-to-image) viene comunque uploadata ma
+  // ignorata server-side (la pipeline e' uniforme).
+  onItemProgress(-1, garments.length, "📤 Upload foto outfit");
+  const outfit = await uploadBlob(outfitBlob, "jpg");
+  const tempOutfitPath = outfit.path;
 
   const results = [];
 
@@ -117,7 +116,7 @@ export async function extractAll(outfitBlob, garments, onItemProgress = () => {}
       const prompt = garment.image_prompt
         || `${garment.subcategory || garment.category || "garment"}, ${(garment.color_primary || []).join(" ")}, ${(garment.material || []).join(" ")}, ${(garment.pattern || []).join(" ")}`;
 
-      const generatedBlob = await generateGarmentImage(outfit ? outfit.url : null, prompt);
+      const generatedBlob = await generateGarmentImage(outfit.url, prompt);
 
       onItemProgress(i, garments.length, "📤 Salvataggio");
       const { url, path } = await uploadBlob(generatedBlob, "png");
@@ -150,10 +149,8 @@ export async function extractAll(outfitBlob, garments, onItemProgress = () => {}
     }
   }
 
-  // Cleanup della foto outfit temporanea (solo se l'avevamo uploadata)
-  if (tempOutfitPath) {
-    await deleteStoragePath(tempOutfitPath);
-  }
+  // Cleanup della foto outfit temporanea (era solo reference, non e' un capo)
+  await deleteStoragePath(tempOutfitPath);
 
   return results;
 }

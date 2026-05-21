@@ -518,6 +518,23 @@ html, body {
 .outfit-extract-text strong { font-size: 14px; font-weight: 700; color: var(--color-text); }
 .outfit-extract-text small  { font-size: 12px; color: var(--color-text-muted); line-height: 1.3; }
 
+/* Banner costo soft: appare in cima al modal Capi estratti, stile informativo
+   neutro. Niente bordi accesi, niente accent gold (sarebbe troppo visibile). */
+.outfit-extract-cost-hint {
+  background: var(--color-surface-alt, rgba(0, 0, 0, 0.04));
+  color: var(--color-text-muted, #666);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-bottom: var(--space-3);
+  text-align: center;
+}
+.outfit-extract-cost-hint strong {
+  color: var(--color-text, #222);
+  font-weight: 600;
+}
+
 /* Review modal: preview foto sorgente + lista capi estratti */
 .outfit-extract-preview {
   background: var(--color-surface-alt);

@@ -223,7 +223,7 @@ function listDays(startISO, endISO) {
 }
 
 /**
- * Inferisce le 8 stagioni di Marty compatibili con la data nord-emisfero.
+ * Inferisce le 8 stagioni di Marti compatibili con la data nord-emisfero.
  * Multi-stagione = mese di transizione include anche la mezza stagione adiacente.
  */
 function inferSeasons(startISO) {

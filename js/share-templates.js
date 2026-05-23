@@ -602,7 +602,7 @@ async function renderMinimal(ctx, data, opts) {
   }
   if (opts.includeWatermark !== false) {
     ctx.fillStyle = "#bbb"; ctx.font = "300 14px " + FONT_FAMILIES.mono; ctx.textAlign = "right";
-    ctx.fillText("· marty outfit ·", SIZE - 60, SIZE - 60);
+    ctx.fillText("· marti outfit ·", SIZE - 60, SIZE - 60);
   }
 }
 

@@ -3019,9 +3019,58 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("Bottom nav setup fail (non blocco il boot):", err);
   }
 
-  // Incolla foto da clipboard (con auto-analisi AI)
+  // Incolla foto da clipboard via bottone "📋 Incolla foto" (tap esplicito)
   const btnPastePhoto = document.getElementById("btn-paste-photo");
   if (btnPastePhoto) btnPastePhoto.addEventListener("click", pastePhotoFromClipboard);
+
+  // Cmd+V / Ctrl+V globale: cattura Paste event quando un modal foto e' aperto.
+  // Funziona su browser desktop (Safari/Chrome/Firefox) senza permessi API:
+  // event.clipboardData arriva subito perche' e' user gesture nativo.
+  document.addEventListener("paste", async (e) => {
+    const modalItemOpen = !document.getElementById("modal-item")?.classList.contains("hidden");
+    const modalPhotoOutfitOpen = !document.getElementById("modal-photo-outfit")?.classList.contains("hidden");
+    if (!modalItemOpen && !modalPhotoOutfitOpen) return;
+
+    const items = e.clipboardData?.items;
+    if (!items || items.length === 0) return;
+
+    // Cerco il primo blob image nel clipboard
+    let imgBlob = null;
+    let imgType = "image/jpeg";
+    for (const it of items) {
+      if (it.kind === "file" && it.type.startsWith("image/")) {
+        imgBlob = it.getAsFile();
+        imgType = it.type;
+        break;
+      }
+    }
+    if (!imgBlob) return;  // niente immagine, lascia il default browser
+
+    e.preventDefault();
+    const file = new File([imgBlob], "pasted.jpg", { type: imgType });
+
+    if (modalPhotoOutfitOpen) {
+      // Inoltra al composer outfit foto
+      try {
+        const PO = await import("./photo-outfit-composer.js");
+        PO.onPhotoSelected(file);
+        toast("✓ Foto incollata nell'outfit", "success");
+      } catch (err) {
+        console.error("paste → photo-outfit failed", err);
+        toast("Errore: " + err.message, "error");
+      }
+      return;
+    }
+
+    // Modal "Nuovo capo": stesso flow del bottone "📋 Incolla foto"
+    try {
+      await handlePhotoSelected(file);
+      toast("✓ Foto incollata. Tocca 🤖 Analizza con AI per generare i tag.", "success");
+    } catch (err) {
+      console.error("paste → handlePhoto failed", err);
+      toast("Errore: " + err.message, "error");
+    }
+  });
 
   // Forza aggiornamento PWA (utile quando il SW e' bloccato su versione vecchia)
   const btnForceUpdate = document.getElementById("btn-force-update");

@@ -447,7 +447,7 @@ function renderConflictBanner(conflicts, reservedCount) {
     <div class="td-conflict-icon">⚠️</div>
     <div class="td-conflict-body">
       <div class="td-conflict-title">${reservedCount} ${reservedCount === 1 ? "capo riservato" : "capi riservati"} ad altri viaggi</div>
-      <div class="td-conflict-sub">Marty li ha esclusi dalla generazione per non sovrapporre con:</div>
+      <div class="td-conflict-sub">Marti li ha esclusi dalla generazione per non sovrapporre con:</div>
       <div class="td-conflict-trips">${tripsList}</div>
     </div>
   `;
@@ -1107,7 +1107,7 @@ function renderThermalProfile() {
 }
 
 function thermalHintText(off) {
-  if (off <= -3) return "🥶 Molto freddolosa: Marty aggiunge sempre uno strato termico in più.";
+  if (off <= -3) return "🥶 Molto freddolosa: Marti aggiunge sempre uno strato termico in più.";
   if (off <= -1) return "❄️ Freddolosa: capi un po' più coprenti del normale.";
   if (off >= 3)  return "🔥 Sopporti molto bene il caldo: capi più leggeri del solito.";
   if (off >= 1)  return "🌤 Sopporti il caldo: capi più freschi.";
@@ -1256,6 +1256,41 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-delete-trip").addEventListener("click", onDelete);
   document.getElementById("btn-share-wrapped").addEventListener("click", onShareWrapped);
   document.getElementById("btn-mood-board").addEventListener("click", onCreateMoodBoard);
+
+  // Menu ⋯ in header: dropdown con scorciatoia alle azioni gia' presenti
+  // in fondo pagina. Click apre/chiude, click fuori chiude, Esc chiude.
+  const tdMenuBtn = document.getElementById("btn-td-menu");
+  const tdMenuDropdown = document.getElementById("td-menu-dropdown");
+  function closeTdMenu() { tdMenuDropdown?.classList.add("hidden"); }
+  if (tdMenuBtn && tdMenuDropdown) {
+    tdMenuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      tdMenuDropdown.classList.toggle("hidden");
+    });
+    tdMenuDropdown.addEventListener("click", (e) => {
+      const item = e.target.closest(".td-menu-item");
+      if (!item) return;
+      e.stopPropagation();
+      closeTdMenu();
+      const act = item.dataset.act;
+      // Delego ai handler esistenti che gia' validano stato/conferma
+      if (act === "duplicate") onDuplicate();
+      else if (act === "freeze") onToggleFreeze();
+      else if (act === "share")  onShareWrapped();
+      else if (act === "mood")   onCreateMoodBoard();
+      else if (act === "delete") onDelete();
+    });
+    document.addEventListener("click", (e) => {
+      if (!tdMenuDropdown.classList.contains("hidden") &&
+          !tdMenuDropdown.contains(e.target) &&
+          e.target !== tdMenuBtn) {
+        closeTdMenu();
+      }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeTdMenu();
+    });
+  }
   const igW = document.getElementById("btn-ig-story-wrapped");
   if (igW) igW.addEventListener("click", onShareIgStoryWrapped);
   const igM = document.getElementById("btn-ig-story-mood");

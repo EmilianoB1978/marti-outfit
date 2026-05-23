@@ -235,7 +235,7 @@ export function exportTheme() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `marty-theme-${Date.now()}.json`;
+  a.download = `marti-theme-${Date.now()}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -290,7 +290,7 @@ function saveToStorage() {
 // Esposizione globale per debug da console
 // =============================================================================
 if (typeof window !== "undefined") {
-  window.MartyTheme = {
+  window.MartiTheme = {
     init, set, update, overrideToken, clearOverrides, reset,
     getPreferences, getPresets, getFonts, exportTheme, importTheme, subscribe,
   };

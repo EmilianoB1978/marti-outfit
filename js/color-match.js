@@ -37,7 +37,7 @@ export function colorDistance(hex1, hex2) {
 }
 
 // Range tipico colorDistance redmean: 0 (uguale) → ~750 (estremi).
-// Soglie calibrate sui colori italiani della tassonomia Marty:
+// Soglie calibrate sui colori italiani della tassonomia Marti:
 const THRESHOLD_IN   = 110;   // < soglia → in palette
 const THRESHOLD_NEAR = 200;   // < soglia → vicino, > → fuori
 

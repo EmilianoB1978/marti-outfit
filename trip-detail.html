@@ -18,10 +18,18 @@
 </head>
 <body class="settings-page">
 
-  <header class="settings-header">
+  <header class="settings-header" style="position:relative;">
     <a href="./trips.html" class="btn-icon" aria-label="Torna ai viaggi">←</a>
     <h1 id="td-title">Viaggio</h1>
     <button class="btn-icon" id="btn-td-menu" aria-label="Menu">⋯</button>
+    <!-- Dropdown menu azioni (nascosto di default) -->
+    <div id="td-menu-dropdown" class="td-menu-dropdown hidden">
+      <button class="td-menu-item" data-act="duplicate">🔁 Duplica viaggio</button>
+      <button class="td-menu-item" data-act="freeze">❄️ Metti in pausa / Riattiva</button>
+      <button class="td-menu-item" data-act="share">📸 Condividi wrapped</button>
+      <button class="td-menu-item" data-act="mood">🎬 Mood board</button>
+      <button class="td-menu-item td-menu-item-danger" data-act="delete">🗑 Elimina viaggio</button>
+    </div>
   </header>
 
   <main class="settings-main">
@@ -91,7 +99,7 @@
           <button type="button" class="td-thermal-chip" data-offset="3" aria-label="Sento molto caldo">🔥<span>+3°</span></button>
         </div>
         <p class="td-thermal-hint" id="td-thermal-hint">
-          Quanto sopporti il freddo/caldo? Marty userà questo per consigliarti capi più (o meno) coprenti.
+          Quanto sopporti il freddo/caldo? Marti userà questo per consigliarti capi più (o meno) coprenti.
         </p>
       </section>
 

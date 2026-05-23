@@ -1,4 +1,4 @@
-// Marty Diary Wrapped: riassunto annuale del diario condivisibile.
+// Marti Diary Wrapped: riassunto annuale del diario condivisibile.
 // Riusa pattern Trip Wrapped (canvas 1080x1080 + Web Share API + Instagram
 // Stories deep link). Stats calcolate dalle entry diary + wear_history dei capi.
 

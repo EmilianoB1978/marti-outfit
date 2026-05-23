@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v144-fix-empty-img';
+const CACHE_VERSION = 'v145-save-edit-menu-fixes';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -160,7 +160,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🐛 Fix: anteprima editor foto outfit ora si popola davvero (bug CSS :empty su img).";
+const WHATS_NEW = "🐛 3 fix: salvataggio outfit con toast errore esplicito · nuovo bottone ✏️ Modifica outfit (titolo/contesto) · menu drawer ora con ✕ in alto a dx + Esc + swipe-down per chiudere.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

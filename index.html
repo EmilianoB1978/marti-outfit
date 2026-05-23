@@ -721,7 +721,8 @@
   <!-- Menu drawer (icona ⋯ in header) -->
   <div id="menu-drawer" class="menu-overlay hidden">
     <div class="menu-panel">
-      <div class="menu-handle"></div>
+      <button class="menu-close-btn" id="btn-menu-close" type="button" aria-label="Chiudi menu">✕</button>
+      <div class="menu-handle" id="menu-handle"></div>
       <div class="menu-grid" id="menu-grid">
         <!-- popolato dinamicamente da js/app.js renderMenuGrid() -->
       </div>
@@ -879,6 +880,31 @@
       );
     }
   </script>
+
+  <!-- Modale: Modifica outfit salvato (titolo + contesto + descrizione) -->
+  <div id="modal-edit-outfit" class="modal hidden">
+    <div class="modal-content modal-small">
+      <header class="modal-header">
+        <button class="btn-icon" id="edit-outfit-close" aria-label="Chiudi">✕</button>
+        <h2>Modifica outfit</h2>
+        <button class="btn-text" id="edit-outfit-save">Salva</button>
+      </header>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="edit-outfit-title">Titolo</label>
+          <input type="text" id="edit-outfit-title" maxlength="80" />
+        </div>
+        <div class="form-group">
+          <label for="edit-outfit-context">Occasione / contesto</label>
+          <input type="text" id="edit-outfit-context" placeholder="es. aperitivo, lavoro..." maxlength="80" />
+        </div>
+        <div class="form-group">
+          <label for="edit-outfit-description">Descrizione (opzionale)</label>
+          <textarea id="edit-outfit-description" rows="3" maxlength="200"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Modale: composer outfit da foto reale di Martina vestita -->
   <div id="modal-photo-outfit" class="modal hidden">

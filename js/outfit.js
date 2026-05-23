@@ -4,7 +4,7 @@
 
 import {
   db, storage,
-  collection, doc, addDoc, getDocs, deleteDoc,
+  collection, doc, addDoc, getDocs, updateDoc, deleteDoc,
   query, orderBy, serverTimestamp,
   storageRef, uploadBytes, getDownloadURL,
 } from "./firebase-config.js";
@@ -34,6 +34,19 @@ export async function saveOutfit(outfit) {
   };
   const ref = await addDoc(collection(db, COLLECTION), payload);
   return { id: ref.id, ...payload };
+}
+
+/**
+ * Aggiorna un outfit salvato esistente. Accetta un patch parziale (solo i
+ * campi da modificare). Aggiunge automaticamente updated_at = serverTimestamp.
+ */
+export async function updateSavedOutfit(id, patch) {
+  const cleaned = { ...patch, updated_at: serverTimestamp() };
+  // Firestore non accetta undefined: trasformo in null
+  for (const k of Object.keys(cleaned)) {
+    if (cleaned[k] === undefined) cleaned[k] = null;
+  }
+  await updateDoc(doc(db, COLLECTION, id), cleaned);
 }
 
 /**

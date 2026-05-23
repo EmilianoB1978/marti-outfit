@@ -17,6 +17,7 @@
 @keyframes menuFadeIn { from { opacity: 0; } }
 
 .menu-panel {
+  position: relative;   /* per posizionare il bottone ✕ */
   background: var(--color-bg);
   width: 100%;
   border-radius: var(--radius-card) var(--radius-card) 0 0;
@@ -33,6 +34,30 @@
   background: var(--color-border);
   border-radius: var(--radius-pill);
   margin: 0 auto var(--space-3);
+  cursor: grab;
+}
+
+/* Bottone ✕ esplicito in alto-destra del panel. Sempre visibile cosi' Martina
+   ha sempre una via d'uscita garantita (oltre a swipe-down e click backdrop). */
+.menu-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface-alt, rgba(0, 0, 0, 0.06));
+  color: var(--color-text, #222);
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.menu-close-btn:hover {
+  background: var(--color-surface, rgba(0, 0, 0, 0.1));
 }
 
 /* GRIGLIA card: 3 colonne uguali, card 1:1 ben centrate */

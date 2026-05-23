@@ -2631,14 +2631,25 @@ function renderCurrentOutfits() {
   container.querySelectorAll("[data-save]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const idx = +btn.dataset.save;
+      const outfit = state.currentOutfits[idx];
+      if (!outfit) {
+        toast("Outfit non trovato — ricarica e riprova", "error");
+        return;
+      }
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = "Salvataggio...";
       try {
-        const saved = await Outfit.saveOutfit(state.currentOutfits[idx]);
+        const saved = await Outfit.saveOutfit(outfit);
         state.savedOutfits.unshift(saved);
         renderSavedOutfits();
         toast("Outfit salvato", "success");
       } catch (err) {
-        console.error(err);
-        toast("Errore salvataggio outfit", "error");
+        console.error("[saveOutfit] failed", err, outfit);
+        toast("Errore salvataggio: " + (err?.message || "sconosciuto"), "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
       }
     });
   });
@@ -2680,12 +2691,21 @@ function renderSavedOutfits() {
         </div>
         <div class="outfit-actions">
           <button class="btn-worn" data-worn="${outfit.id}">✓ Indossato</button>
+          <button class="btn-secondary" data-edit="${outfit.id}">✏️ Modifica</button>
           <button class="btn-secondary" data-share="${outfit.id}">📸 Condividi</button>
           <button class="btn-secondary" data-del="${outfit.id}">🗑️</button>
         </div>
       </div>
     `;
   }).join("");
+
+  // Modifica outfit (rinomina + edit contesto/descrizione)
+  container.querySelectorAll("[data-edit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const outfit = state.savedOutfits.find(o => o.id === btn.dataset.edit);
+      if (outfit) openEditOutfitModal(outfit);
+    });
+  });
 
   // Condividi outfit -> apre modal scelta template + opzioni
   container.querySelectorAll("[data-share]").forEach(btn => {
@@ -2730,6 +2750,54 @@ function renderSavedOutfits() {
       }
     });
   });
+}
+
+// =============================================================================
+// Modifica outfit salvato (rinomina + contesto)
+// =============================================================================
+// Editor base: rinomina titolo + cambia contesto/occasione. Per outfit visuali
+// (composite_url presente), il vero edit del layout drag&drop avviene in
+// outfit-editor.html?edit=ID (in roadmap, per ora solo titolo).
+let _editingOutfitId = null;
+
+function openEditOutfitModal(outfit) {
+  _editingOutfitId = outfit.id;
+  const modal = document.getElementById("modal-edit-outfit");
+  if (!modal) {
+    console.warn("[edit-outfit] modal missing in index.html");
+    return;
+  }
+  document.getElementById("edit-outfit-title").value = outfit.title || "";
+  document.getElementById("edit-outfit-context").value = outfit.context || "";
+  document.getElementById("edit-outfit-description").value = outfit.description || "";
+  modal.classList.remove("hidden");
+}
+
+function closeEditOutfitModal() {
+  _editingOutfitId = null;
+  const modal = document.getElementById("modal-edit-outfit");
+  if (modal) modal.classList.add("hidden");
+}
+
+async function saveEditedOutfit() {
+  if (!_editingOutfitId) return;
+  const title = document.getElementById("edit-outfit-title").value.trim() || "Outfit";
+  const context = document.getElementById("edit-outfit-context").value.trim() || null;
+  const description = document.getElementById("edit-outfit-description").value.trim() || null;
+  try {
+    await Outfit.updateSavedOutfit(_editingOutfitId, { title, context, description });
+    // Aggiorna in memoria
+    const idx = state.savedOutfits.findIndex(o => o.id === _editingOutfitId);
+    if (idx >= 0) {
+      Object.assign(state.savedOutfits[idx], { title, context, description });
+    }
+    renderSavedOutfits();
+    closeEditOutfitModal();
+    toast("Outfit aggiornato", "success");
+  } catch (err) {
+    console.error("[edit-outfit] save failed", err);
+    toast("Errore: " + (err?.message || "salvataggio fallito"), "error");
+  }
 }
 
 // =============================================================================
@@ -2856,7 +2924,8 @@ async function generateShuffleOutfits() {
           renderSavedOutfits();
           toast("Outfit salvato", "success");
         } catch (err) {
-          toast("Errore salvataggio", "error");
+          console.error("[shuffle save] failed", err);
+          toast("Errore salvataggio: " + (err?.message || "sconosciuto"), "error");
         }
       });
 
@@ -3024,6 +3093,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("btn-outfit-extract-save")?.addEventListener("click", saveExtractedItems);
   document.getElementById("btn-outfit-extract-close")?.addEventListener("click", closeOutfitExtractModal);
+
+  // Edit outfit salvato: modal modifica titolo/contesto/descrizione
+  document.getElementById("edit-outfit-close")?.addEventListener("click", closeEditOutfitModal);
+  document.getElementById("edit-outfit-save")?.addEventListener("click", saveEditedOutfit);
 
   // Composer "Foto outfit": apre il modal con galleria sfondi
   const btnPhotoOutfit = document.getElementById("btn-photo-outfit");
@@ -3212,13 +3285,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Menu drawer (icona ⋯ in header)
   const menuDrawer = document.getElementById("menu-drawer");
+  function _closeMenuDrawer() {
+    menuDrawer.classList.add("hidden");
+  }
   document.getElementById("btn-menu").addEventListener("click", () => {
     renderMenuGrid();
     menuDrawer.classList.remove("hidden");
   });
+  // Click sul backdrop scuro fuori dal panel
   menuDrawer.addEventListener("click", (e) => {
-    if (e.target === menuDrawer) menuDrawer.classList.add("hidden");
+    if (e.target === menuDrawer) _closeMenuDrawer();
   });
+  // Bottone ✕ esplicito (sempre disponibile, anche se backdrop e' coperto)
+  document.getElementById("btn-menu-close")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    _closeMenuDrawer();
+  });
+  // Tasto Esc chiude (desktop + tastiera bluetooth)
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !menuDrawer.classList.contains("hidden")) {
+      _closeMenuDrawer();
+    }
+  });
+  // Swipe-down sull'handle o sul panel chiude (mobile)
+  let _menuTouchStart = null;
+  const _menuPanel = menuDrawer.querySelector(".menu-panel");
+  if (_menuPanel) {
+    _menuPanel.addEventListener("touchstart", (e) => {
+      // Solo se il touch parte dall'handle o nei primi 80px dall'alto del panel
+      const rect = _menuPanel.getBoundingClientRect();
+      const touchY = e.touches[0].clientY;
+      if (touchY - rect.top > 80) return;  // sotto la zona "drag handle", lascia perdere
+      _menuTouchStart = { y: touchY, t: Date.now() };
+    }, { passive: true });
+    _menuPanel.addEventListener("touchend", (e) => {
+      if (!_menuTouchStart) return;
+      const endY = (e.changedTouches[0] || {}).clientY || 0;
+      const dy = endY - _menuTouchStart.y;
+      const dt = Date.now() - _menuTouchStart.t;
+      // Swipe down rapido (>60px in <500ms)
+      if (dy > 60 && dt < 500) _closeMenuDrawer();
+      _menuTouchStart = null;
+    });
+    _menuPanel.addEventListener("touchcancel", () => { _menuTouchStart = null; });
+  }
   // Render iniziale (cosi' il primo apri non flicca)
   try { renderMenuGrid(); } catch {}
 

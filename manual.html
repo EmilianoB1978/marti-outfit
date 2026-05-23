@@ -40,6 +40,11 @@
       </button>
       <div class="accordion-body">
 
+        <h4 class="manual-version">Versione 1.50</h4>
+        <ul class="manual-list">
+          <li>Nuovo form qui in Aiuto per <strong>segnalare bug</strong> o <strong>chiedere nuove funzioni</strong>: scegli pagina e sezione e scrivi cosa non va. La segnalazione arriva direttamente a Emiliano</li>
+        </ul>
+
         <h4 class="manual-version">Versione 1.49</h4>
         <ul class="manual-list">
           <li>Sezione <strong>Viaggi piu' personalizzabile</strong>: tocca il titolo del viaggio per rinominarlo direttamente</li>
@@ -135,6 +140,63 @@
           <li>Funzione <strong>Rimuovi sfondo</strong> dalla foto di un capo: tocchi ✨ e l'app genera una versione del capo isolato su sfondo trasparente, utile per i collage outfit</li>
         </ul>
 
+      </div>
+    </div>
+
+    <!-- ===== Sezione: Segnalazioni e Richieste ===== -->
+    <div class="accordion-item">
+      <button class="accordion-header" aria-expanded="false">
+        <span>💬 Segnala un problema o chiedi una funzione</span>
+      </button>
+      <div class="accordion-body" hidden>
+        <p class="settings-hint">
+          Hai trovato un bug? O ti manca una funzione? Scrivilo qui. Ricevo
+          le segnalazioni subito.
+        </p>
+
+        <div class="form-group">
+          <label for="fb-type">Cosa vuoi inviare?</label>
+          <select id="fb-type" class="form-select">
+            <option value="">— Scegli —</option>
+            <option value="bug">🐛 Segnalazione (qualcosa non funziona)</option>
+            <option value="feature">💡 Richiesta nuova funzione</option>
+          </select>
+        </div>
+
+        <!-- BUG: tendine cascade Pagina + Sezione -->
+        <div id="fb-bug-fields" class="hidden">
+          <div class="form-group">
+            <label for="fb-page">In quale pagina è il problema?</label>
+            <select id="fb-page" class="form-select">
+              <option value="">— Scegli pagina —</option>
+            </select>
+          </div>
+          <div class="form-group" id="fb-section-group">
+            <label for="fb-section">In quale parte della pagina?</label>
+            <select id="fb-section" class="form-select" disabled>
+              <option value="">Scegli prima la pagina</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="fb-bug-text">Descrivi cosa è successo</label>
+            <textarea id="fb-bug-text" rows="4" maxlength="800"
+              placeholder="Es. 'Quando tocco Salva sull'outfit nuovo, l'app dice errore e non salva.'"></textarea>
+          </div>
+        </div>
+
+        <!-- FEATURE: solo textarea libera -->
+        <div id="fb-feature-fields" class="hidden">
+          <div class="form-group">
+            <label for="fb-feature-text">Cosa ti piacerebbe poter fare?</label>
+            <textarea id="fb-feature-text" rows="5" maxlength="1000"
+              placeholder="Descrivi liberamente la funzione che vorresti. Più dettagli dai, meglio la posso costruire."></textarea>
+          </div>
+        </div>
+
+        <div id="fb-actions" class="hidden">
+          <button id="fb-submit" class="btn btn--gold btn--block">📤 Invia</button>
+          <div id="fb-status" class="settings-hint" style="text-align:center;margin-top:var(--space-2);"></div>
+        </div>
       </div>
     </div>
 
@@ -1505,6 +1567,120 @@ match /inspirationPosts/{document=**} {
 
     // Versione (placeholder per ora; quando avrai un build pipeline puoi iniettarla)
     document.getElementById("version-info").textContent = "v0.4 · Fase 4";
+
+    // ====================================================================
+    // Form Segnalazione/Richiesta: cascade pagina/sezione + submit Firestore
+    // ====================================================================
+    // Catalogo pagine + sezioni dell'app. Ordinato per visibilita' sidebar.
+    // Per future pagine: aggiungere voce qui. La cascade nasconde la tendina
+    // Sezione se la pagina ha sections vuote (es. "Altro / Non saprei").
+    const REPORT_PAGES = [
+      { key: "guardaroba", label: "👕 Guardaroba", sections: ["Lista capi (griglia)", "Aggiungere un capo", "Modificare un capo", "Foto outfit (con sfondo)", "Estrai capi da foto outfit", "Filtri/ricerca"] },
+      { key: "outfit", label: "✨ Outfit", sections: ["Sorprendimi (3 random)", "Crea outfit visuale (drag&drop)", "Genera con AI / Regole locali", "Carica foto outfit", "Outfit salvati", "Modifica outfit"] },
+      { key: "calendario", label: "📅 Calendario", sections: ["Vista mensile", "Aggiungere outfit a un giorno", "Vista diario integrata"] },
+      { key: "diario", label: "📔 Diario", sections: ["Lista voci", "Nuova voce / scelta giorno", "Pagina del giorno", "Diary Wrapped"] },
+      { key: "viaggi", label: "✈️ Viaggi", sections: ["Lista viaggi", "Crea viaggio (wizard)", "Dettaglio viaggio", "Generazione outfit per giorno", "Note libere per giorno", "Bagaglio/luggage", "Mood board / Wrapped"] },
+      { key: "capsule", label: "🌸 Capsule", sections: ["Lista capsule", "Dettaglio capsule"] },
+      { key: "armocromia", label: "💄 Armocromia", sections: ["Test 14 domande", "Risultato palette", "Match capi vs palette"] },
+      { key: "budget", label: "💰 Budget", sections: ["Riepilogo mensile", "Aggiungere spesa", "Statistiche / Wrapped"] },
+      { key: "note", label: "📝 Note", sections: ["Lista note", "Dettaglio nota"] },
+      { key: "promemoria", label: "🔔 Promemoria", sections: ["Lista promemoria", "Crea promemoria"] },
+      { key: "ispirazioni", label: "💭 Ispirazioni", sections: ["Feed", "Influencer", "Aggiungere post Instagram"] },
+      { key: "categorie", label: "🗂️ Categorie e tag", sections: ["Categorie + sotto-categorie", "Colori", "Pattern", "Materiali", "Stili", "Stagioni", "Occasioni"] },
+      { key: "impostazioni", label: "⚙️ Impostazioni", sections: ["Aspetto / Tema", "Sistema", "Aiuto / Novità", "Backup"] },
+      { key: "menu_pwa", label: "📲 Menu / installazione PWA", sections: ["Menu drawer ⋯", "Aggiornamento app", "Installazione su iPhone"] },
+      { key: "altro", label: "❓ Altro / Non saprei", sections: [] },
+    ];
+
+    const fbType = document.getElementById("fb-type");
+    const fbBugFields = document.getElementById("fb-bug-fields");
+    const fbFeatureFields = document.getElementById("fb-feature-fields");
+    const fbActions = document.getElementById("fb-actions");
+    const fbPage = document.getElementById("fb-page");
+    const fbSection = document.getElementById("fb-section");
+    const fbSectionGroup = document.getElementById("fb-section-group");
+    const fbSubmit = document.getElementById("fb-submit");
+    const fbStatus = document.getElementById("fb-status");
+
+    // Popolo dropdown pagine
+    fbPage.innerHTML = '<option value="">— Scegli pagina —</option>' +
+      REPORT_PAGES.map(p => `<option value="${p.key}">${p.label}</option>`).join("");
+
+    function refreshFbUI() {
+      const t = fbType.value;
+      fbBugFields.classList.toggle("hidden", t !== "bug");
+      fbFeatureFields.classList.toggle("hidden", t !== "feature");
+      fbActions.classList.toggle("hidden", !t);
+    }
+    fbType.addEventListener("change", refreshFbUI);
+
+    // Cascade pagina → sezione
+    fbPage.addEventListener("change", () => {
+      const p = REPORT_PAGES.find(x => x.key === fbPage.value);
+      if (!p || p.sections.length === 0) {
+        fbSection.innerHTML = '<option value="">— Non applicabile —</option>';
+        fbSection.disabled = true;
+        fbSectionGroup.style.display = p ? "block" : "block";
+        return;
+      }
+      fbSection.innerHTML = '<option value="">— Scegli sezione (opzionale) —</option>' +
+        p.sections.map(s => `<option value="${s}">${s}</option>`).join("");
+      fbSection.disabled = false;
+    });
+
+    // Submit feedback → Firestore collection "feedback"
+    fbSubmit.addEventListener("click", async () => {
+      const type = fbType.value;
+      if (!type) return;
+
+      let payload = { type, created_at: new Date().toISOString() };
+
+      if (type === "bug") {
+        const text = document.getElementById("fb-bug-text").value.trim();
+        if (!text) {
+          fbStatus.textContent = "Descrivi cosa è successo prima di inviare.";
+          return;
+        }
+        payload.page = fbPage.value || null;
+        payload.section = fbSection.value || null;
+        payload.text = text;
+      } else {
+        const text = document.getElementById("fb-feature-text").value.trim();
+        if (!text) {
+          fbStatus.textContent = "Scrivi la richiesta prima di inviare.";
+          return;
+        }
+        payload.text = text;
+      }
+
+      // User agent + viewport per context tecnico (utile a Emiliano)
+      payload.user_agent = navigator.userAgent;
+      payload.viewport = `${window.innerWidth}×${window.innerHeight}`;
+
+      fbSubmit.disabled = true;
+      fbStatus.textContent = "Invio in corso...";
+
+      try {
+        // Import dinamico Firebase per non caricare se l'utente non usa il form
+        const fb = await import("./js/firebase-config.js");
+        if (!fb.isConfigured || !fb.db) throw new Error("Firebase non configurato");
+        const ref = await fb.addDoc(fb.collection(fb.db, "feedback"), payload);
+        fbStatus.textContent = "✓ Grazie! Segnalazione ricevuta. Ti faccio sapere appena la sistemo.";
+        // Reset form
+        document.getElementById("fb-bug-text").value = "";
+        document.getElementById("fb-feature-text").value = "";
+        fbType.value = "";
+        fbPage.value = "";
+        fbSection.innerHTML = '<option value="">Scegli prima la pagina</option>';
+        fbSection.disabled = true;
+        refreshFbUI();
+      } catch (err) {
+        console.error("[feedback] submit failed", err);
+        fbStatus.textContent = "Errore invio: " + (err.message || "riprova");
+      } finally {
+        fbSubmit.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>

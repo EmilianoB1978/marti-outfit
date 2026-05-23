@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v149-viaggi-piu-liberi';
+const CACHE_VERSION = 'v150-feedback-form';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -161,7 +161,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "✈️ Viaggi piu' personalizzabili: tocca il titolo per rinominarlo · scrivi una nota libera per ogni giorno (es. 'matrimonio 18:00', 'spiaggia mattina'). Salvataggio automatico.";
+const WHATS_NEW = "💬 Nuovo nell'Aiuto: form per inviare segnalazioni (con pagina + sezione) o richieste di nuove funzioni. Bastano 3 tap.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

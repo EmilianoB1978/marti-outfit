@@ -253,7 +253,15 @@ function renderHeader() {
   const today = todayISO();
   document.getElementById("td-title").textContent = t.name || "Viaggio";
   document.getElementById("td-flag").textContent = countryFlag(t.destination?.country_code);
-  document.getElementById("td-name").textContent = t.name || t.destination?.name || "Viaggio";
+  const nameEl = document.getElementById("td-name");
+  nameEl.textContent = t.name || t.destination?.name || "Viaggio";
+  // Rendi il titolo cliccabile per editing inline. Cursore + suggerimento UX.
+  nameEl.style.cursor = "text";
+  nameEl.title = "Tocca per rinominare";
+  if (!nameEl.dataset.editBound) {
+    nameEl.dataset.editBound = "1";
+    nameEl.addEventListener("click", _startEditTripName);
+  }
   const dest = t.destination?.name || "—";
   const sub = t.destination?.admin1 ? `${dest}, ${t.destination.admin1}` : dest;
   document.getElementById("td-meta").innerHTML =
@@ -265,6 +273,83 @@ function renderHeader() {
     return opt ? `<span class="trip-tag">${opt.icon} ${opt.label}</span>` : "";
   }).join("");
   document.getElementById("td-occasions").innerHTML = occHtml;
+}
+
+// Edit inline del titolo viaggio: trasforma il div in input, salva al blur/Enter,
+// annulla con Esc. Persiste via updateTrip + aggiorna stato locale.
+function _startEditTripName(e) {
+  e.stopPropagation();
+  const nameEl = document.getElementById("td-name");
+  const current = state.trip.name || state.trip.destination?.name || "";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = current;
+  input.maxLength = 80;
+  input.className = "td-name-input";
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+  const finish = async (save) => {
+    if (done) return;
+    done = true;
+    const newName = (input.value || "").trim();
+    const span = document.createElement("div");
+    span.className = "td-hero-name";
+    span.id = "td-name";
+    span.textContent = save && newName ? newName : current;
+    input.replaceWith(span);
+    if (save && newName && newName !== current) {
+      try {
+        await updateTrip(state.trip.id, { name: newName });
+        state.trip.name = newName;
+        document.getElementById("td-title").textContent = newName;
+        toast("Titolo aggiornato", "success");
+      } catch (err) {
+        console.error("[trip-edit-name] failed", err);
+        toast("Errore: " + (err.message || ""), "error");
+        span.textContent = current;
+      }
+    }
+    // Ricollego handler click
+    renderHeader();
+  };
+
+  input.addEventListener("blur", () => finish(true));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+    if (e.key === "Escape") { e.preventDefault(); finish(false); }
+  });
+}
+
+// Auto-resize della textarea note: cresce con righe del contenuto
+function _autoResize(ta) {
+  if (!ta) return;
+  ta.style.height = "auto";
+  ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+}
+
+// Salva la nota di un giorno specifico nel campo day_notes del trip.
+// Persiste via updateTrip + aggiorna lo state locale per coerenza.
+async function _saveDayNote(iso, value) {
+  if (!iso || !state.trip) return;
+  const clean = (value || "").trim();
+  const current = (state.trip.day_notes || {})[iso] || "";
+  if (clean === current) return;  // niente cambio, skip
+
+  const dayNotes = { ...(state.trip.day_notes || {}) };
+  if (clean) dayNotes[iso] = clean;
+  else delete dayNotes[iso];  // vuoto = rimuovi la chiave
+
+  try {
+    await updateTrip(state.trip.id, { day_notes: dayNotes });
+    state.trip.day_notes = dayNotes;
+    // Nessun toast: feedback gia' visibile (testo scritto). Save silenzioso.
+  } catch (err) {
+    console.error("[trip day note] save failed", err);
+    toast("Errore salvataggio nota: " + (err.message || ""), "error");
+  }
 }
 
 function renderOutfitsSection() {
@@ -325,6 +410,16 @@ function renderDays(outfitsByDay) {
       ? `<div class="td-day-warn">⚠️ ${issues.length} ${issues.length === 1 ? "capo" : "capi"} non ideali per il meteo</div>`
       : "";
 
+    // Nota libera per il giorno (es. "matrimonio 18:00", "spiaggia mattina")
+    const dayNotes = state.trip.day_notes || {};
+    const noteVal = dayNotes[iso] || "";
+    const noteHtml = `
+      <div class="td-day-note">
+        <textarea class="td-day-note-input" data-iso="${iso}" rows="1"
+          placeholder="📝 Aggiungi una nota per questo giorno..."
+          maxlength="200">${escapeHtml(noteVal)}</textarea>
+      </div>`;
+
     return `<article class="td-day-card${issues.length ? ' has-warning' : ''}" data-iso="${iso}">
       <header class="td-day-head">
         <div class="td-day-title">
@@ -337,12 +432,29 @@ function renderDays(outfitsByDay) {
         ${thumbs || '<div class="td-day-empty">Nessun capo</div>'}
       </div>
       ${dayWarn}
+      ${noteHtml}
     </article>`;
   }).join("");
 
   // Bind shuffle giorno
   list.querySelectorAll('[data-action="shuffle-day"]').forEach(btn => {
     btn.addEventListener("click", () => onShuffleDay(btn.dataset.iso));
+  });
+
+  // Bind note libere: salvataggio debounced 600ms + flush su blur.
+  // Auto-resize: textarea cresce con il contenuto.
+  list.querySelectorAll(".td-day-note-input").forEach(ta => {
+    _autoResize(ta);
+    let debounceTimer = null;
+    ta.addEventListener("input", () => {
+      _autoResize(ta);
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => _saveDayNote(ta.dataset.iso, ta.value), 600);
+    });
+    ta.addEventListener("blur", () => {
+      clearTimeout(debounceTimer);
+      _saveDayNote(ta.dataset.iso, ta.value);
+    });
   });
 }
 

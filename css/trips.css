@@ -1521,3 +1521,55 @@ a.trip-card:active { transform: scale(0.99); }
 .td-menu-item-danger {
   color: var(--color-error, #c92020);
 }
+
+/* Edit inline del titolo viaggio: input che sostituisce il div .td-hero-name */
+.td-name-input {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-family: var(--font-family-heading, inherit);
+  background: var(--color-surface, #fff);
+  border: 2px solid var(--accent, #d4af37);
+  border-radius: 8px;
+  padding: 4px 10px;
+  width: 100%;
+  max-width: 100%;
+  color: var(--color-text, #222);
+  box-sizing: border-box;
+}
+.td-name-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25);
+}
+
+/* Nota libera per giorno: textarea soft sotto le thumb dei capi */
+.td-day-note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-border, rgba(0, 0, 0, 0.1));
+}
+.td-day-note-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text, #222);
+  padding: 4px 0;
+  outline: none;
+  overflow: hidden;
+  min-height: 24px;
+  box-sizing: border-box;
+}
+.td-day-note-input::placeholder {
+  color: var(--color-text-muted, #999);
+  font-style: italic;
+}
+.td-day-note-input:focus {
+  background: var(--color-surface-alt, rgba(0, 0, 0, 0.03));
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: 0 -8px;
+}

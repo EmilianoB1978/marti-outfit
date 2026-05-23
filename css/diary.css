@@ -5,7 +5,9 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin: 12px;
+  /* Margini laterali rimossi: .settings-main ha gia' il proprio padding
+     orizzontale. Mantengo solo il margin verticale per separazione. */
+  margin: 0 0 12px;
 }
 .diary-stat {
   background: linear-gradient(135deg, rgba(167,139,250,0.06), rgba(244,114,182,0.06));
@@ -29,7 +31,7 @@
 }
 
 .diary-search {
-  margin: 0 12px 12px;
+  margin: 0 0 12px;
 }
 .diary-search input {
   width: 100%;
@@ -43,7 +45,9 @@
 }
 
 .diary-timeline {
-  padding: 0 12px 100px;
+  /* Solo padding-bottom per dare aria all'ultima entry. Lateral lasciato
+     al .settings-main parent (no doppia indentazione). */
+  padding: 0 0 100px;
 }
 .diary-month-group {
   margin-bottom: 24px;

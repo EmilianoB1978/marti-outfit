@@ -12,9 +12,32 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 
 window.addEventListener("DOMContentLoaded", async () => {
+  // FAB ＋ : apre il date picker nativo per scegliere il giorno della nuova
+  // voce. Default = oggi. Su iOS Safari mostra il classico picker rotella.
+  const datePicker = $("#diary-new-date-picker");
   $("#fab-add").addEventListener("click", () => {
-    location.href = `./diary-detail.html?date=${todayId()}`;
+    if (!datePicker) {
+      location.href = `./diary-detail.html?date=${todayId()}`;
+      return;
+    }
+    datePicker.value = todayId();
+    // showPicker() preferito (Chromium); fallback click() per Safari iOS
+    try {
+      if (typeof datePicker.showPicker === "function") datePicker.showPicker();
+      else datePicker.click();
+    } catch {
+      datePicker.click();
+    }
   });
+  if (datePicker) {
+    datePicker.addEventListener("change", () => {
+      const v = datePicker.value;
+      if (!v) return;
+      // Format YYYY-MM-DD: stesso formato di todayId() (dateToId)
+      location.href = `./diary-detail.html?date=${v}`;
+    });
+  }
+  // Bottone 📍 in header: shortcut diretta a "oggi" (senza picker)
   $("#btn-today").addEventListener("click", () => {
     location.href = `./diary-detail.html?date=${todayId()}`;
   });

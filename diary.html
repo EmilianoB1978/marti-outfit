@@ -57,6 +57,9 @@
   </main>
 
   <button class="notes-fab" id="fab-add" aria-label="Nuova pagina">＋</button>
+  <!-- Date picker per scegliere il giorno della nuova voce diario.
+       Nascosto: viene aperto dal FAB tramite showPicker() / click. -->
+  <input type="date" id="diary-new-date-picker" style="position:absolute;left:-9999px;opacity:0;pointer-events:none;" />
 
   <div id="toast" class="toast hidden"></div>
 

@@ -2571,23 +2571,38 @@ async function generateOutfit() {
   btn.disabled = true;
   btn.textContent = "✨ Generazione...";
 
+  // Toggle engine: regole locali (default, gratis) vs AI esterna (Claude)
+  const useAi = !!document.getElementById("outfit-engine-ai")?.checked;
+
   try {
-    // Recupero il meteo se l'utente ha attivato la posizione (Settings → Meteo)
-    let weatherCtx = null;
-    const loc = Weather.getCachedLocation();
-    if (loc) {
-      try {
-        const forecast = await Weather.getForecast(loc);
-        weatherCtx = Weather.buildWeatherContext(forecast);
-      } catch (err) {
-        console.warn("Forecast non disponibile, procedo senza:", err);
+    let outfits;
+    if (useAi) {
+      // Recupero il meteo se l'utente ha attivato la posizione (Settings → Meteo)
+      let weatherCtx = null;
+      const loc = Weather.getCachedLocation();
+      if (loc) {
+        try {
+          const forecast = await Weather.getForecast(loc);
+          weatherCtx = Weather.buildWeatherContext(forecast);
+        } catch (err) {
+          console.warn("Forecast non disponibile, procedo senza:", err);
+        }
+      }
+      outfits = await Claude.suggestOutfits(context, state.items, weatherCtx);
+    } else {
+      // Engine locale rule-based: senza chiamate API esterne, deterministico,
+      // valuta colori/formality/stagione/stile/anti-ripetizione + multi-top
+      const Rules = await import("./outfit-rules.js");
+      outfits = Rules.suggestOutfitsLocal(context, state.items, { count: 3 });
+      if (outfits.length === 0) {
+        toast("Nessuna combinazione adatta. Aggiungi capi o cambia occasione.", "warning");
+        return;
       }
     }
-
-    const outfits = await Claude.suggestOutfits(context, state.items, weatherCtx);
     state.currentOutfits = outfits.map(o => ({ ...o, context }));
     renderCurrentOutfits();
-    toast(`${outfits.length} outfit generati${weatherCtx ? " (meteo incluso)" : ""}`, "success");
+    const engineLabel = useAi ? "AI Claude" : "regole locali";
+    toast(`${outfits.length} outfit generati (${engineLabel})`, "success");
   } catch (err) {
     console.error("Errore generazione outfit:", err);
     toast("Errore generazione: " + err.message, "error");
@@ -2854,12 +2869,24 @@ async function generateShuffleOutfits() {
   }
 
   const container = document.getElementById("shuffle-results");
-  // Render 3 card con slot vuoti
-  const outfits = [
-    composeRandomOutfit(),
-    composeRandomOutfit(),
-    composeRandomOutfit(),
-  ];
+
+  // Provo prima a usare l'engine rule-based (context vuoto = libera scelta).
+  // Se genera 3 outfit con score >= soglia li uso; altrimenti fallback random.
+  let outfits;
+  try {
+    const Rules = await import("./outfit-rules.js");
+    const scored = Rules.suggestOutfitsLocal("", state.items, { count: 3, minScore: 0 });
+    if (scored.length >= 1) {
+      outfits = scored.map(s => s.item_ids.map(id => state.items.find(it => it.id === id)).filter(Boolean));
+      // Padding con random se ne servono di piu'
+      while (outfits.length < 3) outfits.push(composeRandomOutfit());
+    } else {
+      outfits = [composeRandomOutfit(), composeRandomOutfit(), composeRandomOutfit()];
+    }
+  } catch (err) {
+    console.warn("Rules engine fallito, uso random:", err);
+    outfits = [composeRandomOutfit(), composeRandomOutfit(), composeRandomOutfit()];
+  }
 
   container.innerHTML = outfits.map((items, idx) => {
     const slots = items.map((_, i) => `<div class="shuffle-slot is-spinning" data-card="${idx}" data-slot="${i}"></div>`).join("");

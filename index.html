@@ -208,8 +208,21 @@
             id="outfit-context"
             placeholder="es. cena informale, lavoro, weekend..."
           />
+          <!-- Toggle motore: regole locali (default, gratis) vs Claude AI -->
+          <div class="outfit-engine-toggle">
+            <label class="outfit-engine-opt">
+              <input type="radio" name="outfit-engine" id="outfit-engine-local" checked />
+              <span>🛠 Regole locali</span>
+              <small>gratis · veloce · deterministico</small>
+            </label>
+            <label class="outfit-engine-opt">
+              <input type="radio" name="outfit-engine" id="outfit-engine-ai" />
+              <span>🤖 AI Claude</span>
+              <small>più creativo · costa ~$0.005</small>
+            </label>
+          </div>
           <button id="btn-generate-outfit" class="btn-primary">
-            ✨ Genera outfit con AI
+            ✨ Genera outfit
           </button>
         </div>
 

@@ -1,7 +1,7 @@
 // Service Worker per PWA Marti Outfit
 // Strategia: cache-first per shell statica, network-first per Firebase/Claude API
 
-const CACHE_VERSION = 'v146-marti-rename-paste-tripmenu';
+const CACHE_VERSION = 'v147-outfit-rules-engine';
 const CACHE_NAME = `marty-outfit-${CACHE_VERSION}`;
 
 // File della shell PWA da pre-cachare per uso offline.
@@ -39,6 +39,7 @@ const SHELL_FILES = [
   './js/multi-item-extractor.js',
   './js/photo-outfit-composer.js',
   './js/background-library.js',
+  './js/outfit-rules.js',
   './js/calendar.js',
   './js/weather.js',
   './js/search.js',
@@ -160,7 +161,7 @@ self.addEventListener('install', (event) => {
 
 // Cosa c'e' di nuovo in questa versione (testo human-friendly mostrato nel
 // banner di update). Tieni stringato e accattivante, NON tecnico.
-const WHATS_NEW = "🧹 Tutti i 'Marty' residui rinominati in 'Marti' · ora puoi incollare immagini con Cmd+V dal browser nel modal Nuovo capo e Foto outfit · menu ⋯ nei dettagli viaggio funzionante (duplica/pausa/elimina).";
+const WHATS_NEW = "🧠 Nuovo motore outfit con regole locali (gratis, no AI esterna): abbina colori, formality, stagione, stile, evita ripetizioni e aggiunge cardigan/giacca quando serve. Toggle 'Regole locali' o 'AI Claude'.";
 
 // Listener postMessage:
 //  - 'SKIP_WAITING' -> attiva subito il nuovo SW

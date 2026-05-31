@@ -456,7 +456,7 @@ async function renderMagazine(ctx, data, opts) {
 
   if (opts.includeWatermark !== false) {
     ctx.fillStyle = "#1a1a1a"; ctx.textAlign = "right"; ctx.font = "bold 22px sans-serif";
-    ctx.fillText("MARTY OUTFIT", SIZE - 80, SIZE - 40);
+    ctx.fillText("MARTI OUTFIT", SIZE - 80, SIZE - 40);
   }
 }
 
@@ -547,7 +547,7 @@ async function renderMosaic(ctx, data, opts) {
 
   if (opts.includeWatermark !== false) {
     ctx.fillStyle = "#aaa"; ctx.font = "300 22px " + FONT_FAMILIES.system; ctx.textAlign = "right";
-    ctx.fillText("MARTY OUTFIT", SIZE - 60, SIZE - 40);
+    ctx.fillText("MARTI OUTFIT", SIZE - 60, SIZE - 40);
   }
 }
 

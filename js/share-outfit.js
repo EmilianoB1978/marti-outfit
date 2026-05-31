@@ -58,7 +58,7 @@ function buildCaption(outfit, items, options = {}) {
   // Hashtag
   if (options.includeHashtags !== false) {
     lines.push("");
-    lines.push("#outfit #ootd #lookoftheday #fashion #martyoutfit");
+    lines.push("#outfit #ootd #lookoftheday #fashion #martioutfit");
   }
 
   return lines.join("\n");
